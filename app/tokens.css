@@ -1,0 +1,57 @@
+:root {
+  /* Color */
+  --color-ink: #0a0a0a; /* single near-black, replaces old #111 / #0A0A0A split */
+  --color-white: #ffffff;
+
+  /* Gray scale — a single flat ramp, lightest to darkest. Consolidated from
+     the original's 9 ad hoc, unnamed gray values (several within one hex
+     step of each other, e.g. #E6E6E6/#E4E4E4/#E2E2E2/#EEE all served as
+     "light border gray") into one consistent scale. */
+  --gray-100: #f4f4f4; /* placeholder-cover fill */
+  --gray-200: #ececec; /* placeholder-cover fill */
+  --gray-300: #e6e6e6; /* light borders */
+  --gray-400: #b0b0b0; /* secondary copy on dark surfaces */
+  --gray-500: #a0a0a0; /* muted icons / struck-through price */
+  --gray-600: #8a8a8a; /* uppercase eyebrow labels */
+  --gray-700: #7a7a7a; /* faint copyright / footnote text */
+  --gray-800: #6a6a6a; /* secondary body copy, link hover */
+  --gray-900: #5a5a5a; /* primary muted body copy */
+  --border-dark: #222222; /* borders on dark sections */
+
+  /* CTA gradient */
+  --cta-gradient: linear-gradient(180deg, #ff6a67 0%, #ff3431 55%, #d91e1b 100%);
+  --cta-glow: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.55), transparent 72%);
+
+  /* Spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 40px;
+  --space-9: 48px;
+  --space-10: 64px;
+  --space-11: 76px;
+  --space-12: 96px;
+
+  /* Layout */
+  --pad: 26px;
+  --max-width: 1280px;
+  --max-width-narrow: 1080px;
+}
+
+@media (max-width: 600px) {
+  :root {
+    --pad: 18px;
+  }
+}
+
+/* Single breakpoint set shared by both page types (replaces the old
+   600/860/1000 vs 600/720 split) */
+:root {
+  --bp-mobile: 600px;
+  --bp-tablet: 860px;
+  --bp-desktop: 1000px;
+}
