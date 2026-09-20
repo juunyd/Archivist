@@ -1,4 +1,4 @@
-// GET ?token=<uuid> -> { bookTitle, pdfUrl, downloadsRemaining }
+// GET ?token=<uuid> -> { bookTitle, fileName, pdfUrl, downloadsRemaining }
 //
 // The token is the buyer's only credential, so it is treated like one: it must
 // belong to a paid order, it is spent against a download cap, and it yields
@@ -66,7 +66,7 @@ Deno.serve(async (req) => {
     return jsonError(req, 500, "server_error", "Could not open this download. Please contact support.");
   }
 
-  const pdfUrl = await signedPdfUrl(book);
+  const pdfUrl = await signedPdfUrl(book, `${claim.book_slug}.pdf`);
 
   if (!pdfUrl) {
     console.error(`get-download: no signable file for ${claim.book_slug}`);
@@ -75,6 +75,7 @@ Deno.serve(async (req) => {
 
   return json(req, {
     bookTitle: book.title,
+    fileName: `${claim.book_slug}.pdf`,
     pdfUrl,
     downloadsRemaining: Math.max(DOWNLOAD_LIMIT - claim.download_count, 0),
   });

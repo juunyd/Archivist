@@ -8,6 +8,7 @@ import { getFunction, postFunction } from "@/lib/supabase-functions";
 
 interface DownloadResponse {
   bookTitle: string;
+  fileName: string;
   pdfUrl: string;
   downloadsRemaining: number;
 }
@@ -65,11 +66,18 @@ export function DownloadContent() {
         <>
           <p className="download__eyebrow">Your book</p>
           <h2 className="download__title">{download.bookTitle}</h2>
+          {/*
+            No target="_blank": the signed URL comes back with
+            Content-Disposition: attachment, so the browser saves the file
+            without navigating away, and a new tab would flash empty and close
+            on mobile Safari. The download attribute is a no-op cross-origin
+            but costs nothing if the header is ever missing.
+          */}
           <a
             className="cta-button download__cta"
             href={download.pdfUrl}
-            target="_blank"
-            rel="noopener noreferrer"
+            download={download.fileName}
+            rel="noopener"
           >
             <span>Download the PDF</span>
             <span className="cta-button__arrow" aria-hidden="true">
