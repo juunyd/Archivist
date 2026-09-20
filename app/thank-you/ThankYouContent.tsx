@@ -4,33 +4,73 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { siteConfig } from "@/lib/site";
+import { getFunction } from "@/lib/supabase-functions";
 
-type OrderStatus = "idle" | "loading" | "paid" | "pending" | "not_found" | "error";
+interface OrderStatusResponse {
+  status: "created" | "paid" | "failed" | "refunded";
+  maskedEmail: string | null;
+  bookTitle: string | null;
+}
+
+type View = "loading" | "paid" | "pending" | "failed" | "not_found" | "error";
+
+// The webhook can land after the browser does, so a 'created' order is not yet
+// bad news — poll for a while before saying anything discouraging.
+const POLL_INTERVAL_MS = 3000;
+const POLL_TIMEOUT_MS = 30000;
 
 export function ThankYouContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get("order_id");
-  const [status, setStatus] = useState<OrderStatus>("idle");
+
+  const [view, setView] = useState<View>("loading");
+  const [order, setOrder] = useState<OrderStatusResponse | null>(null);
 
   useEffect(() => {
     if (!orderId) return;
 
-    setStatus("loading");
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout>;
+    const startedAt = Date.now();
 
-    // PLACEHOLDER: once the Supabase Edge Function exists, replace this
-    // block with a real fetch, e.g.:
-    //
-    //   const res = await fetch(
-    //     `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/order-status?order_id=${orderId}`,
-    //     { headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! } }
-    //   );
-    //   const data = await res.json();
-    //   setStatus(data.status);
-    //
-    // This static page never talks to a database directly — it only ever
-    // calls a public Supabase Edge Function endpoint, client-side.
-    const timeout = setTimeout(() => setStatus("pending"), 400);
-    return () => clearTimeout(timeout);
+    const poll = async () => {
+      try {
+        const data = await getFunction<OrderStatusResponse>("order-status", {
+          order_id: orderId,
+        });
+        if (cancelled) return;
+
+        setOrder(data);
+
+        if (data.status === "paid" || data.status === "refunded") {
+          setView("paid");
+          return;
+        }
+        if (data.status === "failed") {
+          setView("failed");
+          return;
+        }
+
+        // Still 'created'.
+        if (Date.now() - startedAt >= POLL_TIMEOUT_MS) {
+          setView("pending");
+          return;
+        }
+        setView("pending");
+        timer = setTimeout(poll, POLL_INTERVAL_MS);
+      } catch (error) {
+        if (cancelled) return;
+        const code = (error as { code?: string }).code;
+        setView(code === "order_not_found" ? "not_found" : "error");
+      }
+    };
+
+    void poll();
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [orderId]);
 
   if (!orderId) {
@@ -38,8 +78,8 @@ export function ThankYouContent() {
       <>
         <p className="thank-you__body">
           We couldn&apos;t find an order reference in this link. If you just
-          completed checkout, check your email — your receipt and download
-          links are sent there directly.
+          completed checkout, check your email — your download link is sent
+          there directly.
         </p>
         <Link href="/" className="thank-you__link">
           Back to Archivist
@@ -48,33 +88,63 @@ export function ThankYouContent() {
     );
   }
 
+  const support = (
+    <a href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a>
+  );
+
   return (
     <>
       <p className="thank-you__order">
         Order <strong>{orderId}</strong>
       </p>
-      {status === "loading" || status === "idle" ? (
-        <p className="thank-you__body">Checking your order status&hellip;</p>
-      ) : status === "paid" ? (
+
+      {view === "loading" && (
+        <p className="thank-you__body">Checking your order&hellip;</p>
+      )}
+
+      {view === "paid" && (
         <p className="thank-you__body">
-          Payment confirmed. Your download links have been emailed to you.
-        </p>
-      ) : status === "pending" ? (
-        <p className="thank-you__body">
-          Order status checking isn&apos;t wired up yet — this is a
-          placeholder response. Once payments are live, this page will call a
-          Supabase Edge Function to confirm your order and show real status
-          here.
-        </p>
-      ) : (
-        <p className="thank-you__body">
-          We couldn&apos;t confirm this order. If you were charged, contact{" "}
-          <a href={`mailto:${siteConfig.contactEmail}`}>
-            {siteConfig.contactEmail}
-          </a>
-          .
+          Payment confirmed
+          {order?.bookTitle ? <> for <strong>{order.bookTitle}</strong></> : null}.
+          Your download link is on its way
+          {order?.maskedEmail ? <> to {order.maskedEmail}</> : null}. It can be
+          reused whenever you need it. If it hasn&apos;t arrived in a few
+          minutes, check your spam folder or write to {support}.
         </p>
       )}
+
+      {view === "pending" && (
+        <p className="thank-you__body">
+          Your payment is being confirmed. This usually takes a few seconds —
+          you can safely leave this page, and the download link will be emailed
+          to you as soon as it clears. If nothing arrives within an hour, write
+          to {support}.
+        </p>
+      )}
+
+      {view === "failed" && (
+        <p className="thank-you__body">
+          This payment did not go through, so you have not been charged. You can
+          try again from the book&apos;s page, or write to {support} if you
+          think this is wrong.
+        </p>
+      )}
+
+      {view === "not_found" && (
+        <p className="thank-you__body">
+          We couldn&apos;t find that order. If you were charged, forward your
+          payment receipt to {support} and we will sort it out.
+        </p>
+      )}
+
+      {view === "error" && (
+        <p className="thank-you__body">
+          We couldn&apos;t check this order just now. Your payment is
+          unaffected — if you were charged, the download link will still be
+          emailed to you. Questions: {support}.
+        </p>
+      )}
+
       <Link href="/" className="thank-you__link">
         Back to Archivist
       </Link>
