@@ -25,7 +25,7 @@ export function Footer({ collectionsLinks }: FooterProps) {
             style={{ height: 30, width: "auto", display: "block", marginBottom: 14 }}
           />
           <p className="site-footer__tagline">
-            Solutions on hard problems, with every claim sourced.
+            Short books on hard problems.
           </p>
         </div>
         <div className="site-footer__links">

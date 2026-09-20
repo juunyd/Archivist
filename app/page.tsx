@@ -64,10 +64,9 @@ export default function HomePage() {
       <section id="standard" className={styles.standardSection}>
         <div className={styles.standardGrid}>
           <div>
-            <div className={styles.standardEyebrow}>The standard</div>
+            <div className={styles.standardEyebrow}>What&apos;s inside every book</div>
             <p className={styles.standardLede}>
-              Every title is held to the same three commitments, and we print
-              them so you can hold us to them too.
+              Every Archivist book follows the same format.
             </p>
           </div>
           <div>
