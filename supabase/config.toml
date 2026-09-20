@@ -411,3 +411,19 @@ s3_secret_key = "env(S3_SECRET_KEY)"
 # declarative_schema_path = "./database"
 # JSON string passed through to pg-delta SQL formatting.
 # format_options = "{\"keywordCase\":\"upper\",\"indent\":2,\"maxWidth\":80,\"commaStyle\":\"trailing\"}"
+
+# --- Edge Functions -----------------------------------------------------------
+# Called from the browser with the anon key as the JWT.
+[functions.create-order]
+verify_jwt = true
+
+[functions.verify-payment]
+verify_jwt = true
+
+[functions.order-status]
+verify_jwt = true
+
+# Called by Razorpay, which cannot send a Supabase JWT. Authentication here is
+# the HMAC signature over the raw request body, checked inside the function.
+[functions.razorpay-webhook]
+verify_jwt = false
