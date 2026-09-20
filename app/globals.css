@@ -674,3 +674,14 @@ button {
 .download__home {
   margin-top: 40px;
 }
+
+/* Confirmation page download link. Question 3 of the FAQ promises the link is
+   here as well as in the email, so it gets the same weight as a buy button. */
+.thank-you__cta-row {
+  margin: 0 0 28px;
+}
+
+.thank-you__cta {
+  margin: 0 auto;
+  text-decoration: none;
+}

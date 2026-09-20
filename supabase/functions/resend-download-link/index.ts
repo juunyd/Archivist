@@ -7,7 +7,7 @@ import { preflight } from "../_shared/cors.ts";
 import { isEmail, json, jsonError, methodNotAllowed, readJson } from "../_shared/http.ts";
 import { adminClient } from "../_shared/supabase.ts";
 import { allowResendRequest } from "../_shared/rate-limit.ts";
-import { downloadUrlFor } from "../_shared/fulfil.ts";
+import { downloadUrlFor } from "../_shared/links.ts";
 import { sendEmail } from "../_shared/email.ts";
 import { downloadLinksEmail } from "../_shared/templates.ts";
 

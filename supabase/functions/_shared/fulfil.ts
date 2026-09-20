@@ -1,10 +1,7 @@
 import { adminClient, type OrderRow } from "./supabase.ts";
-import { siteUrl } from "./env.ts";
 import { sendEmail } from "./email.ts";
 import { deliveryEmail } from "./templates.ts";
-
-export const downloadUrlFor = (token: string): string =>
-  `${siteUrl()}/download/?token=${token}`;
+import { downloadUrlFor } from "./links.ts";
 
 export type FulfilResult =
   | { status: "sent" }

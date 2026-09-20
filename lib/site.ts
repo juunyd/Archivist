@@ -26,18 +26,38 @@ export const editorialRules = [
 
 export const homepageFaqs = [
   {
-    question: "What is an Archivist guide?",
+    question: "What is an Archivist book?",
     answer:
-      "A short, focused digital book built around a specific question, problem, or subject. Written to be read in one sitting rather than stretched to a predetermined length.",
+      "A short, focused digital book built around one specific problem. Around 40 to 60 pages, written to be read in a single sitting.",
   },
   {
     question: "What format are the books?",
     answer:
-      "A print-ready PDF, delivered by email within a minute of checkout. One payment, lifetime access, including later editions of the same title.",
+      "A print-ready PDF, delivered to your email within a minute of checkout. You can read it on a phone, laptop or tablet, or print it.",
+  },
+  {
+    question: "How do I get the book after paying?",
+    answer:
+      "The download link is emailed to you immediately, and also shown on the confirmation page. The link keeps working, so you can download the book again whenever you need it.",
+  },
+  {
+    question: "I didn't receive my email. What now?",
+    answer:
+      "Check your spam folder first. You can also request the link again from our download page, or write to hello@archivist.in and we'll send it to you.",
   },
   {
     question: "Can I get a refund?",
     answer:
-      "Yes. Reply to the delivery email within 30 days for a full refund, and keep the files.",
+      "Because the books are delivered instantly as digital files, purchases are not refundable. If you were charged twice, or the book was never delivered, write to hello@archivist.in and we'll refund you in full.",
+  },
+  {
+    question: "Do I get future updates of the book?",
+    answer:
+      "Yes. If a book is revised, the same download link gives you the latest edition at no extra cost.",
+  },
+  {
+    question: "Who writes the books?",
+    answer:
+      "Archivist is an independent Indian publisher. Each book is researched and written in-house, with sources named in the text.",
   },
 ];

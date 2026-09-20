@@ -64,12 +64,12 @@ export const books: Book[] = [
       {
         question: "What format do I get?",
         answer:
-          "A print-ready PDF, delivered to your inbox within a minute of checkout.",
+          "A print-ready PDF, delivered to your inbox within a minute of checkout. Read it on a phone, laptop or tablet, or print it.",
       },
       {
         question: "What if I want a refund?",
         answer:
-          "Reply to the delivery email within 30 days for a full refund. You keep the files.",
+          "Digital files are delivered instantly, so purchases are not refundable. If you were charged twice, or the book never arrived, write to hello@archivist.in and we will refund you in full.",
       },
       {
         question: "Is it a one-time payment?",
@@ -121,12 +121,12 @@ export const books: Book[] = [
       {
         question: "What format do I get?",
         answer:
-          "A print-ready PDF, delivered to your inbox within a minute of checkout.",
+          "A print-ready PDF, delivered to your inbox within a minute of checkout. Read it on a phone, laptop or tablet, or print it.",
       },
       {
         question: "What if I want a refund?",
         answer:
-          "Reply to the delivery email within 30 days for a full refund. You keep the files.",
+          "Digital files are delivered instantly, so purchases are not refundable. If you were charged twice, or the book never arrived, write to hello@archivist.in and we will refund you in full.",
       },
       {
         question: "Is it a one-time payment?",
@@ -178,12 +178,12 @@ export const books: Book[] = [
       {
         question: "What format do I get?",
         answer:
-          "A print-ready PDF, delivered to your inbox within a minute of checkout.",
+          "A print-ready PDF, delivered to your inbox within a minute of checkout. Read it on a phone, laptop or tablet, or print it.",
       },
       {
         question: "What if I want a refund?",
         answer:
-          "Reply to the delivery email within 30 days for a full refund. You keep the files.",
+          "Digital files are delivered instantly, so purchases are not refundable. If you were charged twice, or the book never arrived, write to hello@archivist.in and we will refund you in full.",
       },
       {
         question: "Is it a one-time payment?",
@@ -234,12 +234,12 @@ export const books: Book[] = [
       {
         question: "What format do I get?",
         answer:
-          "A print-ready PDF, delivered to your inbox within a minute of checkout.",
+          "A print-ready PDF, delivered to your inbox within a minute of checkout. Read it on a phone, laptop or tablet, or print it.",
       },
       {
         question: "What if I want a refund?",
         answer:
-          "Reply to the delivery email within 30 days for a full refund. You keep the files.",
+          "Digital files are delivered instantly, so purchases are not refundable. If you were charged twice, or the book never arrived, write to hello@archivist.in and we will refund you in full.",
       },
       {
         question: "Is it a one-time payment?",

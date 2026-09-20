@@ -1,10 +1,17 @@
-// GET ?order_id=<uuid> -> { status, maskedEmail, bookTitle }
+// GET ?order_id=<uuid> -> { status, maskedEmail, bookTitle, downloadUrl? }
 //
 // The thank-you page polls this with nothing but an order id, so it returns
-// the bare minimum: no amount, no payment id, no full email address, no token.
+// the bare minimum: no amount, no payment id, no full email address.
+//
+// downloadUrl is included only once the order is paid, so the buyer can get
+// their book straight from the confirmation page instead of waiting on email.
+// That does make the order id in the thank-you URL a credential for the
+// download — it is a v4 uuid, unguessable and never shown to anyone but the
+// buyer, but it is worth knowing that forwarding that URL shares the book.
 import { preflight } from "../_shared/cors.ts";
 import { isUuid, json, jsonError, maskEmail, methodNotAllowed } from "../_shared/http.ts";
 import { adminClient } from "../_shared/supabase.ts";
+import { downloadUrlFor } from "../_shared/links.ts";
 
 Deno.serve(async (req) => {
   const options = preflight(req);
@@ -18,11 +25,12 @@ Deno.serve(async (req) => {
 
   const { data, error } = await adminClient()
     .from("orders")
-    .select("status, buyer_email, books(title)")
+    .select("status, buyer_email, download_token, books(title)")
     .eq("id", orderId)
     .maybeSingle<{
       status: string;
       buyer_email: string | null;
+      download_token: string;
       books: { title: string } | null;
     }>();
 
@@ -38,5 +46,7 @@ Deno.serve(async (req) => {
     status: data.status,
     maskedEmail: maskEmail(data.buyer_email),
     bookTitle: data.books?.title ?? null,
+    downloadUrl:
+      data.status === "paid" ? downloadUrlFor(data.download_token) : null,
   });
 });

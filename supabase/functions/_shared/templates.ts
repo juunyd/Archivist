@@ -24,7 +24,7 @@ const shell = (bodyHtml: string): string => `<!doctype html>
           <tr><td style="padding-top:28px;">${bodyHtml}</td></tr>
           <tr>
             <td style="padding-top:36px;margin-top:36px;border-top:1px solid #e5e5e5;font-size:13px;line-height:1.6;color:#666666;">
-              Questions, or need a refund? Reply to this email or write to
+              Trouble opening your book, or charged twice? Reply to this email or write to
               <a href="mailto:${supportEmail}" style="color:#111111;">${supportEmail}</a>.
             </td>
           </tr>
@@ -59,7 +59,7 @@ export function deliveryEmail(input: { bookTitle: string; downloadUrl: string })
       ``,
       `Keep this email — the link works again whenever you need it, on any device.`,
       ``,
-      `Questions, or need a refund? Reply to this email or write to ${supportEmail}.`,
+      `Trouble opening your book, or charged twice? Reply to this email or write to ${supportEmail}.`,
       ``,
       `Archivist`,
     ].join("\n"),
