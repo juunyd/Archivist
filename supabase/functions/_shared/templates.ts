@@ -46,15 +46,15 @@ export function deliveryEmail(input: { bookTitle: string; downloadUrl: string })
     subject: `Your copy of ${input.bookTitle}`,
     html: shell(`
       <p style="${P}">Your copy of <strong>${title}</strong> is ready.</p>
-      <p style="margin:0 0 28px;font-size:16px;line-height:1.6;color:#111111;">Download it as a PDF or an EPUB from the link below.</p>
-      <p style="margin:0 0 28px;">${button(input.downloadUrl, "Download your book")}</p>
+      <p style="margin:0 0 28px;font-size:16px;line-height:1.6;color:#111111;">Download the PDF from the link below.</p>
+      <p style="margin:0 0 28px;">${button(input.downloadUrl, "Download the PDF")}</p>
       <p style="margin:0;font-size:14px;line-height:1.6;color:#666666;">
         Keep this email — the link works again whenever you need it, on any device.
       </p>`),
     text: [
       `Your copy of ${input.bookTitle} is ready.`,
       ``,
-      `Download it as a PDF or an EPUB here:`,
+      `Download the PDF here:`,
       input.downloadUrl,
       ``,
       `Keep this email — the link works again whenever you need it, on any device.`,
@@ -71,7 +71,7 @@ export function downloadLinksEmail(
 ) {
   const rows = items.map((item) => `
       <p style="margin:0 0 10px;font-size:16px;line-height:1.5;"><strong>${escapeHtml(item.bookTitle)}</strong></p>
-      <p style="margin:0 0 28px;">${button(item.downloadUrl, "Download")}</p>`).join("");
+      <p style="margin:0 0 28px;">${button(item.downloadUrl, "Download the PDF")}</p>`).join("");
   return {
     subject: items.length === 1 ? "Your Archivist download link" : "Your Archivist download links",
     html: shell(`

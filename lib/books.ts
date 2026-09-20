@@ -64,7 +64,7 @@ export const books: Book[] = [
       {
         question: "What format do I get?",
         answer:
-          "A print-ready PDF and an EPUB for e-readers, delivered to your inbox within a minute of checkout.",
+          "A print-ready PDF, delivered to your inbox within a minute of checkout.",
       },
       {
         question: "What if I want a refund?",
@@ -121,7 +121,7 @@ export const books: Book[] = [
       {
         question: "What format do I get?",
         answer:
-          "A print-ready PDF and an EPUB for e-readers, delivered to your inbox within a minute of checkout.",
+          "A print-ready PDF, delivered to your inbox within a minute of checkout.",
       },
       {
         question: "What if I want a refund?",
@@ -178,7 +178,7 @@ export const books: Book[] = [
       {
         question: "What format do I get?",
         answer:
-          "A print-ready PDF and an EPUB for e-readers, delivered to your inbox within a minute of checkout.",
+          "A print-ready PDF, delivered to your inbox within a minute of checkout.",
       },
       {
         question: "What if I want a refund?",
@@ -234,7 +234,7 @@ export const books: Book[] = [
       {
         question: "What format do I get?",
         answer:
-          "A print-ready PDF and an EPUB for e-readers, delivered to your inbox within a minute of checkout.",
+          "A print-ready PDF, delivered to your inbox within a minute of checkout.",
       },
       {
         question: "What if I want a refund?",

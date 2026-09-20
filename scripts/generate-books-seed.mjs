@@ -27,7 +27,7 @@ const rows = books.map((book) => {
     throw new Error(`Book "${book.slug}" has an unusable price: ${book.price}`);
   }
   return `  (${q(book.slug)}, ${q(book.title)}, ${pricePaise}, 'INR', ` +
-    `${q(`${book.slug}/${book.slug}.pdf`)}, ${q(`${book.slug}/${book.slug}.epub`)}, true)`;
+    `${q(`${book.slug}/${book.slug}.pdf`)}, true)`;
 });
 
 const sql = `-- GENERATED FILE — do not edit by hand.
@@ -36,7 +36,7 @@ const sql = `-- GENERATED FILE — do not edit by hand.
 -- Upserts the catalogue. Prices here are what buyers are actually charged;
 -- lib/books.ts only decides what the marketing pages display.
 
-insert into public.books (slug, title, price_paise, currency, pdf_path, epub_path, active)
+insert into public.books (slug, title, price_paise, currency, pdf_path, active)
 values
 ${rows.join(",\n")}
 on conflict (slug) do update
@@ -44,7 +44,6 @@ on conflict (slug) do update
       price_paise = excluded.price_paise,
       currency    = excluded.currency,
       pdf_path    = excluded.pdf_path,
-      epub_path   = excluded.epub_path,
       active      = excluded.active;
 
 -- Anything no longer in lib/books.ts stops being sellable, but is kept so

@@ -95,7 +95,7 @@ export default async function BookPage({ params }: BookPageProps) {
               <div className={styles.trustBadges}>
                 <span>&#10003; Instant delivery</span>
                 <span>&#10003; Secure checkout</span>
-                <span>&#10003; PDF + EPUB</span>
+                <span>&#10003; PDF</span>
               </div>
             </div>
           </div>
@@ -139,7 +139,7 @@ export default async function BookPage({ params }: BookPageProps) {
         <div className={styles.buyInner}>
           <h2 className={styles.buyHeading}>Decide better by this time tomorrow.</h2>
           <p className={styles.buySub}>
-            {book.pageCount} pages, PDF and EPUB, delivered the moment you check out.
+            {book.pageCount} pages, PDF, delivered the moment you check out.
           </p>
           <div className={styles.buyPrice}>&#8377;{book.price}</div>
           <CtaButton book={book} className={styles.buyCta} />

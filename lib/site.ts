@@ -38,7 +38,7 @@ export const homepageFaqs = [
   {
     question: "What format are the books?",
     answer:
-      "PDF and EPUB, delivered by email within a minute of checkout. One payment, lifetime access, including later editions of the same title.",
+      "A print-ready PDF, delivered by email within a minute of checkout. One payment, lifetime access, including later editions of the same title.",
   },
   {
     question: "Can I get a refund?",
