@@ -6,3 +6,10 @@ next-env.d.ts
 .env
 .env.local
 .env*.local
+
+# Cloudflare / secrets
+.wrangler
+.dev.vars
+.dev.vars.*
+.env*
+!.env.example
