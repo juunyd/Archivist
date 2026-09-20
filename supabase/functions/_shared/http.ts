@@ -53,6 +53,13 @@ export const isHexSignature = (v: unknown): v is string =>
 export const isUuid = (v: unknown): v is string =>
   typeof v === "string" && UUID.test(v);
 
+// Deliberately permissive: this rejects what cannot be an address, and leaves
+// deciding whether it receives mail to the mail server.
+const EMAIL = /^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/;
+
+export const isEmail = (v: unknown): v is string =>
+  typeof v === "string" && v.length <= 254 && EMAIL.test(v.trim());
+
 /** j***@example.com — enough for a buyer to recognise, useless to a stranger. */
 export function maskEmail(email: string | null | undefined): string | null {
   if (!email) return null;

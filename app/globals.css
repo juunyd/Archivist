@@ -479,9 +479,65 @@ button {
 }
 
 /* Checkout button states. The wrapper keeps the inline error attached to the
-   button that produced it, since a page can show several buy buttons. */
+   button that produced it, since a page can show several buy buttons.
+   display:contents keeps every existing layout exactly as it was — the form
+   and the error sit in the flow the bare button used to occupy. */
 .cta-button__wrap {
   display: contents;
+}
+
+/* Email capture step: one field, one button, in place of the button. */
+.checkout-email {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.checkout-email--center {
+  margin-inline: auto;
+}
+
+.checkout-email__input {
+  font-family: inherit;
+  font-size: 16px; /* 16px stops iOS Safari zooming the page on focus. */
+  padding: 16px 20px;
+  border: 1px solid var(--gray-300);
+  border-radius: 999px;
+  background: var(--color-white);
+  color: var(--color-ink);
+  width: 100%;
+}
+
+.checkout-email__input:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 1px;
+  border-color: var(--color-ink);
+}
+
+.checkout-email__input:disabled {
+  opacity: 0.6;
+}
+
+/* Inherits the section's text colour, so this reads correctly on the white
+   hero and on the dark buy section without either needing to know about it. */
+.checkout-email__note {
+  font-size: 13px;
+  line-height: 1.5;
+  color: inherit;
+  opacity: 0.7;
+  margin: 0;
+  text-align: center;
+}
+
+.sticky-buy-bar .checkout-email {
+  flex: 1;
+  max-width: none;
+}
+
+.sticky-buy-bar .checkout-email__note {
+  display: none; /* The bar is a re-entry point, not the first thing they read. */
 }
 
 .cta-button:disabled {

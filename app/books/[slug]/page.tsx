@@ -124,7 +124,7 @@ export default async function BookPage({ params }: BookPageProps) {
             ))}
           </div>
 
-          <CtaButton book={book} className={styles.insideCta} />
+          <CtaButton book={book} align="center" className={styles.insideCta} />
         </div>
       </section>
 
@@ -142,7 +142,7 @@ export default async function BookPage({ params }: BookPageProps) {
             {book.pageCount} pages, PDF, delivered the moment you check out.
           </p>
           <div className={styles.buyPrice}>&#8377;{book.price}</div>
-          <CtaButton book={book} className={styles.buyCta} />
+          <CtaButton book={book} align="center" className={styles.buyCta} />
         </div>
       </section>
 

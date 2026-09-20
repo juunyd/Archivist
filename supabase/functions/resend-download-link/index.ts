@@ -4,15 +4,12 @@
 // "no orders found", it would become a way to test whether an address has
 // bought from us — so a well-formed request gets one reply and one only.
 import { preflight } from "../_shared/cors.ts";
-import { json, jsonError, methodNotAllowed, readJson } from "../_shared/http.ts";
+import { isEmail, json, jsonError, methodNotAllowed, readJson } from "../_shared/http.ts";
 import { adminClient } from "../_shared/supabase.ts";
 import { allowResendRequest } from "../_shared/rate-limit.ts";
 import { downloadUrlFor } from "../_shared/fulfil.ts";
 import { sendEmail } from "../_shared/email.ts";
 import { downloadLinksEmail } from "../_shared/templates.ts";
-
-// Deliberately permissive: this only rejects things that cannot be addresses.
-const EMAIL = /^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/;
 
 const GENERIC_REPLY = {
   ok: true,
@@ -34,7 +31,7 @@ Deno.serve(async (req) => {
   const body = await readJson<{ email?: unknown }>(req);
   const email = typeof body?.email === "string" ? body.email.trim() : "";
 
-  if (!email || email.length > 254 || !EMAIL.test(email)) {
+  if (!isEmail(email)) {
     // A malformed address is a client bug, not a probe, so this one may differ.
     return jsonError(req, 400, "invalid_email", "Enter a valid email address.");
   }

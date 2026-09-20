@@ -1,10 +1,11 @@
-// POST { slug } -> { orderId, razorpayOrderId, amount, currency, keyId, bookTitle }
+// POST { slug, email? } -> { orderId, razorpayOrderId, amount, currency, keyId, bookTitle }
 //
-// The client names a book. It never names a price: the amount comes from the
-// books table and is copied onto the order, and every later check compares
-// Razorpay's numbers against that stored copy.
+// The client names a book, and optionally the address to deliver it to. It
+// never names a price: the amount comes from the books table and is copied
+// onto the order, and every later check compares Razorpay's numbers against
+// that stored copy.
 import { preflight } from "../_shared/cors.ts";
-import { isSlug, json, jsonError, methodNotAllowed, readJson } from "../_shared/http.ts";
+import { isEmail, isSlug, json, jsonError, methodNotAllowed, readJson } from "../_shared/http.ts";
 import { adminClient, type BookRow } from "../_shared/supabase.ts";
 import { createRazorpayOrder } from "../_shared/razorpay.ts";
 import { requireEnv } from "../_shared/env.ts";
@@ -14,11 +15,18 @@ Deno.serve(async (req) => {
   if (options) return options;
   if (req.method !== "POST") return methodNotAllowed(req, "POST");
 
-  const body = await readJson<{ slug?: unknown }>(req);
+  const body = await readJson<{ slug?: unknown; email?: unknown }>(req);
   if (!body || !isSlug(body.slug)) {
     return jsonError(req, 400, "invalid_request", "A valid book slug is required.");
   }
   const slug = body.slug;
+
+  // Captured before checkout so we can still deliver if Razorpay hands back no
+  // address. Optional: an order can be created without one.
+  if (body.email !== undefined && body.email !== "" && !isEmail(body.email)) {
+    return jsonError(req, 400, "invalid_email", "Enter a valid email address.");
+  }
+  const buyerEmail = isEmail(body.email) ? body.email.trim().toLowerCase() : null;
 
   const db = adminClient();
   const { data: book, error: bookError } = await db
@@ -60,6 +68,7 @@ Deno.serve(async (req) => {
     currency: book.currency,
     status: "created",
     razorpay_order_id: razorpayOrder.id,
+    buyer_email: buyerEmail,
   });
 
   if (insertError) {

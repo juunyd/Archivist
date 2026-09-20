@@ -18,7 +18,13 @@ export type CheckoutPhase =
   | "verifying"
   | "redirecting";
 
-export interface CheckoutHandlers {
+export interface CheckoutOptions {
+  /**
+   * Captured before checkout opens. It is stored on the order immediately, so
+   * a book can still be delivered if Razorpay hands back no address, and it
+   * prefills the Checkout form so the buyer does not type it twice.
+   */
+  email?: string;
   onPhase?(phase: CheckoutPhase): void;
   onError?(message: string): void;
 }
@@ -77,9 +83,9 @@ let inFlight = false;
 
 export async function startCheckout(
   slug: string,
-  handlers: CheckoutHandlers = {},
+  options: CheckoutOptions = {},
 ): Promise<void> {
-  const { onPhase, onError } = handlers;
+  const { email, onPhase, onError } = options;
   const phase = (next: CheckoutPhase) => onPhase?.(next);
   const fail = (error: unknown) => {
     inFlight = false;
@@ -97,7 +103,7 @@ export async function startCheckout(
   let order: CreateOrderResponse;
   try {
     phase("creating");
-    order = await postFunction<CreateOrderResponse>("create-order", { slug });
+    order = await postFunction<CreateOrderResponse>("create-order", { slug, email });
     await loadCheckoutScript();
   } catch (error) {
     fail(error);
@@ -116,8 +122,9 @@ export async function startCheckout(
     currency: order.currency,
     name: "Archivist",
     description: order.bookTitle,
-    // No prefill: we collect nothing before payment, and Razorpay hands us
-    // the buyer's email afterwards.
+    // Only the address we just captured. Razorpay's own value still wins
+    // afterwards if the buyer changes it on the payment screen.
+    prefill: email ? { email } : undefined,
     theme: { color: "#0a0a0a" },
     modal: {
       ondismiss: () => {

@@ -60,6 +60,11 @@ export function checkPaymentMatchesOrder(
  * Moves an order to paid, once. The `status = 'created'` predicate makes this
  * a no-op for whichever of verify-payment / webhook arrives second, so buyer
  * details are never overwritten and paid_at keeps the first timestamp.
+ *
+ * Razorpay's email wins when it has one, since that is the address the buyer
+ * confirmed at the payment step. When it has none, the address captured before
+ * checkout stays put rather than being blanked — that address is the only way
+ * to deliver the book.
  */
 export async function markOrderPaid(input: {
   orderId: string;
@@ -67,15 +72,17 @@ export async function markOrderPaid(input: {
   email: string | null;
   phone: string | null;
 }): Promise<{ changed: boolean }> {
+  const patch: Record<string, unknown> = {
+    status: "paid",
+    razorpay_payment_id: input.paymentId,
+    paid_at: new Date().toISOString(),
+  };
+  if (input.email) patch.buyer_email = input.email;
+  if (input.phone) patch.buyer_phone = input.phone;
+
   const { data, error } = await adminClient()
     .from("orders")
-    .update({
-      status: "paid",
-      razorpay_payment_id: input.paymentId,
-      buyer_email: input.email,
-      buyer_phone: input.phone,
-      paid_at: new Date().toISOString(),
-    })
+    .update(patch)
     .eq("id", input.orderId)
     .eq("status", "created")
     .select("id")
