@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
-import type { FaqItem } from "@/lib/books";
+import type { FaqItem } from "@/lib/catalogue";
 
 interface FaqAccordionProps {
   items: FaqItem[];

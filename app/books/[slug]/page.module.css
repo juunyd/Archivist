@@ -86,12 +86,6 @@
   line-height: 1;
 }
 
-.compareAtPrice {
-  font-size: 20px;
-  color: var(--gray-500);
-  text-decoration: line-through;
-}
-
 .trustBadges {
   display: flex;
   flex-wrap: wrap;

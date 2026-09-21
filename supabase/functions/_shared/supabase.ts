@@ -30,8 +30,10 @@ export interface BookRow {
   price_paise: number;
   currency: string;
   pdf_path: string | null;
-  active: boolean;
+  status: BookStatus;
 }
+
+export type BookStatus = "draft" | "published";
 
 export interface OrderRow {
   id: string;

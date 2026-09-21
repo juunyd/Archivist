@@ -3,7 +3,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { BookCard } from "@/components/BookCard";
 import { FaqAccordion } from "@/components/FaqAccordion";
-import { books } from "@/lib/books";
+import { getPublishedBooks } from "@/lib/catalogue";
 import { editorialRules, homepageFaqs, siteConfig } from "@/lib/site";
 import styles from "./page.module.css";
 
@@ -29,7 +29,9 @@ export const metadata: Metadata = {
   },
 };
 
-export default function HomePage() {
+export default async function HomePage() {
+  const books = await getPublishedBooks();
+
   return (
     <>
       <Header navLinks={navLinks} />

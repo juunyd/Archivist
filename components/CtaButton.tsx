@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { Book } from "@/lib/books";
+import type { Book } from "@/lib/catalogue";
 import { startCheckout, type CheckoutPhase } from "@/lib/checkout";
 
 interface CtaButtonProps {

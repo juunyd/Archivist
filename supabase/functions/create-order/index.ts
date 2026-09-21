@@ -29,11 +29,12 @@ Deno.serve(async (req) => {
   const buyerEmail = isEmail(body.email) ? body.email.trim().toLowerCase() : null;
 
   const db = adminClient();
+  // Draft books are not for sale, whatever the client asks for.
   const { data: book, error: bookError } = await db
     .from("books")
-    .select("slug, title, price_paise, currency, active")
+    .select("slug, title, price_paise, currency, status")
     .eq("slug", slug)
-    .eq("active", true)
+    .eq("status", "published")
     .maybeSingle<BookRow>();
 
   if (bookError) {
@@ -41,7 +42,7 @@ Deno.serve(async (req) => {
     return jsonError(req, 500, "server_error", "Could not start checkout. Please try again.");
   }
   if (!book) {
-    // Unknown and inactive slugs are the same answer, so probing tells nobody anything.
+    // Unknown and draft slugs are the same answer, so probing tells nobody anything.
     return jsonError(req, 404, "book_unavailable", "That book is not available for purchase.");
   }
 
