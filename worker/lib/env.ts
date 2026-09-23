@@ -56,7 +56,7 @@ export function siteUrl(env: WorkerEnv): string {
 }
 
 export function emailFromAddress(env: WorkerEnv): string {
-  return env.EMAIL_FROM || "Archivist <books@archivist.in>";
+  return env.EMAIL_FROM || "Archivist <noreply@archivist.in>";
 }
 
 export const supportEmail = "hello@archivist.in";

@@ -16,7 +16,7 @@
 	// same as they were Supabase Edge Function secrets before.
 	"vars": {
 		"SITE_URL": "https://archivist.in",
-		"EMAIL_FROM": "Archivist <books@archivist.in>"
+		"EMAIL_FROM": "Archivist <noreply@archivist.in>"
 	},
 	"d1_databases": [
 		{

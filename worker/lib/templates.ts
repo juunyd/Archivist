@@ -150,7 +150,7 @@ export function deliveryEmail(input: DeliveryEmailInput) {
         This link keeps working, so you can download the guide again whenever you need it.
       </p>
       <p style="margin:0;font-size:14px;line-height:1.6;color:#666666;">
-        Questions, or trouble opening your guide? Just reply to this email, or write to <a href="mailto:${supportEmail}" style="color:#111111;">${supportEmail}</a>.
+        Questions, or trouble opening your guide? Write to <a href="mailto:${supportEmail}" style="color:#111111;">${supportEmail}</a>.
       </p>`,
     }),
     text: [
@@ -170,7 +170,7 @@ export function deliveryEmail(input: DeliveryEmailInput) {
       ``,
       `This link keeps working, so you can download the guide again whenever you need it.`,
       ``,
-      `Questions, or trouble opening your guide? Just reply to this email, or write to ${supportEmail}.`,
+      `Questions, or trouble opening your guide? Write to ${supportEmail}.`,
       ``,
       `Archivist`,
       `archivist.in`,
@@ -225,7 +225,7 @@ export function downloadLinksEmail(items: DownloadLinkItem[]) {
         These links keep working — no need to request them again.
       </p>
       <p style="margin:0;font-size:14px;line-height:1.6;color:#666666;">
-        Questions, or trouble opening a guide? Just reply to this email, or write to <a href="mailto:${supportEmail}" style="color:#111111;">${supportEmail}</a>.
+        Questions, or trouble opening your guide? Write to <a href="mailto:${supportEmail}" style="color:#111111;">${supportEmail}</a>.
       </p>`,
     }),
     text: [
@@ -234,7 +234,7 @@ export function downloadLinksEmail(items: DownloadLinkItem[]) {
       ...itemsText,
       `These links keep working — no need to request them again.`,
       ``,
-      `Questions, or trouble opening a guide? Just reply to this email, or write to ${supportEmail}.`,
+      `Questions, or trouble opening your guide? Write to ${supportEmail}.`,
       ``,
       `Archivist`,
       `archivist.in`,
