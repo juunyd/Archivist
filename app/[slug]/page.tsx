@@ -6,7 +6,7 @@ import { Footer } from "@/components/Footer";
 import { CtaButton } from "@/components/CtaButton";
 import { FaqAccordion } from "@/components/FaqAccordion";
 import { StickyBuyBar } from "@/components/StickyBuyBar";
-import { getAllGuideSlugs, getGuideBySlug, guideDisclaimer } from "@/lib/guides";
+import { getAllGuideSlugs, getGuideBySlug } from "@/lib/guides";
 import styles from "./page.module.css";
 
 interface GuidePageProps {
@@ -135,10 +135,6 @@ export default async function GuidePage({ params }: GuidePageProps) {
 
           <CtaButton guide={guide} align="center" className={styles.insideCta} />
         </div>
-      </section>
-
-      <section className={styles.disclaimerSection}>
-        <p className={styles.disclaimerText}>{guideDisclaimer}</p>
       </section>
 
       <section id="faq" className={styles.faqSection}>

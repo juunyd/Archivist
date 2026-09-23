@@ -22,7 +22,7 @@
 
 .cover {
   width: 100%;
-  max-width: 320px;
+  max-width: 560px;
   height: auto;
   aspect-ratio: 16 / 9;
   object-fit: cover;
@@ -161,19 +161,6 @@
 
 .insideCta {
   margin: 36px auto 0;
-}
-
-.disclaimerSection {
-  padding: 28px 20px;
-  border-bottom: 1px solid var(--gray-300);
-}
-
-.disclaimerText {
-  max-width: 780px;
-  margin: 0 auto;
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--gray-600);
 }
 
 .faqSection {

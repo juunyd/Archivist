@@ -284,15 +284,6 @@ export const guides: Guide[] = [
   },
 ];
 
-/**
- * Shown on every guide page. This series covers trading recovery for
- * Indian retail traders — it is educational and emotional-support content
- * only, never financial advice, and never a tip, signal, or performance
- * claim of any kind.
- */
-export const guideDisclaimer =
-  "This guide is for general educational and emotional-support purposes only. It is not financial, legal, or medical advice, and contains no trading tips, signals, or performance claims. For decisions about your own money, consult a SEBI-registered investment adviser. If you are in distress, the guide includes support resources, including Tele-MANAS, India's free 24-hour mental health helpline (14416 / 1-800-891-4416).";
-
 // Fails the build loudly rather than letting a guide slug silently shadow
 // (or be shadowed by) a reserved top-level route once /books/[slug] is
 // flattened to /[slug].
