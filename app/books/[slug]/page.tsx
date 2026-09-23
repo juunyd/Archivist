@@ -6,7 +6,7 @@ import { Footer } from "@/components/Footer";
 import { CtaButton } from "@/components/CtaButton";
 import { FaqAccordion } from "@/components/FaqAccordion";
 import { StickyBuyBar } from "@/components/StickyBuyBar";
-import { getAllBookSlugs, getBookBySlug } from "@/lib/catalogue";
+import { getAllBookSlugs, getBookBySlug } from "@/lib/books";
 import styles from "./page.module.css";
 
 interface BookPageProps {
@@ -24,9 +24,8 @@ const footerLinks = [
   { href: "#faq", label: "FAQ" },
 ];
 
-export async function generateStaticParams() {
-  const slugs = await getAllBookSlugs();
-  return slugs.map((slug) => ({ slug }));
+export function generateStaticParams() {
+  return getAllBookSlugs().map((slug) => ({ slug }));
 }
 
 // No fallback: only slugs returned by generateStaticParams are built. There
@@ -35,7 +34,7 @@ export const dynamicParams = false;
 
 export async function generateMetadata({ params }: BookPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const book = await getBookBySlug(slug);
+  const book = getBookBySlug(slug);
   if (!book) return {};
 
   return {
@@ -44,7 +43,7 @@ export async function generateMetadata({ params }: BookPageProps): Promise<Metad
     openGraph: {
       title: book.title,
       description: book.subtitle,
-      images: book.coverUrl ? [{ url: book.coverUrl }] : undefined,
+      images: book.coverImage ? [{ url: book.coverImage }] : undefined,
     },
   };
 }
@@ -53,7 +52,7 @@ const SENTINEL_ID = "hero-sentinel";
 
 export default async function BookPage({ params }: BookPageProps) {
   const { slug } = await params;
-  const book = await getBookBySlug(slug);
+  const book = getBookBySlug(slug);
   if (!book) notFound();
 
   return (
@@ -64,9 +63,9 @@ export default async function BookPage({ params }: BookPageProps) {
         <div className={styles.heroInner}>
           <div className={styles.heroGrid}>
             <div className={styles.heroMedia}>
-              {book.coverUrl ? (
+              {book.coverImage ? (
                 <Image
-                  src={book.coverUrl}
+                  src={book.coverImage}
                   alt={book.title}
                   width={1200}
                   height={628}
@@ -84,6 +83,11 @@ export default async function BookPage({ params }: BookPageProps) {
 
               <div className={styles.priceRow}>
                 <span className={styles.price}>&#8377;{book.price}</span>
+                {book.compareAtPrice && (
+                  <span className={styles.compareAtPrice}>
+                    &#8377;{book.compareAtPrice}
+                  </span>
+                )}
               </div>
 
               <CtaButton book={book} />
@@ -103,7 +107,7 @@ export default async function BookPage({ params }: BookPageProps) {
       <section id="inside" className={styles.insideSection}>
         <div className={styles.insideInner}>
           <div className={styles.eyebrow}>The problem</div>
-          <p className={styles.problemStatement}>{book.description}</p>
+          <p className={styles.problemStatement}>{book.problemStatement}</p>
 
           <div className={styles.insideEyebrow}>What&apos;s inside</div>
           <div className={styles.insideList}>
@@ -114,7 +118,7 @@ export default async function BookPage({ params }: BookPageProps) {
                 </span>
                 <div>
                   <h3 className={styles.insideItemTitle}>{item.title}</h3>
-                  <p className={styles.insideItemBody}>{item.body}</p>
+                  <p className={styles.insideItemBody}>{item.description}</p>
                 </div>
               </div>
             ))}
