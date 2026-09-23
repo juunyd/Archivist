@@ -25,7 +25,7 @@ export default function TermsPage() {
       <p style={{ color: "var(--gray-800)" }}>Last updated: 21 September 2026</p>
       <p>
         These Terms &amp; Conditions (&ldquo;Terms&rdquo;) govern your use of
-        archivist.in (the &ldquo;Website&rdquo;) and your purchase of books from
+        archivist.in (the &ldquo;Website&rdquo;) and your purchase of guides from
         Archivist (&ldquo;we&rdquo;, &ldquo;us&rdquo;, &ldquo;our&rdquo;). By
         using the Website or making a purchase, you agree to these Terms. If you
         do not agree, please do not use the Website.
@@ -33,7 +33,7 @@ export default function TermsPage() {
 
       <h2 style={headingStyle}>About Archivist</h2>
       <p>
-        Archivist is an independent publisher of short digital books. Our books
+        Archivist is an independent publisher of short digital guides. Our guides
         are sold as downloadable PDF files through this Website.
       </p>
 
@@ -58,15 +58,15 @@ export default function TermsPage() {
 
       <h2 style={headingStyle}>Delivery</h2>
       <p>
-        After a successful payment, your book is delivered by email and is also
+        After a successful payment, your guide is delivered by email and is also
         available through a download link shown on the confirmation page.
         Download links may be used a limited number of times. If you do not
-        receive your book, please contact us at {support}.
+        receive your guide, please contact us at {support}.
       </p>
 
       <h2 style={headingStyle}>Refunds</h2>
       <p>
-        As our books are digital products delivered instantly, all purchases are
+        As our guides are digital products delivered instantly, all purchases are
         final and non-refundable, except in cases of duplicate payment or failed
         delivery. Please see our <a href="/refund-policy/">Refund Policy</a> for
         details.
@@ -74,15 +74,15 @@ export default function TermsPage() {
 
       <h2 style={headingStyle}>Licence and permitted use</h2>
       <p>
-        When you buy a book, you receive a personal, non-exclusive,
+        When you buy a guide, you receive a personal, non-exclusive,
         non-transferable licence to read and use it for your own purposes.
       </p>
       <p>You may not:</p>
       <ul>
-        <li>share, resell, distribute or publish the book or its download link;</li>
-        <li>upload the book to any website, file-sharing service or group;</li>
+        <li>share, resell, distribute or publish the guide or its download link;</li>
+        <li>upload the guide to any website, file-sharing service or group;</li>
         <li>
-          copy, reproduce or modify the book, in whole or in part, except for
+          copy, reproduce or modify the guide, in whole or in part, except for
           your personal use; or
         </li>
         <li>use the content to create competing products.</li>
@@ -94,14 +94,14 @@ export default function TermsPage() {
 
       <h2 style={headingStyle}>Intellectual property</h2>
       <p>
-        All content on the Website and in our books, including text, design,
+        All content on the Website and in our guides, including text, design,
         graphics and logos, is owned by Archivist or its licensors and is
         protected by copyright and other intellectual property laws.
       </p>
 
       <h2 style={headingStyle}>Information, not professional advice</h2>
       <p>
-        Our books are for general educational and informational purposes only.
+        Our guides are for general educational and informational purposes only.
         They do not constitute financial, legal, tax, investment or other
         professional advice. You are responsible for any decisions you make
         based on our content, and you should consult a qualified professional
@@ -112,8 +112,8 @@ export default function TermsPage() {
       <p>
         To the fullest extent permitted by law, Archivist will not be liable for
         any indirect, incidental or consequential loss arising from your use of
-        the Website or our books. Our total liability for any claim relating to
-        a purchase is limited to the amount you paid for that book.
+        the Website or our guides. Our total liability for any claim relating to
+        a purchase is limited to the amount you paid for that guide.
       </p>
 
       <h2 style={headingStyle}>Acceptable use</h2>

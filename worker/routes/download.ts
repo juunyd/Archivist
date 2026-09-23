@@ -9,7 +9,7 @@
 // reachable except through this route. Ports
 // the old Supabase Edge Functions.
 import { isUuid, jsonError, methodNotAllowed } from "../lib/http";
-import { claimDownload, getBookBySlug } from "../lib/orders";
+import { claimDownload, getGuideBySlug } from "../lib/orders";
 import type { WorkerEnv } from "../lib/env";
 
 const DOWNLOAD_LIMIT = 10;
@@ -50,16 +50,16 @@ export async function handleDownload(req: Request, env: WorkerEnv): Promise<Resp
     return jsonError(req, 404, "invalid_token", "This download link is not valid.");
   }
 
-  const book = await getBookBySlug(env, claim.book_slug);
-  if (!book || !book.pdf_path) {
+  const guide = await getGuideBySlug(env, claim.book_slug);
+  if (!guide || !guide.pdf_path) {
     console.error(`download: no pdf_path for ${claim.book_slug} (order ${claim.order_id})`);
-    return jsonError(req, 500, "file_unavailable", "The file for this book is temporarily unavailable. Please contact support.");
+    return jsonError(req, 500, "file_unavailable", "The file for this guide is temporarily unavailable. Please contact support.");
   }
 
-  const object = await env.BOOK_FILES.get(book.pdf_path);
+  const object = await env.BOOK_FILES.get(guide.pdf_path);
   if (!object) {
-    console.error(`download: R2 object missing at ${book.pdf_path} for order ${claim.order_id}`);
-    return jsonError(req, 500, "file_unavailable", "The file for this book is temporarily unavailable. Please contact support.");
+    console.error(`download: R2 object missing at ${guide.pdf_path} for order ${claim.order_id}`);
+    return jsonError(req, 500, "file_unavailable", "The file for this guide is temporarily unavailable. Please contact support.");
   }
 
   const filename = `${claim.book_slug}.pdf`;
@@ -76,8 +76,8 @@ export async function handleDownload(req: Request, env: WorkerEnv): Promise<Resp
   // (plain <a href> downloads ignore headers, so this only matters if the
   // page fetches this route with JS rather than just linking to it).
   headers.set("X-Downloads-Remaining", String(Math.max(DOWNLOAD_LIMIT - claim.download_count, 0)));
-  headers.set("X-Book-Title", encodeURIComponent(book.title));
-  headers.set("Access-Control-Expose-Headers", "X-Downloads-Remaining, X-Book-Title");
+  headers.set("X-Guide-Title", encodeURIComponent(guide.title));
+  headers.set("Access-Control-Expose-Headers", "X-Downloads-Remaining, X-Guide-Title");
 
   return new Response(object.body, { status: 200, headers });
 }

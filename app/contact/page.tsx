@@ -23,7 +23,7 @@ export default function ContactPage() {
   return (
     <LegalPage title="Contact">
       <p>
-        Questions about a book, your order or a download? Write to us and
+        Questions about a guide, your order or a download? Write to us and
         we&rsquo;ll get back to you.
       </p>
       <p>
@@ -36,12 +36,12 @@ export default function ContactPage() {
       <h2 style={headingStyle}>Before you write</h2>
       <ul>
         <li>
-          <strong>Didn&rsquo;t receive your book?</strong> Check your spam
+          <strong>Didn&rsquo;t receive your guide?</strong> Check your spam
           folder first, or request your download link again from the{" "}
           <a href="/download/">download page</a>.
         </li>
         <li>
-          <strong>Charged twice or book not delivered?</strong> Include your
+          <strong>Charged twice or guide not delivered?</strong> Include your
           order ID or the email you used at checkout, and we&rsquo;ll sort it
           out quickly.
         </li>

@@ -1,15 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { Book } from "@/lib/books";
+import type { Guide } from "@/lib/guides";
 import { CtaButton } from "./CtaButton";
 
 interface StickyBuyBarProps {
-  book: Pick<Book, "slug" | "title" | "price">;
+  guide: Pick<Guide, "slug" | "title" | "price">;
   sentinelId: string;
 }
 
-export function StickyBuyBar({ book, sentinelId }: StickyBuyBarProps) {
+export function StickyBuyBar({ guide, sentinelId }: StickyBuyBarProps) {
   const [visible, setVisible] = useState(false);
   const barRef = useRef<HTMLDivElement>(null);
 
@@ -38,8 +38,8 @@ export function StickyBuyBar({ book, sentinelId }: StickyBuyBarProps) {
       style={{ transform: visible ? "translateY(0)" : "translateY(130%)" }}
       aria-hidden={!visible}
     >
-      <span className="sticky-buy-bar__price">&#8377;{book.price}</span>
-      <CtaButton book={book} label="Get Instant Access" size="compact" className="sticky-buy-bar__cta" />
+      <span className="sticky-buy-bar__price">&#8377;{guide.price}</span>
+      <CtaButton guide={guide} label="Get Instant Access" size="compact" className="sticky-buy-bar__cta" />
     </div>
   );
 }

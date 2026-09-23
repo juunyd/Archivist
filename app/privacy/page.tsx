@@ -27,14 +27,14 @@ export default function PrivacyPage() {
         This Privacy Policy explains how Archivist (&ldquo;we&rdquo;,
         &ldquo;us&rdquo;, &ldquo;our&rdquo;) collects, uses and protects your
         information when you visit archivist.in (the &ldquo;Website&rdquo;) or
-        purchase our books. By using the Website, you agree to the practices
+        purchase our guides. By using the Website, you agree to the practices
         described in this policy.
       </p>
 
       <h2 style={headingStyle}>Information we collect</h2>
       <p>
         We collect information you provide to us, such as your email address
-        when you buy a book, and any details you share when you contact us.
+        when you buy a guide, and any details you share when you contact us.
       </p>
       <p>
         When you make a payment, our payment partner may collect your name,
@@ -49,7 +49,7 @@ export default function PrivacyPage() {
       <h2 style={headingStyle}>How we use your information</h2>
       <p>We use your information to:</p>
       <ul>
-        <li>process your order and deliver your book;</li>
+        <li>process your order and deliver your guide;</li>
         <li>send you your download link and order-related emails;</li>
         <li>respond to your questions and support requests;</li>
         <li>prevent fraud and misuse of our Website and products;</li>
@@ -57,7 +57,7 @@ export default function PrivacyPage() {
         <li>comply with legal and regulatory requirements.</li>
       </ul>
       <p>
-        We may also send you updates about new books. You can unsubscribe from
+        We may also send you updates about new guides. You can unsubscribe from
         these at any time.
       </p>
 
@@ -101,7 +101,7 @@ export default function PrivacyPage() {
 
       <h2 style={headingStyle}>Children</h2>
       <p>
-        Our Website and books are intended for users aged 18 and above. We do
+        Our Website and guides are intended for users aged 18 and above. We do
         not knowingly collect information from children.
       </p>
 

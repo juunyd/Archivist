@@ -4,7 +4,7 @@ import { FunctionError, postJson } from "./api";
  * Razorpay Checkout, start to finish.
  *
  * The browser never names a price: it sends a slug, the Worker looks up what
- * that book costs (in D1) and creates the Razorpay order, and the amount
+ * that guide costs (in D1) and creates the Razorpay order, and the amount
  * comes back only so Checkout can display it. Verification happens
  * server-side too — nothing here can mark an order paid.
  */
@@ -21,7 +21,7 @@ export type CheckoutPhase =
 export interface CheckoutOptions {
   /**
    * Captured before checkout opens. It is stored on the order immediately, so
-   * a book can still be delivered if Razorpay hands back no address, and it
+   * a guide can still be delivered if Razorpay hands back no address, and it
    * prefills the Checkout form so the buyer does not type it twice.
    */
   email?: string;
@@ -35,7 +35,7 @@ interface CreateOrderResponse {
   amount: number;
   currency: string;
   keyId: string;
-  bookTitle: string;
+  guideTitle: string;
 }
 
 interface RazorpaySuccess {
@@ -121,7 +121,7 @@ export async function startCheckout(
     amount: order.amount,
     currency: order.currency,
     name: "Archivist",
-    description: order.bookTitle,
+    description: order.guideTitle,
     // Only the address we just captured. Razorpay's own value still wins
     // afterwards if the buyer changes it on the payment screen.
     prefill: email ? { email } : undefined,

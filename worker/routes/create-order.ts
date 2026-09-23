@@ -1,11 +1,11 @@
-// POST /api/create-order  { slug, email? } -> { orderId, razorpayOrderId, amount, currency, keyId, bookTitle }
+// POST /api/create-order  { slug, email? } -> { orderId, razorpayOrderId, amount, currency, keyId, guideTitle }
 //
-// The client names a book, and optionally the address to deliver it to. It
+// The client names a guide, and optionally the address to deliver it to. It
 // never names a price: the amount comes from the books table and is copied
 // onto the order, and every later check compares Razorpay's numbers against
 // that stored copy. Ports the old Supabase Edge Functions.
 import { isEmail, isSlug, json, jsonError, methodNotAllowed, readJson } from "../lib/http";
-import { getPublishedBook, insertOrder } from "../lib/orders";
+import { getPublishedGuide, insertOrder } from "../lib/orders";
 import { createRazorpayOrder } from "../lib/razorpay";
 import { requireEnv, type WorkerEnv } from "../lib/env";
 
@@ -14,7 +14,7 @@ export async function handleCreateOrder(req: Request, env: WorkerEnv): Promise<R
 
   const body = await readJson<{ slug?: unknown; email?: unknown }>(req);
   if (!body || !isSlug(body.slug)) {
-    return jsonError(req, 400, "invalid_request", "A valid book slug is required.");
+    return jsonError(req, 400, "invalid_request", "A valid guide slug is required.");
   }
   const slug = body.slug;
 
@@ -25,17 +25,17 @@ export async function handleCreateOrder(req: Request, env: WorkerEnv): Promise<R
   }
   const buyerEmail = isEmail(body.email) ? body.email.trim().toLowerCase() : null;
 
-  // Draft books are not for sale, whatever the client asks for.
-  let book;
+  // Draft guides are not for sale, whatever the client asks for.
+  let guide;
   try {
-    book = await getPublishedBook(env, slug);
+    guide = await getPublishedGuide(env, slug);
   } catch (error) {
-    console.error("create-order: book lookup failed", error);
+    console.error("create-order: guide lookup failed", error);
     return jsonError(req, 500, "server_error", "Could not start checkout. Please try again.");
   }
-  if (!book) {
+  if (!guide) {
     // Unknown and draft slugs are the same answer, so probing tells nobody anything.
-    return jsonError(req, 404, "book_unavailable", "That book is not available for purchase.");
+    return jsonError(req, 404, "guide_unavailable", "That guide is not available for purchase.");
   }
 
   // Our id first, so it can be the Razorpay receipt and travel in the notes.
@@ -44,10 +44,10 @@ export async function handleCreateOrder(req: Request, env: WorkerEnv): Promise<R
   let razorpayOrder;
   try {
     razorpayOrder = await createRazorpayOrder(env, {
-      amountPaise: book.price_paise,
-      currency: book.currency,
+      amountPaise: guide.price_paise,
+      currency: guide.currency,
       receipt: orderId,
-      notes: { book_slug: book.slug, order_id: orderId },
+      notes: { guide_slug: guide.slug, order_id: orderId },
     });
   } catch (error) {
     console.error("create-order: Razorpay order creation failed", error);
@@ -57,9 +57,9 @@ export async function handleCreateOrder(req: Request, env: WorkerEnv): Promise<R
   try {
     await insertOrder(env, {
       id: orderId,
-      bookSlug: book.slug,
-      amountPaise: book.price_paise,
-      currency: book.currency,
+      guideSlug: guide.slug,
+      amountPaise: guide.price_paise,
+      currency: guide.currency,
       razorpayOrderId: razorpayOrder.id,
       downloadToken: crypto.randomUUID(),
       buyerEmail,
@@ -74,9 +74,9 @@ export async function handleCreateOrder(req: Request, env: WorkerEnv): Promise<R
   return json(req, {
     orderId,
     razorpayOrderId: razorpayOrder.id,
-    amount: book.price_paise,
-    currency: book.currency,
+    amount: guide.price_paise,
+    currency: guide.currency,
     keyId: requireEnv(env, "RAZORPAY_KEY_ID"),
-    bookTitle: book.title,
+    guideTitle: guide.title,
   });
 }

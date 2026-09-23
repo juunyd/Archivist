@@ -1,13 +1,13 @@
-// GET /api/order-status?order_id=<uuid> -> { status, maskedEmail, bookTitle, downloadUrl? }
+// GET /api/order-status?order_id=<uuid> -> { status, maskedEmail, guideTitle, downloadUrl? }
 //
 // The thank-you page polls this with nothing but an order id, so it returns
 // the bare minimum: no amount, no payment id, no full email address.
 //
 // downloadUrl is included only once the order is paid, so the buyer can get
-// their book straight from the confirmation page instead of waiting on email.
+// their guide straight from the confirmation page instead of waiting on email.
 // That does make the order id in the thank-you URL a credential for the
 // download — it is a v4 uuid, unguessable and never shown to anyone but the
-// buyer, but it is worth knowing that forwarding that URL shares the book.
+// buyer, but it is worth knowing that forwarding that URL shares the guide.
 // Ports the old Supabase Edge Functions.
 import { isUuid, json, jsonError, maskEmail, methodNotAllowed } from "../lib/http";
 import { downloadUrlFor } from "../lib/links";
@@ -17,7 +17,7 @@ interface OrderStatusRow {
   status: string;
   buyer_email: string | null;
   download_token: string;
-  book_title: string | null;
+  guide_title: string | null;
 }
 
 export async function handleOrderStatus(req: Request, env: WorkerEnv): Promise<Response> {
@@ -35,7 +35,7 @@ export async function handleOrderStatus(req: Request, env: WorkerEnv): Promise<R
         `SELECT o.status AS status,
                 o.buyer_email AS buyer_email,
                 o.download_token AS download_token,
-                b.title AS book_title
+                b.title AS guide_title
            FROM orders o
            LEFT JOIN books b ON b.slug = o.book_slug
           WHERE o.id = ?1`,
@@ -54,7 +54,7 @@ export async function handleOrderStatus(req: Request, env: WorkerEnv): Promise<R
   return json(req, {
     status: data.status,
     maskedEmail: maskEmail(data.buyer_email),
-    bookTitle: data.book_title,
+    guideTitle: data.guide_title,
     downloadUrl: data.status === "paid" ? downloadUrlFor(env, data.download_token) : null,
   });
 }

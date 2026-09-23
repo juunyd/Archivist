@@ -18,7 +18,7 @@ const footerLinks = [
 
 export const metadata: Metadata = {
   title: "Download",
-  description: "Download your Archivist book.",
+  description: "Download your Archivist guide.",
   // A download link should never end up in a search index.
   robots: { index: false, follow: false },
 };

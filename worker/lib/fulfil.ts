@@ -51,13 +51,13 @@ export async function fulfilOrder(env: WorkerEnv, orderId: string): Promise<Fulf
     return { status: "email_failed" };
   }
 
-  const book = await env.DB
+  const guide = await env.DB
     .prepare(`SELECT title FROM books WHERE slug = ?1`)
     .bind(claimed.book_slug)
     .first<{ title: string }>();
 
   const message = deliveryEmail({
-    bookTitle: book?.title ?? "your Archivist book",
+    guideTitle: guide?.title ?? "your Archivist guide",
     downloadUrl: downloadUrlFor(env, claimed.download_token),
   });
 

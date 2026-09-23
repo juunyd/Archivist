@@ -1,5 +1,5 @@
 /**
- * Every book on the site, and the only place the marketing copy lives.
+ * Every guide on the site, and the only place the marketing copy lives.
  *
  * PRICES ARE DUPLICATED ON PURPOSE, AND MUST BE KEPT IN SYNC BY HAND.
  *
@@ -21,8 +21,13 @@
  *      or by editing migrations/0004_seed_books.sql and applying a new
  *      migration — see that file's own header.
  *
- * The same goes for adding or removing a book: a slug that is not in the
+ * The same goes for adding or removing a guide: a slug that is not in the
  * table with status = 'published' renders here but cannot be bought.
+ *
+ * "Guide" is the product name everywhere a visitor sees it. D1's table is
+ * still `books` (column `book_slug` on `orders`), and R2's bucket is still
+ * `archivist-book-files` — those were kept as-is during the rename so
+ * migrations and deployed infra didn't need to move too.
  */
 
 export interface FaqItem {
@@ -35,7 +40,7 @@ export interface WhatsInsideItem {
   description: string;
 }
 
-export interface Book {
+export interface Guide {
   slug: string;
   no: string;
   title: string;
@@ -44,7 +49,7 @@ export interface Book {
   problemStatement: string;
   /** Rupees, shown to the visitor. The charge comes from books.price_paise — see the file header. */
   price: number;
-  /** Only set this when the book genuinely has a "was" price to strike through. */
+  /** Only set this when the guide genuinely has a "was" price to strike through. */
   compareAtPrice?: number;
   pageCount: number;
   coverImage?: string;
@@ -52,7 +57,23 @@ export interface Book {
   faqs: FaqItem[];
 }
 
-export const books: Book[] = [
+/**
+ * Paths that a guide slug must never collide with — everything else that
+ * lives at the top level of the site. Checked below so a bad slug fails the
+ * build loudly instead of silently shadowing (or being shadowed by) one of
+ * these routes.
+ */
+export const RESERVED_TOP_LEVEL_PATHS = [
+  "terms",
+  "privacy",
+  "refund-policy",
+  "contact",
+  "download",
+  "thank-you",
+  "api",
+];
+
+export const guides: Guide[] = [
   {
     slug: "signal-discipline",
     no: "No. 07",
@@ -97,7 +118,7 @@ export const books: Book[] = [
       {
         question: "What if I want a refund?",
         answer:
-          "Digital files are delivered instantly, so purchases are not refundable. If you were charged twice, or the book never arrived, write to hello@archivist.in and we will refund you in full.",
+          "Digital files are delivered instantly, so purchases are not refundable. If you were charged twice, or the guide never arrived, write to hello@archivist.in and we will refund you in full.",
       },
       {
         question: "Is it a one-time payment?",
@@ -154,7 +175,7 @@ export const books: Book[] = [
       {
         question: "What if I want a refund?",
         answer:
-          "Digital files are delivered instantly, so purchases are not refundable. If you were charged twice, or the book never arrived, write to hello@archivist.in and we will refund you in full.",
+          "Digital files are delivered instantly, so purchases are not refundable. If you were charged twice, or the guide never arrived, write to hello@archivist.in and we will refund you in full.",
       },
       {
         question: "Is it a one-time payment?",
@@ -211,7 +232,7 @@ export const books: Book[] = [
       {
         question: "What if I want a refund?",
         answer:
-          "Digital files are delivered instantly, so purchases are not refundable. If you were charged twice, or the book never arrived, write to hello@archivist.in and we will refund you in full.",
+          "Digital files are delivered instantly, so purchases are not refundable. If you were charged twice, or the guide never arrived, write to hello@archivist.in and we will refund you in full.",
       },
       {
         question: "Is it a one-time payment?",
@@ -267,7 +288,7 @@ export const books: Book[] = [
       {
         question: "What if I want a refund?",
         answer:
-          "Digital files are delivered instantly, so purchases are not refundable. If you were charged twice, or the book never arrived, write to hello@archivist.in and we will refund you in full.",
+          "Digital files are delivered instantly, so purchases are not refundable. If you were charged twice, or the guide never arrived, write to hello@archivist.in and we will refund you in full.",
       },
       {
         question: "Is it a one-time payment?",
@@ -283,10 +304,21 @@ export const books: Book[] = [
   },
 ];
 
-export function getBookBySlug(slug: string): Book | undefined {
-  return books.find((book) => book.slug === slug);
+// Fails the build loudly rather than letting a guide slug silently shadow
+// (or be shadowed by) a reserved top-level route once /books/[slug] is
+// flattened to /[slug].
+for (const guide of guides) {
+  if ((RESERVED_TOP_LEVEL_PATHS as string[]).includes(guide.slug)) {
+    throw new Error(
+      `Guide slug "${guide.slug}" collides with a reserved top-level path (${RESERVED_TOP_LEVEL_PATHS.join(", ")}). Rename the guide's slug.`,
+    );
+  }
 }
 
-export function getAllBookSlugs(): string[] {
-  return books.map((book) => book.slug);
+export function getGuideBySlug(slug: string): Guide | undefined {
+  return guides.find((guide) => guide.slug === slug);
+}
+
+export function getAllGuideSlugs(): string[] {
+  return guides.map((guide) => guide.slug);
 }

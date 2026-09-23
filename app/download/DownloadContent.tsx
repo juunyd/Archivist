@@ -7,7 +7,7 @@ import { siteConfig } from "@/lib/site";
 import { FunctionError, postJson } from "@/lib/api";
 
 interface DownloadReady {
-  bookTitle: string;
+  guideTitle: string;
   fileName: string;
   objectUrl: string;
   downloadsRemaining: number;
@@ -75,7 +75,7 @@ export function DownloadContent() {
       }
 
       const remainingHeader = response.headers.get("X-Downloads-Remaining");
-      const titleHeader = response.headers.get("X-Book-Title");
+      const titleHeader = response.headers.get("X-Guide-Title");
       const dispositionMatch = FILENAME_FROM_DISPOSITION.exec(
         response.headers.get("Content-Disposition") ?? "",
       );
@@ -87,8 +87,8 @@ export function DownloadContent() {
       objectUrlRef.current = objectUrl;
 
       setDownload({
-        bookTitle: titleHeader ? decodeURIComponent(titleHeader) : "your Archivist book",
-        fileName: dispositionMatch?.[1] ?? "book.pdf",
+        guideTitle: titleHeader ? decodeURIComponent(titleHeader) : "your Archivist guide",
+        fileName: dispositionMatch?.[1] ?? "guide.pdf",
         objectUrl,
         downloadsRemaining: remainingHeader ? Number(remainingHeader) : 0,
       });
@@ -120,8 +120,8 @@ export function DownloadContent() {
 
       {view === "ready" && download && (
         <>
-          <p className="download__eyebrow">Your book</p>
-          <h2 className="download__title">{download.bookTitle}</h2>
+          <p className="download__eyebrow">Your guide</p>
+          <h2 className="download__title">{download.guideTitle}</h2>
           {/*
             A blob: URL, not a redirect to the Worker — the file is already
             in memory, so the browser's own `download` attribute (which only

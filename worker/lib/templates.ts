@@ -26,7 +26,7 @@ const shell = (bodyHtml: string): string => `<!doctype html>
           <tr><td style="padding-top:28px;">${bodyHtml}</td></tr>
           <tr>
             <td style="padding-top:36px;margin-top:36px;border-top:1px solid #e5e5e5;font-size:13px;line-height:1.6;color:#666666;">
-              Trouble opening your book, or charged twice? Reply to this email or write to
+              Trouble opening your guide, or charged twice? Reply to this email or write to
               <a href="mailto:${supportEmail}" style="color:#111111;">${supportEmail}</a>.
             </td>
           </tr>
@@ -42,10 +42,10 @@ const button = (href: string, label: string): string =>
 
 const P = `margin:0 0 16px;font-size:16px;line-height:1.6;color:#111111;`;
 
-export function deliveryEmail(input: { bookTitle: string; downloadUrl: string }) {
-  const title = escapeHtml(input.bookTitle);
+export function deliveryEmail(input: { guideTitle: string; downloadUrl: string }) {
+  const title = escapeHtml(input.guideTitle);
   return {
-    subject: `Your copy of ${input.bookTitle}`,
+    subject: `Your copy of ${input.guideTitle}`,
     html: shell(`
       <p style="${P}">Your copy of <strong>${title}</strong> is ready.</p>
       <p style="margin:0 0 28px;font-size:16px;line-height:1.6;color:#111111;">Download the PDF from the link below.</p>
@@ -54,14 +54,14 @@ export function deliveryEmail(input: { bookTitle: string; downloadUrl: string })
         Keep this email — the link works again whenever you need it, on any device.
       </p>`),
     text: [
-      `Your copy of ${input.bookTitle} is ready.`,
+      `Your copy of ${input.guideTitle} is ready.`,
       ``,
       `Download the PDF here:`,
       input.downloadUrl,
       ``,
       `Keep this email — the link works again whenever you need it, on any device.`,
       ``,
-      `Trouble opening your book, or charged twice? Reply to this email or write to ${supportEmail}.`,
+      `Trouble opening your guide, or charged twice? Reply to this email or write to ${supportEmail}.`,
       ``,
       `Archivist`,
     ].join("\n"),
@@ -69,23 +69,23 @@ export function deliveryEmail(input: { bookTitle: string; downloadUrl: string })
 }
 
 export function downloadLinksEmail(
-  items: { bookTitle: string; downloadUrl: string }[],
+  items: { guideTitle: string; downloadUrl: string }[],
 ) {
   const rows = items.map((item) => `
-      <p style="margin:0 0 10px;font-size:16px;line-height:1.5;"><strong>${escapeHtml(item.bookTitle)}</strong></p>
+      <p style="margin:0 0 10px;font-size:16px;line-height:1.5;"><strong>${escapeHtml(item.guideTitle)}</strong></p>
       <p style="margin:0 0 28px;">${button(item.downloadUrl, "Download the PDF")}</p>`).join("");
   return {
     subject: items.length === 1 ? "Your Archivist download link" : "Your Archivist download links",
     html: shell(`
-      <p style="${P}">Here ${items.length === 1 ? "is the book" : "are the books"} you have bought from Archivist.</p>
+      <p style="${P}">Here ${items.length === 1 ? "is the guide" : "are the guides"} you have bought from Archivist.</p>
       <div style="margin-top:28px;">${rows}</div>
       <p style="margin:0;font-size:14px;line-height:1.6;color:#666666;">
         These links keep working — no need to request them again.
       </p>`),
     text: [
-      `Here ${items.length === 1 ? "is the book" : "are the books"} you have bought from Archivist.`,
+      `Here ${items.length === 1 ? "is the guide" : "are the guides"} you have bought from Archivist.`,
       ``,
-      ...items.flatMap((item) => [item.bookTitle, item.downloadUrl, ``]),
+      ...items.flatMap((item) => [item.guideTitle, item.downloadUrl, ``]),
       `These links keep working — no need to request them again.`,
       ``,
       `Questions? Write to ${supportEmail}.`,

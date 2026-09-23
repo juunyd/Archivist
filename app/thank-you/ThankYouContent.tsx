@@ -9,7 +9,7 @@ import { getJson } from "@/lib/api";
 interface OrderStatusResponse {
   status: "created" | "paid" | "failed" | "refunded";
   maskedEmail: string | null;
-  bookTitle: string | null;
+  guideTitle: string | null;
   /** Present once the order is paid: the same link that goes out by email. */
   downloadUrl: string | null;
 }
@@ -108,16 +108,16 @@ export function ThankYouContent() {
         <>
           <p className="thank-you__body">
             Payment confirmed
-            {order?.bookTitle ? <> for <strong>{order.bookTitle}</strong></> : null}.
+            {order?.guideTitle ? <> for <strong>{order.guideTitle}</strong></> : null}.
             Your download link is on its way
             {order?.maskedEmail ? <> to {order.maskedEmail}</> : null}, and you
             can go straight to it here. The link keeps working, so you can
-            download the book again whenever you need it.
+            download the guide again whenever you need it.
           </p>
           {order?.downloadUrl && (
             <p className="thank-you__cta-row">
               <a className="cta-button thank-you__cta" href={order.downloadUrl}>
-                <span>Download your book</span>
+                <span>Download your guide</span>
                 <span className="cta-button__arrow" aria-hidden="true">
                   →
                 </span>
@@ -143,7 +143,7 @@ export function ThankYouContent() {
       {view === "failed" && (
         <p className="thank-you__body">
           This payment did not go through, so you have not been charged. You can
-          try again from the book&apos;s page, or write to {support} if you
+          try again from the guide&apos;s page, or write to {support} if you
           think this is wrong.
         </p>
       )}

@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { Book } from "@/lib/books";
+import type { Guide } from "@/lib/guides";
 import { startCheckout, type CheckoutPhase } from "@/lib/checkout";
 
 interface CtaButtonProps {
-  book: Pick<Book, "slug" | "title" | "price">;
+  guide: Pick<Guide, "slug" | "title" | "price">;
   label?: string;
   size?: "default" | "compact";
   /** Match however the surrounding section aligns its button. */
@@ -33,7 +33,7 @@ const EMAIL = /^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/;
  * no second screen — the form replaces the button in place.
  */
 export function CtaButton({
-  book,
+  guide,
   label,
   size = "default",
   align = "start",
@@ -62,13 +62,13 @@ export function CtaButton({
 
     const value = email.trim();
     if (!EMAIL.test(value)) {
-      setError("Enter a valid email address so we can send your book.");
+      setError("Enter a valid email address so we can send your guide.");
       inputRef.current?.focus();
       return;
     }
 
     setError(null);
-    void startCheckout(book.slug, {
+    void startCheckout(guide.slug, {
       email: value,
       onPhase: setPhase,
       onError: setError,
@@ -103,7 +103,7 @@ export function CtaButton({
     return (
       <div className={wrapClass}>
         <button type="button" onClick={openForm} className={buttonClass}>
-          <span>{label ?? `Get Instant Access - ₹${book.price}`}</span>
+          <span>{label ?? `Get Instant Access - ₹${guide.price}`}</span>
           <span className="cta-button__arrow" aria-hidden="true">
             →
           </span>
@@ -115,12 +115,12 @@ export function CtaButton({
   return (
     <div className={wrapClass}>
       <form className={formClass} onSubmit={submit} onKeyDown={onKeyDown}>
-        <label className="visually-hidden" htmlFor={`buy-email-${book.slug}`}>
+        <label className="visually-hidden" htmlFor={`buy-email-${guide.slug}`}>
           Email address
         </label>
         <input
           ref={inputRef}
-          id={`buy-email-${book.slug}`}
+          id={`buy-email-${guide.slug}`}
           className="checkout-email__input"
           type="email"
           name="email"
@@ -133,7 +133,7 @@ export function CtaButton({
           required
         />
         <button type="submit" className={buttonClass} disabled={busy} aria-busy={busy}>
-          <span>{busy ? BUSY_LABEL[phase] : `Continue to payment - ₹${book.price}`}</span>
+          <span>{busy ? BUSY_LABEL[phase] : `Continue to payment - ₹${guide.price}`}</span>
           {!busy && (
             <span className="cta-button__arrow" aria-hidden="true">
               →
@@ -141,7 +141,7 @@ export function CtaButton({
           )}
         </button>
         <p className="checkout-email__note">
-          We&apos;ll email <strong>{book.title}</strong> here the moment your
+          We&apos;ll email <strong>{guide.title}</strong> here the moment your
           payment clears.
         </p>
       </form>

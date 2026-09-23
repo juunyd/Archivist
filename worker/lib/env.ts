@@ -13,6 +13,8 @@
  */
 export interface WorkerEnv {
   DB: D1Database;
+  // Binding name matches the R2 bucket name (archivist-book-files), kept
+  // as-is on the rename to "guide" — see the note in lib/guides.ts.
   BOOK_FILES: R2Bucket;
   ASSETS: Fetcher;
 

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { BookCard } from "@/components/BookCard";
+import { GuideCard } from "@/components/GuideCard";
 import { FaqAccordion } from "@/components/FaqAccordion";
-import { books } from "@/lib/books";
+import { guides } from "@/lib/guides";
 import { editorialRules, homepageFaqs, siteConfig } from "@/lib/site";
 import styles from "./page.module.css";
 
@@ -20,10 +20,10 @@ const footerLinks = [
 ];
 
 export const metadata: Metadata = {
-  title: "Archivist — Short, research-backed digital books",
+  title: "Archivist — Short, research-backed digital guides",
   description: siteConfig.description,
   openGraph: {
-    title: "Archivist — Short, research-backed digital books",
+    title: "Archivist — Short, research-backed digital guides",
     description: siteConfig.description,
     url: siteConfig.url,
   },
@@ -42,7 +42,7 @@ export default function HomePage() {
         </h1>
         <div className={styles.heroSub}>
           <span className={styles.heroSubText}>
-            One question per book. Read it in a sitting.
+            One question per guide. Read it in a sitting.
           </span>
         </div>
       </section>
@@ -55,8 +55,8 @@ export default function HomePage() {
           </div>
         </div>
         <div className={styles.shelf}>
-          {books.map((book) => (
-            <BookCard key={book.slug} book={book} />
+          {guides.map((guide) => (
+            <GuideCard key={guide.slug} guide={guide} />
           ))}
         </div>
       </section>
@@ -64,9 +64,9 @@ export default function HomePage() {
       <section id="standard" className={styles.standardSection}>
         <div className={styles.standardGrid}>
           <div>
-            <div className={styles.standardEyebrow}>What&apos;s inside every book</div>
+            <div className={styles.standardEyebrow}>What&apos;s inside every guide</div>
             <p className={styles.standardLede}>
-              Every Archivist book follows the same format.
+              Every Archivist guide follows the same format.
             </p>
           </div>
           <div>

@@ -13,11 +13,23 @@ import { handleOrderStatus } from "./routes/order-status";
 import { handleDownload } from "./routes/download";
 import { handleResendLink } from "./routes/resend-link";
 
+// Guide pages used to live at /books/[slug]/ and were flattened to /[slug]/.
+// Redirected here (not via next.config.js redirects, which static export
+// does not support) so old links and search results keep working instead of
+// 404ing.
+const OLD_BOOK_PATH = /^\/books\/([^/]+)\/?$/;
+
 export default {
   async fetch(request: Request, env: WorkerEnv, _ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
 
     if (!url.pathname.startsWith("/api/")) {
+      const oldBookMatch = OLD_BOOK_PATH.exec(url.pathname);
+      if (oldBookMatch) {
+        url.pathname = `/${oldBookMatch[1]}/`;
+        return Response.redirect(url.toString(), 308);
+      }
+
       // Static export: pages, /images/*, _next/*, etc.
       return env.ASSETS.fetch(request);
     }

@@ -1,7 +1,11 @@
 import type { WorkerEnv } from "./env";
 import { isPaidStatus, type RazorpayPayment } from "./razorpay";
 
-export interface BookRow {
+// "Guide" is the product name everywhere a visitor sees it, but D1's table
+// is still `books` and `orders.book_slug` — kept as-is on purpose (see
+// lib/guides.ts). GuideRow/getGuideBySlug etc. below just wrap that table
+// under the name the rest of the app now uses.
+export interface GuideRow {
   slug: string;
   title: string;
   price_paise: number;
@@ -12,6 +16,7 @@ export interface BookRow {
 
 export interface OrderRow {
   id: string;
+  /** D1's `orders.book_slug` column — not renamed, see the note above GuideRow. */
   book_slug: string;
   amount_paise: number;
   currency: string;
@@ -30,7 +35,7 @@ export interface OrderRow {
 
 const nowIso = () => new Date().toISOString();
 
-export async function getPublishedBook(env: WorkerEnv, slug: string): Promise<BookRow | null> {
+export async function getPublishedGuide(env: WorkerEnv, slug: string): Promise<GuideRow | null> {
   return env.DB
     .prepare(
       `SELECT slug, title, price_paise, currency, pdf_path, status
@@ -38,21 +43,21 @@ export async function getPublishedBook(env: WorkerEnv, slug: string): Promise<Bo
         WHERE slug = ?1 AND status = 'published'`,
     )
     .bind(slug)
-    .first<BookRow>();
+    .first<GuideRow>();
 }
 
-export async function getBookBySlug(env: WorkerEnv, slug: string): Promise<BookRow | null> {
+export async function getGuideBySlug(env: WorkerEnv, slug: string): Promise<GuideRow | null> {
   return env.DB
     .prepare(`SELECT slug, title, price_paise, currency, pdf_path, status FROM books WHERE slug = ?1`)
     .bind(slug)
-    .first<BookRow>();
+    .first<GuideRow>();
 }
 
 export async function insertOrder(
   env: WorkerEnv,
   input: {
     id: string;
-    bookSlug: string;
+    guideSlug: string;
     amountPaise: number;
     currency: string;
     razorpayOrderId: string;
@@ -68,7 +73,7 @@ export async function insertOrder(
     )
     .bind(
       input.id,
-      input.bookSlug,
+      input.guideSlug,
       input.amountPaise,
       input.currency,
       input.razorpayOrderId,
@@ -141,7 +146,7 @@ export function checkPaymentMatchesOrder(
  * Razorpay's email wins when it has one, since that is the address the buyer
  * confirmed at the payment step. When it has none, the address captured before
  * checkout stays put (COALESCE) rather than being blanked — that address is
- * the only way to deliver the book.
+ * the only way to deliver the guide.
  */
 export async function markOrderPaid(
   env: WorkerEnv,
@@ -206,14 +211,14 @@ export async function claimDownload(
     .first<DownloadClaim>();
 }
 
-export interface PurchasedBook {
+export interface PurchasedGuide {
   book_slug: string;
-  book_title: string;
+  guide_title: string;
   download_token: string;
 }
 
 /**
- * Looks up what an address has bought, one row per book (the newest paid
+ * Looks up what an address has bought, one row per guide (the newest paid
  * order for each). SQLite has no DISTINCT ON, so this uses ROW_NUMBER()
  * partitioned by book_slug instead — same result as the old Postgres
  * function. Matching happens on lower(buyer_email) so an address containing
@@ -222,12 +227,12 @@ export interface PurchasedBook {
  * this was never actually exploitable, but the lower() match itself is kept
  * for parity with the old, audited behaviour).
  */
-export async function paidOrdersForEmail(env: WorkerEnv, email: string): Promise<PurchasedBook[]> {
+export async function paidOrdersForEmail(env: WorkerEnv, email: string): Promise<PurchasedGuide[]> {
   const result = await env.DB
     .prepare(
-      `SELECT book_slug, book_title, download_token FROM (
+      `SELECT book_slug, guide_title, download_token FROM (
          SELECT o.book_slug AS book_slug,
-                b.title AS book_title,
+                b.title AS guide_title,
                 o.download_token AS download_token,
                 ROW_NUMBER() OVER (
                   PARTITION BY o.book_slug
@@ -242,7 +247,7 @@ export async function paidOrdersForEmail(env: WorkerEnv, email: string): Promise
        ORDER BY book_slug`,
     )
     .bind(email)
-    .all<PurchasedBook>();
+    .all<PurchasedGuide>();
 
   return result.results ?? [];
 }

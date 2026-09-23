@@ -1,7 +1,7 @@
 export const siteConfig = {
   name: "Archivist",
   description:
-    "Short, research-backed digital books. One question per book, read in a sitting.",
+    "Short, research-backed digital guides. One question per guide, read in a sitting.",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://archivist.in",
   contactEmail: "hello@archivist.in",
 };
@@ -26,19 +26,19 @@ export const editorialRules = [
 
 export const homepageFaqs = [
   {
-    question: "What is an Archivist book?",
+    question: "What is an Archivist guide?",
     answer:
-      "A short, focused digital book built around one specific problem. Around 40 to 60 pages, written to be read in a single sitting.",
+      "A short, focused digital guide built around one specific problem. Around 40 to 60 pages, written to be read in a single sitting.",
   },
   {
-    question: "What format are the books?",
+    question: "What format are the guides?",
     answer:
       "A print-ready PDF, delivered to your email within a minute of checkout. You can read it on a phone, laptop or tablet, or print it.",
   },
   {
-    question: "How do I get the book after paying?",
+    question: "How do I get the guide after paying?",
     answer:
-      "The download link is emailed to you immediately, and also shown on the confirmation page. The link keeps working, so you can download the book again whenever you need it.",
+      "The download link is emailed to you immediately, and also shown on the confirmation page. The link keeps working, so you can download the guide again whenever you need it.",
   },
   {
     question: "I didn't receive my email. What now?",
@@ -48,16 +48,16 @@ export const homepageFaqs = [
   {
     question: "Can I get a refund?",
     answer:
-      "Because the books are delivered instantly as digital files, purchases are not refundable. If you were charged twice, or the book was never delivered, write to hello@archivist.in and we'll refund you in full.",
+      "Because the guides are delivered instantly as digital files, purchases are not refundable. If you were charged twice, or the guide was never delivered, write to hello@archivist.in and we'll refund you in full.",
   },
   {
-    question: "Do I get future updates of the book?",
+    question: "Do I get future updates of the guide?",
     answer:
-      "Yes. If a book is revised, the same download link gives you the latest edition at no extra cost.",
+      "Yes. If a guide is revised, the same download link gives you the latest edition at no extra cost.",
   },
   {
-    question: "Who writes the books?",
+    question: "Who writes the guides?",
     answer:
-      "Archivist is an independent Indian publisher. Each book is researched and written in-house, with sources named in the text.",
+      "Archivist is an independent Indian publisher. Each guide is researched and written in-house, with sources named in the text.",
   },
 ];

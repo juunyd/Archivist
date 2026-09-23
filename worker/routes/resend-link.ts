@@ -15,7 +15,7 @@ import type { WorkerEnv } from "../lib/env";
 const GENERIC_REPLY = {
   ok: true,
   message:
-    "If that email has bought a book from Archivist, the download links are on their way. Check your spam folder if it does not arrive in a few minutes.",
+    "If that email has bought a guide from Archivist, the download links are on their way. Check your spam folder if it does not arrive in a few minutes.",
 };
 
 export async function handleResendLink(req: Request, env: WorkerEnv): Promise<Response> {
@@ -38,15 +38,15 @@ export async function handleResendLink(req: Request, env: WorkerEnv): Promise<Re
       return json(req, GENERIC_REPLY);
     }
 
-    const books = await paidOrdersForEmail(env, email);
-    if (books.length === 0) {
+    const guides = await paidOrdersForEmail(env, email);
+    if (guides.length === 0) {
       return json(req, GENERIC_REPLY);
     }
 
     const message = downloadLinksEmail(
-      books.map((book) => ({
-        bookTitle: book.book_title,
-        downloadUrl: downloadUrlFor(env, book.download_token),
+      guides.map((guide) => ({
+        guideTitle: guide.guide_title,
+        downloadUrl: downloadUrlFor(env, guide.download_token),
       })),
     );
 

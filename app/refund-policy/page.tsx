@@ -15,7 +15,7 @@ export default function RefundPolicyPage() {
   return (
     <LegalPage title="Refund policy">
       <p>
-        Archivist sells digital books. Every purchase is delivered instantly as
+        Archivist sells digital guides. Every purchase is delivered instantly as
         a download link, which means the file is in your hands the moment the
         payment clears and cannot be returned. For that reason,{" "}
         <strong>purchases are not refundable</strong>.
@@ -23,11 +23,11 @@ export default function RefundPolicyPage() {
       <p>There are two exceptions, and we honour both in full:</p>
       <ul>
         <li>
-          <strong>You were charged more than once</strong> for the same book.
+          <strong>You were charged more than once</strong> for the same guide.
           We refund the duplicate payment.
         </li>
         <li>
-          <strong>The book was never delivered.</strong> If the download link
+          <strong>The guide was never delivered.</strong> If the download link
           never arrived and never worked, we refund the purchase.
         </li>
       </ul>
