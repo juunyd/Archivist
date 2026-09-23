@@ -1,27 +1,39 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { siteConfig } from "@/lib/site";
-import { getFunction, postFunction } from "@/lib/supabase-functions";
+import { FunctionError, postJson } from "@/lib/api";
 
-interface DownloadResponse {
+interface DownloadReady {
   bookTitle: string;
   fileName: string;
-  pdfUrl: string;
+  objectUrl: string;
   downloadsRemaining: number;
 }
 
 type View = "loading" | "ready" | "invalid" | "exhausted" | "error";
 
+/** j***@example.com-shaped filename fallback if Content-Disposition is ever missing. */
+const FILENAME_FROM_DISPOSITION = /filename="([^"]+)"/;
+
+/**
+ * Opening this page spends one of the ten downloads the order allows — same
+ * as before, just for a different reason now: R2 has no Supabase-style
+ * signed URL, so /api/download does the atomic claim and streams the PDF
+ * bytes in the same request, and this is the only way to reach them. The
+ * fetch happens on load; the button underneath just saves the bytes already
+ * in memory, so clicking it costs nothing further server-side.
+ */
 export function DownloadContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
 
   const [view, setView] = useState<View>("loading");
-  const [download, setDownload] = useState<DownloadResponse | null>(null);
+  const [download, setDownload] = useState<DownloadReady | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const objectUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!token) {
@@ -31,26 +43,70 @@ export function DownloadContent() {
 
     let cancelled = false;
 
-    // Opening this page mints a fresh signed URL and spends one of the ten
-    // downloads the order allows — hence the count shown to the buyer.
-    getFunction<DownloadResponse>("get-download", { token })
-      .then((data) => {
+    (async () => {
+      let response: Response;
+      try {
+        response = await fetch(`/api/download?token=${encodeURIComponent(token)}`);
+      } catch {
         if (cancelled) return;
-        setDownload(data);
-        setView("ready");
-      })
-      .catch((error: { code?: string; message?: string }) => {
+        setMessage("We could not reach the server. Check your connection and try again.");
+        setView("error");
+        return;
+      }
+
+      if (cancelled) return;
+
+      if (!response.ok) {
+        let code: string | undefined;
+        let errorMessage: string | undefined;
+        try {
+          const body = await response.json() as { error?: { code?: string; message?: string } };
+          code = body?.error?.code;
+          errorMessage = body?.error?.message;
+        } catch {
+          // Non-JSON error body: fall through to the generic "error" view.
+        }
         if (cancelled) return;
-        setMessage(error?.message ?? null);
-        if (error?.code === "download_limit_reached") setView("exhausted");
-        else if (error?.code === "invalid_token") setView("invalid");
+        setMessage(errorMessage ?? null);
+        if (code === "download_limit_reached") setView("exhausted");
+        else if (code === "invalid_token") setView("invalid");
         else setView("error");
+        return;
+      }
+
+      const remainingHeader = response.headers.get("X-Downloads-Remaining");
+      const titleHeader = response.headers.get("X-Book-Title");
+      const dispositionMatch = FILENAME_FROM_DISPOSITION.exec(
+        response.headers.get("Content-Disposition") ?? "",
+      );
+
+      const blob = await response.blob();
+      if (cancelled) return;
+
+      const objectUrl = URL.createObjectURL(blob);
+      objectUrlRef.current = objectUrl;
+
+      setDownload({
+        bookTitle: titleHeader ? decodeURIComponent(titleHeader) : "your Archivist book",
+        fileName: dispositionMatch?.[1] ?? "book.pdf",
+        objectUrl,
+        downloadsRemaining: remainingHeader ? Number(remainingHeader) : 0,
       });
+      setView("ready");
+    })();
 
     return () => {
       cancelled = true;
     };
   }, [token]);
+
+  // The blob URL only exists in this tab's memory — release it on unmount
+  // (or if the token ever changes) rather than leaking it.
+  useEffect(() => {
+    return () => {
+      if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+    };
+  }, []);
 
   const support = (
     <a href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a>
@@ -67,15 +123,14 @@ export function DownloadContent() {
           <p className="download__eyebrow">Your book</p>
           <h2 className="download__title">{download.bookTitle}</h2>
           {/*
-            No target="_blank": the signed URL comes back with
-            Content-Disposition: attachment, so the browser saves the file
-            without navigating away, and a new tab would flash empty and close
-            on mobile Safari. The download attribute is a no-op cross-origin
-            but costs nothing if the header is ever missing.
+            A blob: URL, not a redirect to the Worker — the file is already
+            in memory, so the browser's own `download` attribute (which only
+            works same-origin or on a blob/data URL, unlike the old signed
+            Supabase URL) is what saves it. No target="_blank" needed either.
           */}
           <a
             className="cta-button download__cta"
-            href={download.pdfUrl}
+            href={download.objectUrl}
             download={download.fileName}
             rel="noopener"
           >
@@ -85,8 +140,8 @@ export function DownloadContent() {
             </span>
           </a>
           <p className="download__note">
-            This link is valid for 10 minutes — reload this page for a fresh
-            one. You can open this page {download.downloadsRemaining} more{" "}
+            Reload this page any time for a fresh copy. You can open this page{" "}
+            {download.downloadsRemaining} more{" "}
             {download.downloadsRemaining === 1 ? "time" : "times"}.
           </p>
         </>
@@ -140,15 +195,13 @@ function ResendForm() {
     setSending(true);
     setResult(null);
     try {
-      const response = await postFunction<{ message: string }>(
-        "resend-download-link",
-        { email },
-      );
+      const response = await postJson<{ message: string }>("/api/resend-link", { email });
       setResult(response.message);
     } catch (error) {
       setResult(
-        (error as { message?: string })?.message ??
-          "We could not send that just now. Please try again.",
+        error instanceof FunctionError
+          ? error.message
+          : "We could not send that just now. Please try again.",
       );
     } finally {
       setSending(false);

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { siteConfig } from "@/lib/site";
-import { getFunction } from "@/lib/supabase-functions";
+import { getJson } from "@/lib/api";
 
 interface OrderStatusResponse {
   status: "created" | "paid" | "failed" | "refunded";
@@ -37,7 +37,7 @@ export function ThankYouContent() {
 
     const poll = async () => {
       try {
-        const data = await getFunction<OrderStatusResponse>("order-status", {
+        const data = await getJson<OrderStatusResponse>("/api/order-status", {
           order_id: orderId,
         });
         if (cancelled) return;

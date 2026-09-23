@@ -1,12 +1,12 @@
-import { FunctionError, postFunction } from "./supabase-functions";
+import { FunctionError, postJson } from "./api";
 
 /**
  * Razorpay Checkout, start to finish.
  *
- * The browser never names a price: it sends a slug, the Edge Function looks up
- * what that book costs and creates the Razorpay order, and the amount comes
- * back only so Checkout can display it. Verification happens server-side too —
- * nothing here can mark an order paid.
+ * The browser never names a price: it sends a slug, the Worker looks up what
+ * that book costs (in D1) and creates the Razorpay order, and the amount
+ * comes back only so Checkout can display it. Verification happens
+ * server-side too — nothing here can mark an order paid.
  */
 
 const CHECKOUT_SCRIPT = "https://checkout.razorpay.com/v1/checkout.js";
@@ -103,7 +103,7 @@ export async function startCheckout(
   let order: CreateOrderResponse;
   try {
     phase("creating");
-    order = await postFunction<CreateOrderResponse>("create-order", { slug, email });
+    order = await postJson<CreateOrderResponse>("/api/create-order", { slug, email });
     await loadCheckoutScript();
   } catch (error) {
     fail(error);
@@ -136,7 +136,7 @@ export async function startCheckout(
     handler: async (response: RazorpaySuccess) => {
       phase("verifying");
       try {
-        await postFunction("verify-payment", {
+        await postJson("/api/verify", {
           razorpay_order_id: response.razorpay_order_id,
           razorpay_payment_id: response.razorpay_payment_id,
           razorpay_signature: response.razorpay_signature,
@@ -146,7 +146,7 @@ export async function startCheckout(
         // The webhook will still fulfil the order, and the thank-you page
         // polls for exactly that, so send the buyer there either way rather
         // than leaving them on a dead-end error.
-        console.error("verify-payment failed, falling back to the webhook", error);
+        console.error("/api/verify failed, falling back to the webhook", error);
       }
       phase("redirecting");
       window.location.assign(`/thank-you/?order_id=${encodeURIComponent(order.orderId)}`);

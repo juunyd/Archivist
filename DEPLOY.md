@@ -1,12 +1,12 @@
 # Deploying Archivist to Cloudflare Workers
 
 This project builds to a fully static export (`next build` with
-`output: "export"` in [next.config.js](next.config.js)) — there is no Node
-server at runtime. All backend logic (checkout, order status, email) lives
-in Supabase Edge Functions, called directly from the browser. Cloudflare
-Workers serves the exported files as static assets, per
-[wrangler.jsonc](wrangler.jsonc)'s `assets` config — there is no Worker
-script handling requests, just the `out/` directory.
+`output: "export"` in [next.config.js](next.config.js)) for the pages, and a
+Worker script ([worker/index.ts](worker/index.ts)) that serves them. All
+backend logic (checkout, order status, email) lives in that Worker, under
+`/api/*`, backed by D1 (orders/books) and R2 (the PDFs) — everything else
+falls through to the static export via the Worker's `ASSETS` binding, per
+[wrangler.jsonc](wrangler.jsonc).
 
 ## 1. Connect the repository
 
@@ -37,31 +37,45 @@ and requires at least Node 18.
 
 ## 3. Environment variables
 
-In **Workers project → Settings → Variables and Secrets**, add the same
-keys listed in [.env.example](.env.example) for both the **Production** and
-**Preview** environments:
+Two different kinds of configuration, set in two different places — mixing
+them up either bakes a secret into the public build or leaves the Worker
+unable to find a value it needs at runtime.
+
+**Build-time (`NEXT_PUBLIC_*`, baked into the static export):** in
+**Workers project → Settings → Variables and Secrets**, add the key listed
+in [.env.example](.env.example) for both the **Production** and **Preview**
+environments:
 
 - `NEXT_PUBLIC_SITE_URL` — the deployed site's canonical URL (e.g.
   `https://archivist.in` for production, or the preview URL Cloudflare
   assigns for preview deployments).
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
-All three are safe to expose publicly — they're inlined into the static
-build and shipped to every visitor's browser. There is no
-`NEXT_PUBLIC_RAZORPAY_KEY_ID` or equivalent: `create-order` returns the
-Razorpay publishable key id alongside the order, so the browser learns it at
-checkout time and no Razorpay identifier needs to be baked into the build.
+That's the only one. It's safe to expose publicly — it's inlined into the
+static build and shipped to every visitor's browser. Because it's baked in
+at build time, changing it requires a new deployment (redeploy, or push a
+commit) to take effect — it cannot be changed at runtime. There is no
+`NEXT_PUBLIC_SUPABASE_*` or `NEXT_PUBLIC_RAZORPAY_KEY_ID` or equivalent: the
+frontend talks to the Worker's own `/api/*` routes, same-origin, and
+`/api/create-order` returns the Razorpay publishable key id alongside the
+order, so the browser learns it at checkout time rather than at build time.
 
-**Never** add a secret key (Supabase `service_role` key, Razorpay key
-secret, Resend API key, webhook signing secrets, etc.) here or anywhere in
-this repo. Those are configured as Supabase Edge Function secrets instead
-(`supabase secrets set ...`), which is a separate project entirely from this
-Cloudflare Workers site.
+**Runtime (the Worker's own config, read by `worker/`):**
+`SITE_URL` and `EMAIL_FROM` are non-secret and already set directly in
+[wrangler.jsonc](wrangler.jsonc)'s `vars`. The rest are secrets and must
+never go in wrangler.jsonc or anywhere else in this repo — set them once per
+environment with:
 
-Because `NEXT_PUBLIC_*` values are baked in at build time, changing one
-requires a new deployment (redeploy, or push a commit) to take effect —
-they cannot be changed at runtime.
+```bash
+npx wrangler secret put RAZORPAY_KEY_ID
+npx wrangler secret put RAZORPAY_KEY_SECRET
+npx wrangler secret put RAZORPAY_WEBHOOK_SECRET
+npx wrangler secret put RESEND_API_KEY
+```
+
+Each prompts for the value and stores it encrypted, scoped to this Worker.
+Unlike `NEXT_PUBLIC_*` vars, secrets take effect on the next request — no
+rebuild needed — but do require the Worker to have been deployed at least
+once so there's something to attach them to.
 
 ## 4. Deploy
 
