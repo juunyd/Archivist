@@ -32,6 +32,8 @@
  * migrations and deployed infra didn't need to move too.
  */
 
+import { homepageFaqs } from "@/lib/site";
+
 export interface FaqItem {
   question: string;
   answer: string;
@@ -79,31 +81,9 @@ export const RESERVED_TOP_LEVEL_PATHS = [
   "api",
 ];
 
-// Shared across every guide FAQ list, per our standing policy on format,
-// delivery and refunds. Reused verbatim rather than restated per guide so
-// the policy only has to be edited in one place.
-const standardFaqs: FaqItem[] = [
-  {
-    question: "What format do I get?",
-    answer:
-      "A print-ready PDF, delivered to your inbox within a minute of checkout. Read it on a phone, laptop or tablet, or print it.",
-  },
-  {
-    question: "What if I want a refund?",
-    answer:
-      "Digital files are delivered instantly, so purchases are not refundable. If you were charged twice, or the guide never arrived, write to hello@archivist.in and we will refund you in full.",
-  },
-  {
-    question: "Is it a one-time payment?",
-    answer:
-      "Yes — one payment, no subscription. You get lifetime access including future editions.",
-  },
-  {
-    question: "Can I get a receipt for expenses?",
-    answer:
-      "Yes, a receipt is emailed automatically and can be addressed to a company name at checkout.",
-  },
-];
+// Shared across every guide FAQ list — kept identical to the homepage FAQs
+// so visitors see the same questions everywhere.
+const standardFaqs: FaqItem[] = homepageFaqs;
 
 export const guides: Guide[] = [
   {
