@@ -7,7 +7,7 @@
 import { isEmail, json, jsonError, methodNotAllowed, readJson } from "../lib/http";
 import { allowResendRequest } from "../lib/rate-limit";
 import { paidOrdersForEmail } from "../lib/orders";
-import { downloadUrlFor } from "../lib/links";
+import { downloadUrlFor, coverUrlFor } from "../lib/links";
 import { sendEmail } from "../lib/email";
 import { downloadLinksEmail } from "../lib/templates";
 import type { WorkerEnv } from "../lib/env";
@@ -47,6 +47,7 @@ export async function handleResendLink(req: Request, env: WorkerEnv): Promise<Re
       guides.map((guide) => ({
         guideTitle: guide.guide_title,
         downloadUrl: downloadUrlFor(env, guide.download_token),
+        coverUrl: coverUrlFor(env, guide.book_slug),
       })),
     );
 

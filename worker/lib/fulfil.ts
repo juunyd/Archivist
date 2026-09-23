@@ -2,7 +2,7 @@ import type { WorkerEnv } from "./env";
 import type { OrderRow } from "./orders";
 import { sendEmail } from "./email";
 import { deliveryEmail } from "./templates";
-import { downloadUrlFor } from "./links";
+import { downloadUrlFor, coverUrlFor } from "./links";
 
 export type FulfilResult =
   | { status: "sent" }
@@ -28,10 +28,12 @@ export async function fulfilOrder(env: WorkerEnv, orderId: string): Promise<Fulf
         WHERE id = ?1
           AND status = 'paid'
           AND fulfilled_at IS NULL
-        RETURNING id, book_slug, buyer_email, download_token`,
+        RETURNING id, book_slug, buyer_email, download_token, amount_paise, paid_at`,
     )
     .bind(orderId, new Date().toISOString())
-    .first<Pick<OrderRow, "id" | "book_slug" | "buyer_email" | "download_token">>();
+    .first<
+      Pick<OrderRow, "id" | "book_slug" | "buyer_email" | "download_token" | "amount_paise" | "paid_at">
+    >();
 
   if (!claimed) {
     // Either already delivered, or not paid yet. Both are no-ops.
@@ -59,6 +61,10 @@ export async function fulfilOrder(env: WorkerEnv, orderId: string): Promise<Fulf
   const message = deliveryEmail({
     guideTitle: guide?.title ?? "your Archivist guide",
     downloadUrl: downloadUrlFor(env, claimed.download_token),
+    orderId: claimed.id,
+    amountPaise: claimed.amount_paise,
+    paidAt: claimed.paid_at ?? new Date().toISOString(),
+    coverUrl: coverUrlFor(env, claimed.book_slug),
   });
 
   const sent = await sendEmail(env, { to: claimed.buyer_email, ...message });
