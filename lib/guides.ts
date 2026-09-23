@@ -110,7 +110,8 @@ export const guides: Guide[] = [
     slug: "i-lost-money-in-fno",
     no: "No. 01",
     title: "I Lost Money in F&O. Now What.",
-    subtitle: "A recovery guide for Indian retail traders, for the night a loss happens.",
+    subtitle:
+      "A recovery guide for Indian retail traders. How to stop the bleeding, understand what happened, and decide what comes next.",
     blurb:
       "A calm, honest guide for the night after a big F&O loss — what to do, and what to skip.",
     problemStatement:

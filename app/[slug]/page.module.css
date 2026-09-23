@@ -61,11 +61,11 @@
 
 .subtitle {
   font-size: clamp(15px, 4.2vw, 19px);
-  line-height: 1.5;
+  line-height: 1.4;
   color: var(--gray-900);
   font-weight: 500;
   margin: 0 0 26px;
-  max-width: 36ch;
+  max-width: 42ch;
   text-wrap: pretty;
 }
 
