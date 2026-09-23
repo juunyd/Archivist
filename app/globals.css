@@ -136,7 +136,7 @@ button {
 
 .book-card__cover {
   position: relative;
-  aspect-ratio: 3 / 4;
+  aspect-ratio: 16 / 9;
   width: 100%;
   overflow: hidden;
   border: 1px solid var(--gray-300);
