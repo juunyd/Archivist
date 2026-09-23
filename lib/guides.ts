@@ -52,7 +52,7 @@ export interface Guide {
   /** Only set this when the guide genuinely has a "was" price to strike through. */
   compareAtPrice?: number;
   pageCount: number;
-  coverImage?: string;
+  coverImage: string;
   whatsInside: WhatsInsideItem[];
   faqs: FaqItem[];
 }
@@ -111,6 +111,7 @@ export const guides: Guide[] = [
       "You lost money trading F&O, and you don't know how to get through tonight, let alone tomorrow.",
     price: 299,
     pageCount: 44,
+    coverImage: "/images/covers/i-lost-money-in-fno.webp",
     whatsInside: [
       {
         title: "You are not the only one",
@@ -157,6 +158,7 @@ export const guides: Guide[] = [
       "A loss makes you want to trade again immediately, bigger, to make it disappear. That trade is usually the expensive one.",
     price: 299,
     pageCount: 61,
+    coverImage: "/images/covers/the-revenge-trading-cure.webp",
     whatsInside: [
       {
         title: "What revenge trading actually is",
@@ -203,6 +205,7 @@ export const guides: Guide[] = [
       "You keep asking yourself whether to quit trading, and the answer depends on your mood that day.",
     price: 299,
     pageCount: 43,
+    coverImage: "/images/covers/should-i-quit-trading.webp",
     whatsInside: [
       {
         title: "Why this decision is so hard",
@@ -244,6 +247,7 @@ export const guides: Guide[] = [
       "You've decided to keep trading. Now you need a plan that doesn't repeat the mistake that got you here.",
     price: 299,
     pageCount: 65,
+    coverImage: "/images/covers/the-comeback-plan.webp",
     whatsInside: [
       {
         title: "Small is not shameful",

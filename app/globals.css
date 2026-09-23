@@ -135,34 +135,39 @@ button {
 }
 
 .book-card__cover {
+  position: relative;
   aspect-ratio: 3 / 4;
   width: 100%;
-  background: repeating-linear-gradient(
-    135deg,
-    var(--gray-100) 0 12px,
-    var(--gray-200) 12px 24px
-  );
+  overflow: hidden;
   border: 1px solid var(--gray-300);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 14px;
+}
+
+.book-card__cover-image {
+  object-fit: cover;
+  object-position: top center;
 }
 
 .book-card__no {
+  position: absolute;
+  top: 10px;
+  left: 10px;
   font-size: 10.5px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--gray-600);
+  color: var(--color-white);
+  background: rgba(0, 0, 0, 0.55);
+  padding: 4px 7px;
 }
 
 .book-card__price {
+  position: absolute;
+  top: 10px;
+  right: 10px;
   font-size: 13px;
   font-weight: 700;
   color: var(--color-ink);
   background: var(--color-white);
   padding: 5px 8px;
-  align-self: flex-start;
 }
 
 .book-card__title {

@@ -37,13 +37,26 @@ export async function generateMetadata({ params }: GuidePageProps): Promise<Meta
   const guide = getGuideBySlug(slug);
   if (!guide) return {};
 
+  const ogImage = {
+    url: guide.coverImage,
+    width: 900,
+    height: 1200,
+    alt: guide.title,
+  };
+
   return {
     title: guide.title,
     description: guide.subtitle,
     openGraph: {
       title: guide.title,
       description: guide.subtitle,
-      images: guide.coverImage ? [{ url: guide.coverImage }] : undefined,
+      images: [ogImage],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: guide.title,
+      description: guide.subtitle,
+      images: [ogImage.url],
     },
   };
 }
@@ -63,18 +76,14 @@ export default async function GuidePage({ params }: GuidePageProps) {
         <div className={styles.heroInner}>
           <div className={styles.heroGrid}>
             <div className={styles.heroMedia}>
-              {guide.coverImage ? (
-                <Image
-                  src={guide.coverImage}
-                  alt={guide.title}
-                  width={1200}
-                  height={628}
-                  className={styles.cover}
-                  priority
-                />
-              ) : (
-                <div className={styles.coverPlaceholder}>Cover coming soon</div>
-              )}
+              <Image
+                src={guide.coverImage}
+                alt={guide.title}
+                width={900}
+                height={1200}
+                className={styles.cover}
+                priority
+              />
             </div>
 
             <div className={styles.heroText}>
