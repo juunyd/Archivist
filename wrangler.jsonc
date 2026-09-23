@@ -5,5 +5,14 @@
     "directory": "./out",
     "not_found_handling": "404-page",
     "html_handling": "auto-trailing-slash"
-  }
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "archivist-db",
+      // Replace with the id printed by `wrangler d1 create archivist-db`.
+      "database_id": "cf2a9b97-fbec-42ac-95be-d3bbdaf63e15",
+      "migrations_dir": "./migrations"
+    }
+  ]
 }
