@@ -91,14 +91,14 @@ export default async function GuidePage({ params }: GuidePageProps) {
                 <span className={styles.badge}>
                   <svg
                     className={styles.badgeIcon}
-                    width="18"
-                    height="13"
-                    viewBox="0 0 18 13"
+                    width="20"
+                    height="18"
+                    viewBox="0 0 18 16"
                     fill="none"
                     aria-hidden="true"
                   >
                     <path
-                      d="M1 2.5L7.5 11.5L17 1"
+                      d="M1 12L5 15L15 3"
                       pathLength="1"
                       stroke="currentColor"
                       strokeWidth="1.6"
@@ -108,6 +108,9 @@ export default async function GuidePage({ params }: GuidePageProps) {
                   </svg>
                   {guide.badge}
                 </span>
+              )}
+              {guide.badge && guide.badgeSource && (
+                <p className={styles.badgeSource}>{guide.badgeSource}</p>
               )}
 
               <h1 className={styles.title}>{guide.title}</h1>
@@ -122,9 +125,6 @@ export default async function GuidePage({ params }: GuidePageProps) {
                   </span>
                 )}
               </div>
-              {guide.badge && guide.badgeSource && (
-                <p className={styles.badgeSource}>{guide.badgeSource}</p>
-              )}
 
               <CtaButton guide={guide} />
 

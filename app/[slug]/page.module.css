@@ -122,12 +122,6 @@
   margin-bottom: 20px;
 }
 
-/* Tightened when a .badgeSource footnote follows, which carries its own
-   bottom margin instead — avoids doubling up the gap before the CTA. */
-.priceRow:has(+ .badgeSource) {
-  margin-bottom: 4px;
-}
-
 .price {
   font-size: clamp(26px, 6.5vw, 30px);
   font-weight: 700;
