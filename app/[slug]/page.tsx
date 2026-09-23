@@ -87,35 +87,10 @@ export default async function GuidePage({ params }: GuidePageProps) {
             </div>
 
             <div className={styles.heroText}>
-              {guide.badge && (
-                <span className={styles.badge}>
-                  <svg
-                    className={styles.badgeIcon}
-                    width="20"
-                    height="18"
-                    viewBox="0 0 18 16"
-                    fill="none"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M1 12L5 15L15 3"
-                      pathLength="1"
-                      stroke="currentColor"
-                      strokeWidth="1.6"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  {guide.badge}
-                </span>
-              )}
-              {guide.badge && guide.badgeSource && (
-                <p className={styles.badgeSource}>{guide.badgeSource}</p>
-              )}
+              {guide.badge && <span className={styles.badge}>{guide.badge}</span>}
 
               <h1 className={styles.title}>{guide.title}</h1>
               <p className={styles.subtitle}>{guide.subtitle}</p>
-              {guide.audience && <p className={styles.audience}>{guide.audience}</p>}
 
               <div className={styles.priceRow}>
                 <span className={styles.price}>&#8377;{guide.price}</span>

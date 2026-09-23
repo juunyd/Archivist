@@ -36,10 +36,8 @@
 }
 
 .badge {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin-bottom: var(--space-2);
+  display: inline-block;
+  margin-bottom: var(--space-3);
   padding: 5px 10px;
   border: 1px solid color-mix(in srgb, var(--color-brand-red) 30%, var(--color-white));
   border-radius: 999px;
@@ -50,35 +48,6 @@
   letter-spacing: 0.03em;
   text-transform: uppercase;
   line-height: 1.3;
-}
-
-.badgeIcon {
-  flex: 0 0 auto;
-}
-
-.badgeIcon path {
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-  animation: badge-draw 650ms ease-out 150ms forwards;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .badgeIcon path {
-    animation: none;
-    stroke-dashoffset: 0;
-  }
-}
-
-@keyframes badge-draw {
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-
-.badgeSource {
-  font-size: 10.5px;
-  color: var(--gray-600);
-  margin: 0 0 var(--space-4);
 }
 
 .title {
@@ -97,21 +66,6 @@
   font-weight: 500;
   margin: 0 0 26px;
   max-width: 36ch;
-  text-wrap: pretty;
-}
-
-/* Tightened when an .audience line follows, which carries its own
-   bottom margin instead — avoids doubling up the gap before priceRow. */
-.subtitle:has(+ .audience) {
-  margin-bottom: 8px;
-}
-
-.audience {
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--gray-800);
-  margin: 0 0 var(--space-6);
-  max-width: 42ch;
   text-wrap: pretty;
 }
 

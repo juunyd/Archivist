@@ -47,8 +47,6 @@ export interface Guide {
   no: string;
   title: string;
   subtitle: string;
-  /** Optional. Renders under the subtitle, in slightly muted text, when set. */
-  audience?: string;
   blurb: string;
   problemStatement: string;
   /** Rupees, shown to the visitor. The charge comes from books.price_paise — see the file header. */
@@ -59,10 +57,8 @@ export interface Guide {
   /** Optional. When set, renders the "N pages · N chapters · Read it in one sitting" line near the hero trust ticks. */
   chapterCount?: number;
   coverImage: string;
-  /** Optional small claim badge shown above the hero title. Only set this for a claim `badgeSource` can back up. */
+  /** Optional small claim badge shown above the hero title. */
   badge?: string;
-  /** Source line for `badge`'s claim, shown in tiny muted text near the price. Set whenever `badge` is set. */
-  badgeSource?: string;
   whatsInside: WhatsInsideItem[];
   faqs: FaqItem[];
 }
@@ -115,8 +111,6 @@ export const guides: Guide[] = [
     no: "No. 01",
     title: "I Lost Money in F&O. Now What.",
     subtitle: "A recovery guide for Indian retail traders, for the night a loss happens.",
-    audience:
-      "For traders who have taken a real loss in F&O and want a clear plan for the next 30 days, not a strategy to win it back.",
     blurb:
       "A calm, honest guide for the night after a big F&O loss — what to do, and what to skip.",
     problemStatement:
@@ -127,7 +121,6 @@ export const guides: Guide[] = [
     chapterCount: 21,
     coverImage: "/images/covers/i-lost-money-in-fno.png",
     badge: "93% lose money. This is what comes next.",
-    badgeSource: "SEBI, individual F&O traders, FY22 to FY24.",
     whatsInside: [
       {
         title: "You are not the only one",
