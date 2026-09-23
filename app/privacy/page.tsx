@@ -70,6 +70,16 @@ export default function PrivacyPage() {
         services. We may also disclose information if required by law or to
         protect our rights.
       </p>
+      <p>
+        We also share a one-way, irreversibly hashed version of your email
+        address or phone number, along with basic purchase details (such as
+        the guide bought and the amount paid), with advertising partners such
+        as Meta (Facebook/Instagram). This helps us measure the performance of
+        our ads and does not share your information with these partners in
+        readable form. You can opt out of this by adjusting your ad
+        preferences with the relevant advertising partner, or by using
+        browser tools that block advertising cookies and pixels.
+      </p>
 
       <h2 style={headingStyle}>Cookies</h2>
       <p>

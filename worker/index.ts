@@ -20,7 +20,7 @@ import { handleResendLink } from "./routes/resend-link";
 const OLD_BOOK_PATH = /^\/books\/([^/]+)\/?$/;
 
 export default {
-  async fetch(request: Request, env: WorkerEnv, _ctx: ExecutionContext): Promise<Response> {
+  async fetch(request: Request, env: WorkerEnv, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
 
     if (!url.pathname.startsWith("/api/")) {
@@ -42,9 +42,9 @@ export default {
         case "/api/create-order":
           return await handleCreateOrder(request, env);
         case "/api/verify":
-          return await handleVerify(request, env);
+          return await handleVerify(request, env, ctx);
         case "/api/webhooks/razorpay":
-          return await handleWebhook(request, env);
+          return await handleWebhook(request, env, ctx);
         case "/api/order-status":
           return await handleOrderStatus(request, env);
         case "/api/download":

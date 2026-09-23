@@ -25,7 +25,7 @@ interface Body {
   razorpay_signature?: unknown;
 }
 
-export async function handleVerify(req: Request, env: WorkerEnv): Promise<Response> {
+export async function handleVerify(req: Request, env: WorkerEnv, ctx: ExecutionContext): Promise<Response> {
   if (req.method !== "POST") return methodNotAllowed(req, "POST");
 
   const body = await readJson<Body>(req);
@@ -92,7 +92,7 @@ export async function handleVerify(req: Request, env: WorkerEnv): Promise<Respon
   }
 
   try {
-    await fulfilOrder(env, order.id);
+    await fulfilOrder(env, ctx, order.id);
   } catch (error) {
     // The money is safe and the order is paid. Delivery can still be retried
     // by the webhook, so the buyer gets a success response either way.

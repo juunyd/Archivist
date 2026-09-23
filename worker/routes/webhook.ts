@@ -30,7 +30,7 @@ interface WebhookBody {
   };
 }
 
-export async function handleWebhook(req: Request, env: WorkerEnv): Promise<Response> {
+export async function handleWebhook(req: Request, env: WorkerEnv, ctx: ExecutionContext): Promise<Response> {
   if (req.method !== "POST") {
     return new Response("Method not allowed", { status: 405 });
   }
@@ -95,7 +95,7 @@ export async function handleWebhook(req: Request, env: WorkerEnv): Promise<Respo
           email: payment.email,
           phone: payment.contact,
         });
-        const result = await fulfilOrder(env, order.id);
+        const result = await fulfilOrder(env, ctx, order.id);
         return ok(`${event}: paid_now=${changed} fulfil=${result.status}`);
       }
 

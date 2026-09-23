@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Archivo } from "next/font/google";
 import { siteConfig } from "@/lib/site";
+import { MetaPixel } from "@/components/MetaPixel";
+import { MetaPixelPageView } from "@/components/MetaPixelPageView";
 import "./globals.css";
 
 const archivo = Archivo({
@@ -38,7 +40,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={archivo.variable}>
-      <body>{children}</body>
+      <head>
+        <MetaPixel />
+      </head>
+      <body>
+        <MetaPixelPageView />
+        {children}
+      </body>
     </html>
   );
 }

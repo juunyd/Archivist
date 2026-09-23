@@ -3,6 +3,7 @@ import type { OrderRow } from "./orders";
 import { sendEmail } from "./email";
 import { deliveryEmail } from "./templates";
 import { downloadUrlFor, coverUrlFor } from "./links";
+import { sendPurchaseEvent } from "./meta-capi";
 
 export type FulfilResult =
   | { status: "sent" }
@@ -19,8 +20,18 @@ export type FulfilResult =
  * order and sometimes concurrently. If the email itself fails, fulfilled_at
  * is released so a later webhook retry can have another go — better a
  * second attempt than a silent loss.
+ *
+ * The Meta Purchase CAPI event rides on the same claim: it's sent the moment
+ * this UPDATE's RETURNING matches a row, so it fires exactly once per order,
+ * whichever of verify/webhook gets here first — the same idempotency guard
+ * fulfilment itself uses. It's fired via ctx.waitUntil so a slow or failing
+ * call to Meta never delays this response or the buyer's email.
  */
-export async function fulfilOrder(env: WorkerEnv, orderId: string): Promise<FulfilResult> {
+export async function fulfilOrder(
+  env: WorkerEnv,
+  ctx: ExecutionContext,
+  orderId: string,
+): Promise<FulfilResult> {
   const claimed = await env.DB
     .prepare(
       `UPDATE orders
@@ -28,11 +39,25 @@ export async function fulfilOrder(env: WorkerEnv, orderId: string): Promise<Fulf
         WHERE id = ?1
           AND status = 'paid'
           AND fulfilled_at IS NULL
-        RETURNING id, book_slug, buyer_email, download_token, amount_paise, paid_at`,
+        RETURNING id, book_slug, buyer_email, buyer_phone, download_token, amount_paise, currency,
+                  paid_at, client_ip, client_user_agent, meta_event_id`,
     )
     .bind(orderId, new Date().toISOString())
     .first<
-      Pick<OrderRow, "id" | "book_slug" | "buyer_email" | "download_token" | "amount_paise" | "paid_at">
+      Pick<
+        OrderRow,
+        | "id"
+        | "book_slug"
+        | "buyer_email"
+        | "buyer_phone"
+        | "download_token"
+        | "amount_paise"
+        | "currency"
+        | "paid_at"
+        | "client_ip"
+        | "client_user_agent"
+        | "meta_event_id"
+      >
     >();
 
   if (!claimed) {
@@ -45,6 +70,20 @@ export async function fulfilOrder(env: WorkerEnv, orderId: string): Promise<Fulf
       ? { status: "already_fulfilled" }
       : { status: "not_payable" };
   }
+
+  ctx.waitUntil(
+    sendPurchaseEvent(env, {
+      orderId: claimed.id,
+      eventId: claimed.meta_event_id,
+      guideSlug: claimed.book_slug,
+      amountPaise: claimed.amount_paise,
+      currency: claimed.currency,
+      buyerEmail: claimed.buyer_email,
+      buyerPhone: claimed.buyer_phone,
+      clientIp: claimed.client_ip,
+      clientUserAgent: claimed.client_user_agent,
+    }),
+  );
 
   if (!claimed.buyer_email) {
     // Paid but Razorpay gave us no address. Leave it claimed and alert the logs;

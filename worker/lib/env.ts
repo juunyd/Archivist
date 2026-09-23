@@ -31,6 +31,12 @@ export interface WorkerEnv {
   RAZORPAY_KEY_SECRET?: string;
   RAZORPAY_WEBHOOK_SECRET?: string;
   RESEND_API_KEY?: string;
+
+  // Meta Conversions API. META_TEST_EVENT_CODE is optional — set while
+  // verifying in Events Manager's Test Events tab, removed afterwards.
+  META_PIXEL_ID?: string;
+  META_CAPI_ACCESS_TOKEN?: string;
+  META_TEST_EVENT_CODE?: string;
 }
 
 type StringEnvKey =
@@ -39,7 +45,9 @@ type StringEnvKey =
   | "RAZORPAY_KEY_ID"
   | "RAZORPAY_KEY_SECRET"
   | "RAZORPAY_WEBHOOK_SECRET"
-  | "RESEND_API_KEY";
+  | "RESEND_API_KEY"
+  | "META_PIXEL_ID"
+  | "META_CAPI_ACCESS_TOKEN";
 
 /** Reads a required secret/var, failing loudly at request time rather than mid-payment. */
 export function requireEnv(env: WorkerEnv, key: StringEnvKey): string {

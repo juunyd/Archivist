@@ -6,6 +6,7 @@ import { Footer } from "@/components/Footer";
 import { CtaButton } from "@/components/CtaButton";
 import { FaqAccordion } from "@/components/FaqAccordion";
 import { StickyBuyBar } from "@/components/StickyBuyBar";
+import { GuideViewTracker } from "@/components/GuideViewTracker";
 import { getAllGuideSlugs, getGuideBySlug } from "@/lib/guides";
 import styles from "./page.module.css";
 
@@ -70,6 +71,7 @@ export default async function GuidePage({ params }: GuidePageProps) {
 
   return (
     <>
+      <GuideViewTracker guide={guide} />
       <Header navLinks={navLinks} />
 
       <section className={styles.hero}>

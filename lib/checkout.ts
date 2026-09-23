@@ -1,4 +1,5 @@
 import { FunctionError, postJson } from "./api";
+import { trackInitiateCheckout, trackPurchase } from "./meta-pixel";
 
 /**
  * Razorpay Checkout, start to finish.
@@ -100,10 +101,19 @@ export async function startCheckout(
   if (inFlight) return;
   inFlight = true;
 
+  // Shared with the server so its own Purchase event (sent from the Worker
+  // once the order is fulfilled) can reuse this id and be deduplicated
+  // against the browser's — see lib/meta-pixel.ts.
+  const purchaseEventId = crypto.randomUUID();
+
   let order: CreateOrderResponse;
   try {
     phase("creating");
-    order = await postJson<CreateOrderResponse>("/api/create-order", { slug, email });
+    order = await postJson<CreateOrderResponse>("/api/create-order", {
+      slug,
+      email,
+      metaEventId: purchaseEventId,
+    });
     await loadCheckoutScript();
   } catch (error) {
     fail(error);
@@ -114,6 +124,15 @@ export async function startCheckout(
     fail(new FunctionError("script_failed", "Could not load the payment window. Please try again."));
     return;
   }
+
+  const productParams = {
+    content_ids: [slug],
+    content_name: order.guideTitle,
+    content_type: "product" as const,
+    value: order.amount / 100,
+    currency: order.currency,
+  };
+  trackInitiateCheckout(productParams, crypto.randomUUID());
 
   const checkout = new window.Razorpay({
     key: order.keyId,
@@ -148,6 +167,7 @@ export async function startCheckout(
         // than leaving them on a dead-end error.
         console.error("/api/verify failed, falling back to the webhook", error);
       }
+      trackPurchase(productParams, purchaseEventId);
       phase("redirecting");
       window.location.assign(`/thank-you/?order_id=${encodeURIComponent(order.orderId)}`);
     },

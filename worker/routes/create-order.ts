@@ -4,7 +4,7 @@
 // never names a price: the amount comes from the books table and is copied
 // onto the order, and every later check compares Razorpay's numbers against
 // that stored copy. Ports the old Supabase Edge Functions.
-import { isEmail, isSlug, json, jsonError, methodNotAllowed, readJson } from "../lib/http";
+import { isEmail, isSlug, isUuid, json, jsonError, methodNotAllowed, readJson } from "../lib/http";
 import { getPublishedGuide, insertOrder } from "../lib/orders";
 import { createRazorpayOrder } from "../lib/razorpay";
 import { requireEnv, type WorkerEnv } from "../lib/env";
@@ -12,7 +12,7 @@ import { requireEnv, type WorkerEnv } from "../lib/env";
 export async function handleCreateOrder(req: Request, env: WorkerEnv): Promise<Response> {
   if (req.method !== "POST") return methodNotAllowed(req, "POST");
 
-  const body = await readJson<{ slug?: unknown; email?: unknown }>(req);
+  const body = await readJson<{ slug?: unknown; email?: unknown; metaEventId?: unknown }>(req);
   if (!body || !isSlug(body.slug)) {
     return jsonError(req, 400, "invalid_request", "A valid guide slug is required.");
   }
@@ -24,6 +24,18 @@ export async function handleCreateOrder(req: Request, env: WorkerEnv): Promise<R
     return jsonError(req, 400, "invalid_email", "Enter a valid email address.");
   }
   const buyerEmail = isEmail(body.email) ? body.email.trim().toLowerCase() : null;
+
+  // The browser's own Purchase event id (see lib/checkout.ts), stored so the
+  // later server-side Meta Purchase event (worker/lib/meta-capi.ts) can reuse
+  // it and be deduplicated against the browser's. Optional and only ever a
+  // dedup key, so an absent/malformed value is simply not stored.
+  const metaEventId = isUuid(body.metaEventId) ? body.metaEventId : null;
+
+  // Captured here because this is the only point in the order's life where a
+  // real client Request is in hand — the webhook that may fulfil this order
+  // later runs server-to-server, with no browser IP/UA of its own.
+  const clientIp = req.headers.get("CF-Connecting-IP");
+  const clientUserAgent = req.headers.get("User-Agent");
 
   // Draft guides are not for sale, whatever the client asks for.
   let guide;
@@ -63,6 +75,9 @@ export async function handleCreateOrder(req: Request, env: WorkerEnv): Promise<R
       razorpayOrderId: razorpayOrder.id,
       downloadToken: crypto.randomUUID(),
       buyerEmail,
+      clientIp,
+      clientUserAgent,
+      metaEventId,
     });
   } catch (error) {
     // The Razorpay order exists but we have nothing to reconcile it against.

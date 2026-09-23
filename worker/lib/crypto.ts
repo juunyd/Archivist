@@ -2,6 +2,14 @@
 // API on Cloudflare Workers as it was on Supabase's Deno runtime, so nothing
 // here needed to change to move backends.
 
+/** SHA-256 of `message`, lowercase hex — for Meta CAPI's hashed user-data fields. */
+export async function sha256Hex(message: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(message));
+  return [...new Uint8Array(digest)]
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 /** HMAC-SHA256 of `message` under `secret`, lowercase hex. */
 export async function hmacSha256Hex(
   secret: string,

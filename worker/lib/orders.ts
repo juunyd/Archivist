@@ -31,6 +31,11 @@ export interface OrderRow {
   paid_at: string | null;
   fulfilled_at: string | null;
   email_sent_at: string | null;
+  /** Captured at checkout time (create-order), for the Meta Purchase CAPI event fired later at fulfilment. */
+  client_ip: string | null;
+  client_user_agent: string | null;
+  /** UUID the browser generated for its own Purchase pixel event; reused by the server event so Meta dedupes them. */
+  meta_event_id: string | null;
 }
 
 const nowIso = () => new Date().toISOString();
@@ -63,13 +68,17 @@ export async function insertOrder(
     razorpayOrderId: string;
     downloadToken: string;
     buyerEmail: string | null;
+    clientIp: string | null;
+    clientUserAgent: string | null;
+    metaEventId: string | null;
   },
 ): Promise<void> {
   await env.DB
     .prepare(
       `INSERT INTO orders
-         (id, book_slug, amount_paise, currency, status, razorpay_order_id, buyer_email, download_token)
-       VALUES (?1, ?2, ?3, ?4, 'created', ?5, ?6, ?7)`,
+         (id, book_slug, amount_paise, currency, status, razorpay_order_id, buyer_email, download_token,
+          client_ip, client_user_agent, meta_event_id)
+       VALUES (?1, ?2, ?3, ?4, 'created', ?5, ?6, ?7, ?8, ?9, ?10)`,
     )
     .bind(
       input.id,
@@ -79,6 +88,9 @@ export async function insertOrder(
       input.razorpayOrderId,
       input.buyerEmail,
       input.downloadToken,
+      input.clientIp,
+      input.clientUserAgent,
+      input.metaEventId,
     )
     .run();
 }
