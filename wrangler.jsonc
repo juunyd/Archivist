@@ -1,18 +1,39 @@
 {
-  "name": "archivist",
-  "compatibility_date": "2026-09-18",
-  "assets": {
-    "directory": "./out",
-    "not_found_handling": "404-page",
-    "html_handling": "auto-trailing-slash"
-  },
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "archivist-db",
-      // Replace with the id printed by `wrangler d1 create archivist-db`.
-      "database_id": "cf2a9b97-fbec-42ac-95be-d3bbdaf63e15",
-      "migrations_dir": "./migrations"
-    }
-  ]
+	"name": "archivist",
+	"compatibility_date": "2026-09-18",
+	// The Worker script is now the entry point for every request (needed for
+	// /api/* below); it serves everything else itself via env.ASSETS.fetch(),
+	// which is why "assets" needs a binding name now, not just a directory.
+	"main": "./worker/index.ts",
+	"assets": {
+		"directory": "./out",
+		"binding": "ASSETS",
+		"not_found_handling": "404-page",
+		"html_handling": "auto-trailing-slash"
+	},
+	// Non-secret config the Worker reads at runtime. The Razorpay/Resend
+	// secrets are NOT here — set with `wrangler secret put <NAME>` instead,
+	// same as they were Supabase Edge Function secrets before.
+	"vars": {
+		"SITE_URL": "https://archivist.in",
+		"EMAIL_FROM": "Archivist <books@archivist.in>"
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "archivist-db",
+			"database_id": "cf2a9b97-fbec-42ac-95be-d3bbdaf63e15",
+			"migrations_dir": "./migrations"
+		}
+	],
+	// Private bucket holding the deliverable PDFs, keyed {slug}/{slug}.pdf
+	// (mirrors books.pdf_path). R2 buckets have no public access and no
+	// signed-URL exposure here. The download route (Phase 3) streams the
+	// object through the Worker after validating the caller's token.
+	"r2_buckets": [
+		{
+			"binding": "BOOK_FILES",
+			"bucket_name": "archivist-book-files"
+		}
+	]
 }
