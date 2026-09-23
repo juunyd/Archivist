@@ -20,7 +20,7 @@ export const editorialRules = [
   {
     n: "03",
     title: "Written for people who are short on time",
-    body: "40 to 60 pages. Finish it in one sitting, on your phone, and know what to do next.",
+    body: "40 to 65 pages. Finish it in one sitting, on your phone, and know what to do next.",
   },
 ];
 
@@ -28,7 +28,7 @@ export const homepageFaqs = [
   {
     question: "What is an Archivist guide?",
     answer:
-      "A short, focused digital guide built around one specific problem. Around 40 to 60 pages, written to be read in a single sitting.",
+      "A short, focused digital guide built around one specific problem. Around 40 to 65 pages, written to be read in a single sitting.",
   },
   {
     question: "What format are the guides?",

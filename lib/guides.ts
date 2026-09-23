@@ -73,236 +73,221 @@ export const RESERVED_TOP_LEVEL_PATHS = [
   "api",
 ];
 
-export const guides: Guide[] = [
+// Shared across every guide FAQ list, per our standing policy on format,
+// delivery and refunds. Reused verbatim rather than restated per guide so
+// the policy only has to be edited in one place.
+const standardFaqs: FaqItem[] = [
   {
-    slug: "signal-discipline",
-    no: "No. 07",
-    title: "Signal Discipline",
-    subtitle:
-      "A field manual for making sharp decisions when your information is noisy, partial and rushed.",
-    blurb:
-      "Making sharp decisions when your information is noisy, partial and rushed.",
-    problemStatement:
-      "You're not short on information. You're short on a way to tell what matters.",
-    price: 199,
-    pageCount: 148,
-    coverImage: "/images/book-cover-hero.webp",
-    whatsInside: [
-      {
-        title: "The evidence ladder",
-        description:
-          "Rank every claim by how it was produced, before arguing about whether it's true.",
-      },
-      {
-        title: "Five-minute premortem",
-        description:
-          "A short script that surfaces the failure modes your team is quietly avoiding naming.",
-      },
-      {
-        title: "Confidence in writing",
-        description:
-          "State what you believe, how sure you are, and what would change your mind, in three lines.",
-      },
-      {
-        title: "The reversal test",
-        description:
-          "A one-question check separating decisions worth debating from decisions worth simply making.",
-      },
-    ],
-    faqs: [
-      {
-        question: "What format do I get?",
-        answer:
-          "A print-ready PDF, delivered to your inbox within a minute of checkout. Read it on a phone, laptop or tablet, or print it.",
-      },
-      {
-        question: "What if I want a refund?",
-        answer:
-          "Digital files are delivered instantly, so purchases are not refundable. If you were charged twice, or the guide never arrived, write to hello@archivist.in and we will refund you in full.",
-      },
-      {
-        question: "Is it a one-time payment?",
-        answer:
-          "Yes — one payment, no subscription. You get lifetime access including future editions.",
-      },
-      {
-        question: "Can I get a receipt for expenses?",
-        answer:
-          "Yes, a receipt is emailed automatically and can be addressed to a company name at checkout.",
-      },
-    ],
+    question: "What format do I get?",
+    answer:
+      "A print-ready PDF, delivered to your inbox within a minute of checkout. Read it on a phone, laptop or tablet, or print it.",
   },
   {
-    slug: "the-cost-of-being-early",
-    no: "No. 06",
-    title: "The Cost of Being Early",
-    subtitle:
-      "What the research actually says about timing a market, a career, or a launch.",
-    blurb:
-      "What the research actually says about timing a market, a career, or a launch.",
-    problemStatement:
-      "Being early feels like foresight. The data says it usually isn't.",
-    price: 199,
-    pageCount: 132,
-    whatsInside: [
-      {
-        title: "The timing myth",
-        description:
-          "Why being first is remembered and being right is not — and how to tell them apart in your own decisions.",
-      },
-      {
-        title: "The waiting cost model",
-        description:
-          "A simple way to price the cost of moving too soon against the cost of moving too late.",
-      },
-      {
-        title: "Reading the market's patience",
-        description:
-          "Signals that tell you whether an audience, a market, or an organization is actually ready.",
-      },
-      {
-        title: "The re-entry plan",
-        description:
-          "What to do when you've moved early and need a credible way back in without losing face.",
-      },
-    ],
-    faqs: [
-      {
-        question: "What format do I get?",
-        answer:
-          "A print-ready PDF, delivered to your inbox within a minute of checkout. Read it on a phone, laptop or tablet, or print it.",
-      },
-      {
-        question: "What if I want a refund?",
-        answer:
-          "Digital files are delivered instantly, so purchases are not refundable. If you were charged twice, or the guide never arrived, write to hello@archivist.in and we will refund you in full.",
-      },
-      {
-        question: "Is it a one-time payment?",
-        answer:
-          "Yes — one payment, no subscription. You get lifetime access including future editions.",
-      },
-      {
-        question: "Can I get a receipt for expenses?",
-        answer:
-          "Yes, a receipt is emailed automatically and can be addressed to a company name at checkout.",
-      },
-    ],
+    question: "What if I want a refund?",
+    answer:
+      "Digital files are delivered instantly, so purchases are not refundable. If you were charged twice, or the guide never arrived, write to hello@archivist.in and we will refund you in full.",
   },
   {
-    slug: "small-teams-hard-calls",
-    no: "No. 05",
-    title: "Small Teams, Hard Calls",
-    subtitle:
-      "How groups of under twelve people decide well, and where they reliably fail.",
-    blurb:
-      "How groups of under twelve people decide well, and where they reliably fail.",
-    problemStatement:
-      "Small teams don't fail from bad ideas. They fail from bad decision processes.",
-    price: 249,
-    pageCount: 164,
-    whatsInside: [
-      {
-        title: "The consensus trap",
-        description:
-          "Why seeking agreement from everyone quietly produces worse decisions than a clear owner would.",
-      },
-      {
-        title: "The disagree-and-commit script",
-        description:
-          "A concrete way to close a debate without pretending everyone agrees.",
-      },
-      {
-        title: "Decision rights, on paper",
-        description:
-          "A one-page format for who decides what, so it stops being renegotiated every time.",
-      },
-      {
-        title: "The blast-radius check",
-        description:
-          "A quick test for whether a call deserves a meeting or just needs to be made.",
-      },
-    ],
-    faqs: [
-      {
-        question: "What format do I get?",
-        answer:
-          "A print-ready PDF, delivered to your inbox within a minute of checkout. Read it on a phone, laptop or tablet, or print it.",
-      },
-      {
-        question: "What if I want a refund?",
-        answer:
-          "Digital files are delivered instantly, so purchases are not refundable. If you were charged twice, or the guide never arrived, write to hello@archivist.in and we will refund you in full.",
-      },
-      {
-        question: "Is it a one-time payment?",
-        answer:
-          "Yes — one payment, no subscription. You get lifetime access including future editions.",
-      },
-      {
-        question: "Can I get a receipt for expenses?",
-        answer:
-          "Yes, a receipt is emailed automatically and can be addressed to a company name at checkout.",
-      },
-    ],
+    question: "Is it a one-time payment?",
+    answer:
+      "Yes — one payment, no subscription. You get lifetime access including future editions.",
   },
   {
-    slug: "reading-a-study-in-20-minutes",
-    no: "No. 04",
-    title: "Reading a Study in 20 Minutes",
-    subtitle:
-      "A practical method for judging a paper you are not qualified to referee.",
-    blurb:
-      "A practical method for judging a paper you are not qualified to referee.",
-    problemStatement:
-      "You don't need a PhD to catch a bad study. You need a checklist.",
-    price: 149,
-    pageCount: 120,
-    whatsInside: [
-      {
-        title: "The five-question filter",
-        description:
-          "What to check first, before reading a single line of the results section.",
-      },
-      {
-        title: "Sample size, honestly",
-        description:
-          "How to tell whether a study's sample can actually support its headline claim.",
-      },
-      {
-        title: "Spotting a p-hacked result",
-        description:
-          "Common tells that a result was found rather than tested for.",
-      },
-      {
-        title: "The one-paragraph verdict",
-        description: "A format for writing down what a study does and doesn't show you, in three lines.",
-      },
-    ],
-    faqs: [
-      {
-        question: "What format do I get?",
-        answer:
-          "A print-ready PDF, delivered to your inbox within a minute of checkout. Read it on a phone, laptop or tablet, or print it.",
-      },
-      {
-        question: "What if I want a refund?",
-        answer:
-          "Digital files are delivered instantly, so purchases are not refundable. If you were charged twice, or the guide never arrived, write to hello@archivist.in and we will refund you in full.",
-      },
-      {
-        question: "Is it a one-time payment?",
-        answer:
-          "Yes — one payment, no subscription. You get lifetime access including future editions.",
-      },
-      {
-        question: "Can I get a receipt for expenses?",
-        answer:
-          "Yes, a receipt is emailed automatically and can be addressed to a company name at checkout.",
-      },
-    ],
+    question: "Can I get a receipt for expenses?",
+    answer:
+      "Yes, a receipt is emailed automatically and can be addressed to a company name at checkout.",
   },
 ];
+
+export const guides: Guide[] = [
+  {
+    slug: "i-lost-money-in-fno",
+    no: "No. 01",
+    title: "I Lost Money in F&O. Now What.",
+    subtitle: "A recovery guide for Indian retail traders, for the night a loss happens.",
+    blurb:
+      "A calm, honest guide for the night after a big F&O loss — what to do, and what to skip.",
+    problemStatement:
+      "You lost money trading F&O, and you don't know how to get through tonight, let alone tomorrow.",
+    price: 299,
+    pageCount: 44,
+    whatsInside: [
+      {
+        title: "You are not the only one",
+        description:
+          "SEBI found that 93% of individual F&O traders lost money over FY22–FY24, with average losses of about ₹2 lakh — why that changes the story you tell about your own loss.",
+      },
+      {
+        title: "Why losses hurt twice as much",
+        description:
+          "The psychology behind why a loss feels heavier than an equal gain feels good, and why that pushes you toward exactly the wrong decision.",
+      },
+      {
+        title: "The cruel arithmetic of losses",
+        description:
+          "Why a 50% loss needs a 100% gain just to break even — and how that maths is what tempts people into the trade that finishes them off.",
+      },
+      {
+        title: "The trap called \"one more trade\"",
+        description:
+          "The sunk-cost pull to win it back immediately, and the story of Jesse Livermore, one of history's greatest traders, who never learned to resist it.",
+      },
+      {
+        title: "Looking at what actually happened",
+        description:
+          "A calm, no-blame way to review your trades and real costs, so the loss becomes a page of facts instead of a cloud of shame.",
+      },
+      {
+        title: "If it hurts more than money",
+        description:
+          "What to do, and who to call, if the loss has moved past a financial problem — including a free, 24-hour national helpline.",
+      },
+    ],
+    faqs: standardFaqs,
+  },
+  {
+    slug: "the-revenge-trading-cure",
+    no: "No. 02",
+    title: "The Revenge Trading Cure",
+    subtitle:
+      "A small book about a single, expensive habit: the trade you place to erase the last one, and the brakes that stop it.",
+    blurb:
+      "The trade you place to erase the last loss — and the brakes that stop it before it costs you everything.",
+    problemStatement:
+      "A loss makes you want to trade again immediately, bigger, to make it disappear. That trade is usually the expensive one.",
+    price: 299,
+    pageCount: 61,
+    whatsInside: [
+      {
+        title: "What revenge trading actually is",
+        description:
+          "The exact mechanism: a loss creates urgency, urgency pushes you to size up and abandon your process — and why that trader is not the one who made your plan.",
+      },
+      {
+        title: "Why losses hurt twice as much",
+        description:
+          "Kahneman and Tversky's loss-aversion research, and the coefficient of 2.25 that explains why your account's red number feels heavier than it looks.",
+      },
+      {
+        title: "The hot state and the cold state",
+        description:
+          "Why you cannot out-think tilt in the moment, and how to write rules while calm that the panicked version of you still has to obey.",
+      },
+      {
+        title: "How to catch yourself in the act",
+        description:
+          "Nine concrete, observable warning signs of tilt — from creeping position size to hiding trades from your family — memorised before you need them.",
+      },
+      {
+        title: "Building the brake",
+        description:
+          "Seven tools: the pre-written rule, the kill switch, the walk-away timer, the two-loss rule, the separate account, the checklist, and the if-then plan.",
+      },
+      {
+        title: "When it is bigger than a bad day",
+        description:
+          "How to tell an ordinary bad afternoon apart from a compulsion that needs professional help — and where to find it, including a free national helpline.",
+      },
+    ],
+    faqs: standardFaqs,
+  },
+  {
+    slug: "should-i-quit-trading",
+    no: "No. 03",
+    title: "Should I Quit Trading? An Honest Test",
+    subtitle:
+      "A set of honest questions, and a way to read your own answers. The decision stays with you.",
+    blurb:
+      "Seven honest checkpoints to help you decide, calmly, whether to keep trading or walk away.",
+    problemStatement:
+      "You keep asking yourself whether to quit trading, and the answer depends on your mood that day.",
+    price: 299,
+    pageCount: 43,
+    whatsInside: [
+      {
+        title: "Why this decision is so hard",
+        description:
+          "The research behind sunk cost, the Concorde fallacy, and status quo bias — the forces that quietly keep people trading past the point they'd choose to.",
+      },
+      {
+        title: "The seven-checkpoint test",
+        description:
+          "A written test covering your real trading record, your process, the true cost of continuing, and whether you'd start again today, knowing what you know now.",
+      },
+      {
+        title: "A bad stretch or a bad fit",
+        description:
+          "How to tell a rough patch that can be waited out apart from a structural mismatch with your capital, time, temperament, or family life.",
+      },
+      {
+        title: "A break is not the same as an exit",
+        description:
+          "Two different doors — a defined, reversible pause versus stopping for good — and rules for choosing between them written in a calm state.",
+      },
+      {
+        title: "When trading stops looking like trading",
+        description:
+          "The signs that this has become a compulsion rather than a decision, and where to turn, including a free, 24-hour national helpline.",
+      },
+    ],
+    faqs: standardFaqs,
+  },
+  {
+    slug: "the-comeback-plan",
+    no: "No. 04",
+    title: "The Comeback Plan",
+    subtitle:
+      "How to rebuild slowly, in a way you can check, after a loss has shaken your money, your confidence, and perhaps your home.",
+    blurb:
+      "A staged, checkable plan for rebuilding after a loss — small size first, growth only when earned.",
+    problemStatement:
+      "You've decided to keep trading. Now you need a plan that doesn't repeat the mistake that got you here.",
+    price: 299,
+    pageCount: 65,
+    whatsInside: [
+      {
+        title: "Small is not shameful",
+        description:
+          "Why trading at a small size after a loss is an instrument for cheap, useful mistakes — not a punishment, and not a step backward.",
+      },
+      {
+        title: "The readiness check",
+        description:
+          "Seven conditions to answer honestly, in writing, before you place another trade — including whether any of the money is borrowed.",
+      },
+      {
+        title: "The three-stage plan",
+        description:
+          "A calendar-based path from rebuilding your routine, to proving your process small, to earning the right to grow — with a gate to pass before each stage.",
+      },
+      {
+        title: "The step-down rule",
+        description:
+          "A written trigger that shrinks your position size automatically when a drawdown starts, so the decision is made before you need to make it.",
+      },
+      {
+        title: "The conversation at home",
+        description:
+          "How to rebuild trust with the people who watched you lose — one visible, honest week at a time, not one big promise.",
+      },
+      {
+        title: "When the comeback isn't the answer",
+        description:
+          "The signs that call for a pause and professional support rather than another stage of the plan, including a free national helpline.",
+      },
+    ],
+    faqs: standardFaqs,
+  },
+];
+
+/**
+ * Shown on every guide page. This series covers trading recovery for
+ * Indian retail traders — it is educational and emotional-support content
+ * only, never financial advice, and never a tip, signal, or performance
+ * claim of any kind.
+ */
+export const guideDisclaimer =
+  "This guide is for general educational and emotional-support purposes only. It is not financial, legal, or medical advice, and contains no trading tips, signals, or performance claims. For decisions about your own money, consult a SEBI-registered investment adviser. If you are in distress, the guide includes support resources, including Tele-MANAS, India's free 24-hour mental health helpline (14416 / 1-800-891-4416).";
 
 // Fails the build loudly rather than letting a guide slug silently shadow
 // (or be shadowed by) a reserved top-level route once /books/[slug] is
