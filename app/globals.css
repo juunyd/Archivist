@@ -163,6 +163,9 @@ button {
   position: absolute;
   top: 10px;
   right: 10px;
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-1);
   font-size: 13px;
   font-weight: 700;
   color: var(--color-ink);
@@ -170,10 +173,17 @@ button {
   padding: 5px 8px;
 }
 
+.book-card__compare-at-price {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--gray-500);
+  text-decoration: line-through;
+}
+
 .book-card__title {
   font-weight: 700;
-  font-size: 24px;
-  line-height: 1.1;
+  font-size: 18px;
+  line-height: 1.18;
   margin: 0 0 8px;
 }
 
@@ -370,10 +380,22 @@ button {
   transition: transform 220ms ease;
 }
 
+.sticky-buy-bar__price-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
 .sticky-buy-bar__price {
   font-size: 21px;
   font-weight: 700;
   letter-spacing: -0.05em;
+}
+
+.sticky-buy-bar__compare-at-price {
+  font-size: 13px;
+  color: var(--gray-500);
+  text-decoration: line-through;
 }
 
 .sticky-buy-bar__cta {

@@ -22,6 +22,10 @@
   --cta-gradient: linear-gradient(180deg, #ff6a67 0%, #ff3431 55%, #d91e1b 100%);
   --cta-glow: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.55), transparent 72%);
 
+  /* Solid brand red — the cta-gradient's core hue, named for reuse as flat
+     text/icon/border color (a gradient can't be used as those). */
+  --color-brand-red: #ff3431;
+
   /* Spacing scale */
   --space-1: 4px;
   --space-2: 8px;

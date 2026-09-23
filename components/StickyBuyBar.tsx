@@ -5,7 +5,7 @@ import type { Guide } from "@/lib/guides";
 import { CtaButton } from "./CtaButton";
 
 interface StickyBuyBarProps {
-  guide: Pick<Guide, "slug" | "title" | "price">;
+  guide: Pick<Guide, "slug" | "title" | "price" | "compareAtPrice">;
   sentinelId: string;
 }
 
@@ -38,7 +38,12 @@ export function StickyBuyBar({ guide, sentinelId }: StickyBuyBarProps) {
       style={{ transform: visible ? "translateY(0)" : "translateY(130%)" }}
       aria-hidden={!visible}
     >
-      <span className="sticky-buy-bar__price">&#8377;{guide.price}</span>
+      <span className="sticky-buy-bar__price-row">
+        <span className="sticky-buy-bar__price">&#8377;{guide.price}</span>
+        {guide.compareAtPrice && (
+          <span className="sticky-buy-bar__compare-at-price">&#8377;{guide.compareAtPrice}</span>
+        )}
+      </span>
       <CtaButton guide={guide} label="Get Instant Access" size="compact" className="sticky-buy-bar__cta" />
     </div>
   );

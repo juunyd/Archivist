@@ -87,8 +87,32 @@ export default async function GuidePage({ params }: GuidePageProps) {
             </div>
 
             <div className={styles.heroText}>
+              {guide.badge && (
+                <span className={styles.badge}>
+                  <svg
+                    className={styles.badgeIcon}
+                    width="18"
+                    height="13"
+                    viewBox="0 0 18 13"
+                    fill="none"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M1 2.5L7.5 11.5L17 1"
+                      pathLength="1"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  {guide.badge}
+                </span>
+              )}
+
               <h1 className={styles.title}>{guide.title}</h1>
               <p className={styles.subtitle}>{guide.subtitle}</p>
+              {guide.audience && <p className={styles.audience}>{guide.audience}</p>}
 
               <div className={styles.priceRow}>
                 <span className={styles.price}>&#8377;{guide.price}</span>
@@ -98,8 +122,18 @@ export default async function GuidePage({ params }: GuidePageProps) {
                   </span>
                 )}
               </div>
+              {guide.badge && guide.badgeSource && (
+                <p className={styles.badgeSource}>{guide.badgeSource}</p>
+              )}
 
               <CtaButton guide={guide} />
+
+              {guide.chapterCount && (
+                <p className={styles.formatLine}>
+                  {guide.pageCount} pages &middot; {guide.chapterCount} chapters &middot; Read it
+                  in one sitting
+                </p>
+              )}
 
               <div className={styles.trustBadges}>
                 <span>&#10003; Instant delivery</span>
@@ -150,7 +184,12 @@ export default async function GuidePage({ params }: GuidePageProps) {
           <p className={styles.buySub}>
             {guide.pageCount} pages, PDF, delivered the moment you check out.
           </p>
-          <div className={styles.buyPrice}>&#8377;{guide.price}</div>
+          <div className={styles.buyPriceRow}>
+            <span className={styles.buyPrice}>&#8377;{guide.price}</span>
+            {guide.compareAtPrice && (
+              <span className={styles.buyCompareAtPrice}>&#8377;{guide.compareAtPrice}</span>
+            )}
+          </div>
           <CtaButton guide={guide} align="center" className={styles.buyCta} />
         </div>
       </section>

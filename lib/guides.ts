@@ -10,7 +10,9 @@
  * slug, never to set a price.
  *
  * So changing a price is two steps, and doing only the first is a bug a
- * visitor sees as one number and pays another:
+ * visitor sees as one number and pays another. `compareAtPrice` (when set)
+ * is a display-only "was" price — it has no D1 counterpart and is never
+ * charged — but `price` must stay in sync:
  *
  *   1. edit `price` below (rupees), and
  *   2. update the matching row in D1 (paise — rupees x 100), either by hand:
@@ -45,6 +47,8 @@ export interface Guide {
   no: string;
   title: string;
   subtitle: string;
+  /** Optional. Renders under the subtitle, in slightly muted text, when set. */
+  audience?: string;
   blurb: string;
   problemStatement: string;
   /** Rupees, shown to the visitor. The charge comes from books.price_paise — see the file header. */
@@ -52,7 +56,13 @@ export interface Guide {
   /** Only set this when the guide genuinely has a "was" price to strike through. */
   compareAtPrice?: number;
   pageCount: number;
+  /** Optional. When set, renders the "N pages · N chapters · Read it in one sitting" line near the hero trust ticks. */
+  chapterCount?: number;
   coverImage: string;
+  /** Optional small claim badge shown above the hero title. Only set this for a claim `badgeSource` can back up. */
+  badge?: string;
+  /** Source line for `badge`'s claim, shown in tiny muted text near the price. Set whenever `badge` is set. */
+  badgeSource?: string;
   whatsInside: WhatsInsideItem[];
   faqs: FaqItem[];
 }
@@ -105,13 +115,19 @@ export const guides: Guide[] = [
     no: "No. 01",
     title: "I Lost Money in F&O. Now What.",
     subtitle: "A recovery guide for Indian retail traders, for the night a loss happens.",
+    audience:
+      "For traders who have taken a real loss in F&O and want a clear plan for the next 30 days, not a strategy to win it back.",
     blurb:
       "A calm, honest guide for the night after a big F&O loss — what to do, and what to skip.",
     problemStatement:
       "You lost money trading F&O, and you don't know how to get through tonight, let alone tomorrow.",
-    price: 299,
+    price: 349,
+    compareAtPrice: 499,
     pageCount: 44,
+    chapterCount: 21,
     coverImage: "/images/covers/i-lost-money-in-fno.png",
+    badge: "93% lose money. This is what comes next.",
+    badgeSource: "SEBI, individual F&O traders, FY22 to FY24.",
     whatsInside: [
       {
         title: "You are not the only one",
@@ -156,7 +172,8 @@ export const guides: Guide[] = [
       "The trade you place to erase the last loss — and the brakes that stop it before it costs you everything.",
     problemStatement:
       "A loss makes you want to trade again immediately, bigger, to make it disappear. That trade is usually the expensive one.",
-    price: 299,
+    price: 349,
+    compareAtPrice: 499,
     pageCount: 61,
     coverImage: "/images/covers/the-revenge-trading-cure.png",
     whatsInside: [
@@ -203,7 +220,8 @@ export const guides: Guide[] = [
       "Seven honest checkpoints to help you decide, calmly, whether to keep trading or walk away.",
     problemStatement:
       "You keep asking yourself whether to quit trading, and the answer depends on your mood that day.",
-    price: 299,
+    price: 349,
+    compareAtPrice: 499,
     pageCount: 43,
     coverImage: "/images/covers/should-i-quit-trading.png",
     whatsInside: [
@@ -245,7 +263,8 @@ export const guides: Guide[] = [
       "A staged, checkable plan for rebuilding after a loss — small size first, growth only when earned.",
     problemStatement:
       "You've decided to keep trading. Now you need a plan that doesn't repeat the mistake that got you here.",
-    price: 299,
+    price: 349,
+    compareAtPrice: 499,
     pageCount: 65,
     coverImage: "/images/covers/the-comeback-plan.png",
     whatsInside: [
