@@ -8,7 +8,7 @@
 // That does make the order id in the thank-you URL a credential for the
 // download — it is a v4 uuid, unguessable and never shown to anyone but the
 // buyer, but it is worth knowing that forwarding that URL shares the book.
-// Ports supabase/functions/order-status/index.ts.
+// Ports the old Supabase Edge Functions.
 import { isUuid, json, jsonError, maskEmail, methodNotAllowed } from "../lib/http";
 import { downloadUrlFor } from "../lib/links";
 import type { WorkerEnv } from "../lib/env";

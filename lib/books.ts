@@ -4,20 +4,25 @@
  * PRICES ARE DUPLICATED ON PURPOSE, AND MUST BE KEPT IN SYNC BY HAND.
  *
  * `price` here is display only — it decides what a visitor reads on the page.
- * What a buyer is actually charged comes from `price_paise` in the Supabase
- * `books` table, looked up server-side by slug in the create-order Edge
- * Function. A tampered client can ask to buy a slug, never to set a price.
+ * What a buyer is actually charged comes from `price_paise` in D1's `books`
+ * table, looked up server-side by slug in the Worker's /api/create-order
+ * route (worker/routes/create-order.ts). A tampered client can ask to buy a
+ * slug, never to set a price.
  *
  * So changing a price is two steps, and doing only the first is a bug a
  * visitor sees as one number and pays another:
  *
  *   1. edit `price` below (rupees), and
- *   2. update the matching row in the books table (paise — rupees x 100):
+ *   2. update the matching row in D1 (paise — rupees x 100), either by hand:
  *
- *      update public.books set price_paise = 24900 where slug = '...';
+ *      npx wrangler d1 execute archivist-db --remote \
+ *        --command "UPDATE books SET price_paise = 24900 WHERE slug = '...'"
  *
- * The same goes for adding or removing a book: a slug that is not in the table
- * with status = 'published' renders here but cannot be bought.
+ *      or by editing migrations/0004_seed_books.sql and applying a new
+ *      migration — see that file's own header.
+ *
+ * The same goes for adding or removing a book: a slug that is not in the
+ * table with status = 'published' renders here but cannot be bought.
  */
 
 export interface FaqItem {

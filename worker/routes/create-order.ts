@@ -3,7 +3,7 @@
 // The client names a book, and optionally the address to deliver it to. It
 // never names a price: the amount comes from the books table and is copied
 // onto the order, and every later check compares Razorpay's numbers against
-// that stored copy. Ports supabase/functions/create-order/index.ts.
+// that stored copy. Ports the old Supabase Edge Functions.
 import { isEmail, isSlug, json, jsonError, methodNotAllowed, readJson } from "../lib/http";
 import { getPublishedBook, insertOrder } from "../lib/orders";
 import { createRazorpayOrder } from "../lib/razorpay";

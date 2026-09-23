@@ -7,7 +7,7 @@
 // the object straight out of the private bucket and streams the bytes back
 // with Content-Disposition: attachment, so the bucket itself is never
 // reachable except through this route. Ports
-// supabase/functions/get-download/index.ts + _shared/storage.ts.
+// the old Supabase Edge Functions.
 import { isUuid, jsonError, methodNotAllowed } from "../lib/http";
 import { claimDownload, getBookBySlug } from "../lib/orders";
 import type { WorkerEnv } from "../lib/env";

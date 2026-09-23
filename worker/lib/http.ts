@@ -35,7 +35,7 @@ export function methodNotAllowed(req: Request, allowed: string): Response {
 
 // Input shapes we accept. Everything from the client is checked against these
 // before it reaches D1 or Razorpay. Unchanged from
-// supabase/functions/_shared/http.ts.
+// the old Supabase Edge Functions.
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const RAZORPAY_ID = /^[A-Za-z0-9_]{6,64}$/;
 const HEX_64 = /^[a-f0-9]{64}$/i;

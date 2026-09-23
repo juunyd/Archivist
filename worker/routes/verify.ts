@@ -4,7 +4,7 @@
 // Called by the browser right after Razorpay Checkout succeeds. This is the
 // fast path; the webhook is the safety net that fulfils the same order if the
 // buyer closes the tab before this ever runs. Ports
-// supabase/functions/verify-payment/index.ts.
+// the old Supabase Edge Functions.
 import {
   isHexSignature,
   isRazorpayId,

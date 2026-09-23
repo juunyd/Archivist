@@ -100,7 +100,7 @@ export type PaymentCheck =
  * Confirms that what Razorpay says about this payment matches the order we
  * created. A valid signature only proves the message came from Razorpay — it
  * does not prove the amount, currency or order are the ones we asked for.
- * Unchanged from supabase/functions/_shared/orders.ts.
+ * Unchanged from the old Supabase Edge Functions.
  */
 export function checkPaymentMatchesOrder(
   order: OrderRow,

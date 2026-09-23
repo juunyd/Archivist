@@ -1,4 +1,4 @@
-// Identical to supabase/functions/_shared/crypto.ts — Web Crypto is the same
+// Identical to the old Supabase Edge Functions — Web Crypto is the same
 // API on Cloudflare Workers as it was on Supabase's Deno runtime, so nothing
 // here needed to change to move backends.
 

@@ -1,7 +1,7 @@
 // POST /api/webhooks/razorpay — Razorpay -> us, server to server. No CORS
 // preflight applies (Razorpay sends no Origin/OPTIONS), no auth beyond the
 // signature over the raw body. Ports
-// supabase/functions/razorpay-webhook/index.ts.
+// the old Supabase Edge Functions.
 //
 // This is the safety net: if the buyer closes the tab before /api/verify
 // runs, the order is still marked paid and delivered from here.

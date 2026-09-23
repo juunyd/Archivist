@@ -1,7 +1,0 @@
--- Nothing to seed.
---
--- The books table is populated by supabase/migrations/20260921090300_backfill_books.sql,
--- so a local `supabase db reset` comes up with the same four books as
--- production. The marketing copy the site renders lives in lib/books.ts; the
--- table carries what create-order needs to charge correctly (price_paise,
--- pdf_path, status). Keep the two in step — see the header of lib/books.ts.

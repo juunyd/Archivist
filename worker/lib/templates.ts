@@ -1,6 +1,6 @@
 import { supportEmail } from "./env";
 
-// Unchanged from supabase/functions/_shared/templates.ts.
+// Unchanged from the old Supabase Edge Functions.
 
 const escapeHtml = (value: string): string =>
   value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")

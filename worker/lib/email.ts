@@ -11,7 +11,7 @@ export interface EmailMessage {
  * Sends through Resend. Returns false instead of throwing so a delivery
  * failure can be handled (and retried by a later webhook) rather than
  * turning into a 500 on a payment that already succeeded. Unchanged from
- * supabase/functions/_shared/email.ts.
+ * the old Supabase Edge Functions.
  */
 export async function sendEmail(env: WorkerEnv, message: EmailMessage): Promise<boolean> {
   try {

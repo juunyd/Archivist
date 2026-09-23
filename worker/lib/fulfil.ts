@@ -11,7 +11,7 @@ export type FulfilResult =
   | { status: "email_failed" };
 
 /**
- * Delivers an order exactly once. Ports supabase/functions/_shared/fulfil.ts
+ * Delivers an order exactly once. Ports the old Supabase Edge Functions
  * onto D1: the `fulfilled_at is null` predicate on the UPDATE is still the
  * lock, D1 still lets exactly one caller's write match a given row.
  *

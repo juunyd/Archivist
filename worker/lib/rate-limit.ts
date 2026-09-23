@@ -7,7 +7,7 @@ export const RESEND_MAX_PER_HOUR = 3;
  *
  * The row is always written, including for addresses that have never bought
  * anything, so an attacker cannot tell the two cases apart by timing. Same
- * logic as supabase/functions/_shared/rate-limit.ts, against D1 instead of
+ * logic as the old Supabase Edge Functions, against D1 instead of
  * Postgres.
  */
 export async function allowResendRequest(env: WorkerEnv, email: string): Promise<boolean> {

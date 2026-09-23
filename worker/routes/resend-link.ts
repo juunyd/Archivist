@@ -3,7 +3,7 @@
 // Always the same answer, whatever is true on our side. If this ever returned
 // "no orders found", it would become a way to test whether an address has
 // bought from us — so a well-formed request gets one reply and one only.
-// Ports supabase/functions/resend-download-link/index.ts.
+// Ports the old Supabase Edge Functions.
 import { isEmail, json, jsonError, methodNotAllowed, readJson } from "../lib/http";
 import { allowResendRequest } from "../lib/rate-limit";
 import { paidOrdersForEmail } from "../lib/orders";

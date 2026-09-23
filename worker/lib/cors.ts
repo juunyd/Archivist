@@ -1,6 +1,6 @@
 // Only our own origins may call these routes from a browser. Anything else
 // gets no CORS headers back, so the browser refuses to read the response.
-// Unchanged from supabase/functions/_shared/cors.ts.
+// Unchanged from the old Supabase Edge Functions.
 const ALLOWED_ORIGINS = [
   "https://archivist.in",
   "http://localhost:3000",
