@@ -24,6 +24,11 @@ export const metadata: Metadata = {
     title: siteConfig.name,
     description: siteConfig.description,
   },
+  verification: {
+    other: {
+      "facebook-domain-verification": "klh5vaavrolsn65fg0l0w0yow8icmi",
+    },
+  },
 };
 
 export default function RootLayout({
