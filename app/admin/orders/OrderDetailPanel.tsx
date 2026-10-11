@@ -12,7 +12,7 @@ interface OrderDetail {
   amountPaise: number;
   currency: string;
   status: string;
-  maskedEmail: string | null;
+  email: string | null;
   razorpayOrderId: string;
   razorpayPaymentId: string | null;
   downloadCount: number;
@@ -97,8 +97,8 @@ export function OrderDetailPanel({ orderId, onClose }: { orderId: string; onClos
               <dd>{formatRupees(order.amountPaise)}</dd>
             </div>
             <div className="admin__detail-row">
-              <dt>Customer</dt>
-              <dd>{order.maskedEmail ? <CopyableText text={order.maskedEmail} /> : "—"}</dd>
+              <dt>Email</dt>
+              <dd>{order.email ? <CopyableText text={order.email} /> : "—"}</dd>
             </div>
             <div className="admin__detail-row">
               <dt>Order ID</dt>

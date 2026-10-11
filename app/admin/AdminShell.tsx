@@ -3,14 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  AdSpendIcon,
-  CustomersIcon,
-  EmailsIcon,
-  GuidesIcon,
-  OrdersIcon,
-  OverviewIcon,
-} from "./icons";
+import { AdSpendIcon, GuidesIcon, OrdersIcon, OverviewIcon } from "./icons";
 
 interface NavItem {
   href: string;
@@ -21,8 +14,6 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { href: "/admin/", label: "Overview", icon: OverviewIcon },
   { href: "/admin/orders/", label: "Orders", icon: OrdersIcon },
-  { href: "/admin/customers/", label: "Customers", icon: CustomersIcon },
-  { href: "/admin/emails/", label: "Emails", icon: EmailsIcon },
   { href: "/admin/guides/", label: "Guides", icon: GuidesIcon },
   { href: "/admin/ad-spend/", label: "Ad spend", icon: AdSpendIcon },
 ];

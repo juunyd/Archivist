@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getJson } from "@/lib/api";
 import { useGuideOptions } from "../useGuideOptions";
+import { CopyableText } from "../CopyableText";
 import { TrendDownIcon, TrendUpIcon } from "../icons";
 import { OrderDetailPanel } from "./OrderDetailPanel";
 
@@ -16,7 +17,7 @@ interface OrderRow {
   guideTitle: string;
   guideSlug: string;
   amountPaise: number;
-  maskedEmail: string | null;
+  email: string | null;
   status: string;
 }
 
@@ -127,6 +128,16 @@ export function OrdersListContent() {
 
   const totalPages = data ? Math.max(1, Math.ceil(data.total / data.pageSize)) : 1;
 
+  const csvHref = useMemo(() => {
+    const params = new URLSearchParams({ format: "csv", sort, dir });
+    if (search) params.set("search", search);
+    if (status !== "all") params.set("status", status);
+    if (guide !== "all") params.set("guide", guide);
+    if (startDate) params.set("start", startDate);
+    if (endDate) params.set("end", endDate);
+    return `/api/admin/orders?${params.toString()}`;
+  }, [search, status, guide, startDate, endDate, sort, dir]);
+
   return (
     <>
       <div className="admin__filter-bar">
@@ -209,9 +220,14 @@ export function OrdersListContent() {
 
       {data && (
         <>
-          <p className="admin__result-count">
-            {data.total} order{data.total === 1 ? "" : "s"}
-          </p>
+          <div className="admin__card-header-row">
+            <p className="admin__result-count">
+              {data.total} order{data.total === 1 ? "" : "s"}
+            </p>
+            <a className="admin__view-all" href={csvHref}>
+              Download CSV
+            </a>
+          </div>
 
           <div className="admin__table-wrap">
             <table className="admin__table">
@@ -225,7 +241,7 @@ export function OrdersListContent() {
                       </button>
                     </th>
                   ))}
-                  <th>Customer</th>
+                  <th>Email</th>
                 </tr>
               </thead>
               <tbody>
@@ -242,7 +258,7 @@ export function OrdersListContent() {
                     <td>
                       <span className={`admin__status admin__status--${o.status}`}>{o.status}</span>
                     </td>
-                    <td>{o.maskedEmail ?? "—"}</td>
+                    <td onClick={(e) => e.stopPropagation()}>{o.email ? <CopyableText text={o.email} /> : "—"}</td>
                   </tr>
                 ))}
               </tbody>

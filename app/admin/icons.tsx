@@ -44,26 +44,6 @@ export function OrdersIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-export function CustomersIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <Icon {...props}>
-      <circle cx="9" cy="8" r="3.2" />
-      <path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5" />
-      <path d="M15.5 5a3.2 3.2 0 0 1 0 6.3" />
-      <path d="M17 14.6c2.3.5 4 2.3 4 5.4" />
-    </Icon>
-  );
-}
-
-export function EmailsIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <Icon {...props}>
-      <rect x="3" y="5" width="18" height="14" rx="2" />
-      <path d="m3.5 6 8.5 7 8.5-7" />
-    </Icon>
-  );
-}
-
 export function GuidesIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <Icon {...props}>

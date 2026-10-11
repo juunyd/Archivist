@@ -25,6 +25,7 @@ export interface ListOrdersParams {
   dir: SortDir;
   page: number;
   pageSize: number;
+  all?: boolean; // skip LIMIT/OFFSET — used for the CSV export
 }
 
 export interface AdminOrderListRow {
@@ -93,6 +94,8 @@ export async function listAdminOrders(
   const sortColumn = SORT_COLUMNS[params.sort];
   const dir = params.dir === "asc" ? "ASC" : "DESC";
   const offset = (params.page - 1) * params.pageSize;
+  const limitClause = params.all ? "" : "LIMIT ? OFFSET ?";
+  const limitBinds = params.all ? [] : [params.pageSize, offset];
 
   const [rowsResult, countRow] = await Promise.all([
     env.DB
@@ -103,9 +106,9 @@ export async function listAdminOrders(
            LEFT JOIN books b ON b.slug = o.book_slug
            ${clause}
           ORDER BY ${sortColumn} ${dir}
-          LIMIT ? OFFSET ?`,
+          ${limitClause}`,
       )
-      .bind(...binds, params.pageSize, offset)
+      .bind(...binds, ...limitBinds)
       .all<AdminOrderListRow>(),
     env.DB
       .prepare(
