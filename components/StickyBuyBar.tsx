@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { Guide } from "@/lib/guides";
+import type { Guide } from "@/lib/catalog";
 import { CtaButton } from "./CtaButton";
 
 interface StickyBuyBarProps {

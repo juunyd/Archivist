@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import type { Guide } from "@/lib/guides";
+import type { Guide } from "@/lib/catalog";
 
 interface GuideCardProps {
   guide: Guide;

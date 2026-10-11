@@ -7,7 +7,7 @@ import { CtaButton } from "@/components/CtaButton";
 import { FaqAccordion } from "@/components/FaqAccordion";
 import { StickyBuyBar } from "@/components/StickyBuyBar";
 import { GuideViewTracker } from "@/components/GuideViewTracker";
-import { getAllGuideSlugs, getGuideBySlug } from "@/lib/guides";
+import { getAllGuideSlugs, getGuideBySlug } from "@/lib/catalog";
 import styles from "./page.module.css";
 
 interface GuidePageProps {
@@ -25,8 +25,9 @@ const footerLinks = [
   { href: "#faq", label: "FAQ" },
 ];
 
-export function generateStaticParams() {
-  return getAllGuideSlugs().map((slug) => ({ slug }));
+export async function generateStaticParams() {
+  const slugs = await getAllGuideSlugs();
+  return slugs.map((slug) => ({ slug }));
 }
 
 // No fallback: only slugs returned by generateStaticParams are built. There
@@ -35,7 +36,7 @@ export const dynamicParams = false;
 
 export async function generateMetadata({ params }: GuidePageProps): Promise<Metadata> {
   const { slug } = await params;
-  const guide = getGuideBySlug(slug);
+  const guide = await getGuideBySlug(slug);
   if (!guide) return {};
 
   const ogImage = {
@@ -66,7 +67,7 @@ const SENTINEL_ID = "hero-sentinel";
 
 export default async function GuidePage({ params }: GuidePageProps) {
   const { slug } = await params;
-  const guide = getGuideBySlug(slug);
+  const guide = await getGuideBySlug(slug);
   if (!guide) notFound();
 
   return (

@@ -3,7 +3,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { GuideCard } from "@/components/GuideCard";
 import { FaqAccordion } from "@/components/FaqAccordion";
-import { guides } from "@/lib/guides";
+import { getAllGuides } from "@/lib/catalog";
 import { editorialRules, homepageFaqs, siteConfig } from "@/lib/site";
 import styles from "./page.module.css";
 
@@ -29,7 +29,8 @@ export const metadata: Metadata = {
   },
 };
 
-export default function HomePage() {
+export default async function HomePage() {
+  const guides = await getAllGuides();
   return (
     <>
       <Header navLinks={navLinks} />

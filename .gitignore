@@ -19,3 +19,6 @@ tsconfig.tsbuildinfo
 # that script in package.json, which `npm run build` always runs first.
 worker-configuration.d.ts
 /guides
+
+# scripts/catalog-parity-check.mjs's working output
+.parity

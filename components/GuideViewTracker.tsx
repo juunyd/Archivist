@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import type { Guide } from "@/lib/guides";
+import type { Guide } from "@/lib/catalog";
 import { trackViewContent } from "@/lib/meta-pixel";
 
 interface GuideViewTrackerProps {
