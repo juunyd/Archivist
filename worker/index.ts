@@ -19,7 +19,9 @@ import {
   handleAdminGuideUnpublish,
   handleAdminGuidesList,
 } from "./routes/admin/guides";
+import { handleAdminGuideCoverUpload, handleAdminGuidePdfUpload } from "./routes/admin/guide-uploads";
 import { handleCatalog } from "./routes/catalog";
+import { handleCoverServe } from "./routes/cover-serve";
 
 // Guide pages used to live at /books/[slug]/ and were flattened to /[slug]/.
 // Redirected here (not via next.config.js redirects, which static export
@@ -27,10 +29,21 @@ import { handleCatalog } from "./routes/catalog";
 // 404ing.
 const OLD_BOOK_PATH = /^\/books\/([^/]+)\/?$/;
 
-// /api/admin/guides/:slug and /api/admin/guides/:slug/unpublish carry a
-// dynamic segment, so they're matched here before the exact-path switch
-// below (which only ever sees static routes).
+// Covers uploaded through the admin API (Step 2) are served straight out of
+// R2 — not part of the static export, so this has to be matched here rather
+// than falling through to env.ASSETS.fetch(). Legacy covers in
+// public/images/covers/ are untouched and keep being served as static
+// assets via the fallthrough below.
+const COVER_SERVE_PATH = /^\/covers\/([a-z0-9-]+\.(?:png|jpg|webp))$/;
+
+// /api/admin/guides/:slug and its sub-paths carry a dynamic segment, so
+// they're matched here before the exact-path switch below (which only ever
+// sees static routes). Order among these doesn't actually matter — each
+// pattern's `[^/]+` can't span the `/` that distinguishes them — but cover/
+// pdf/unpublish are checked first for readability.
 const ADMIN_GUIDE_UNPUBLISH_PATH = /^\/api\/admin\/guides\/([^/]+)\/unpublish$/;
+const ADMIN_GUIDE_COVER_PATH = /^\/api\/admin\/guides\/([^/]+)\/cover$/;
+const ADMIN_GUIDE_PDF_PATH = /^\/api\/admin\/guides\/([^/]+)\/pdf$/;
 const ADMIN_GUIDE_DETAIL_PATH = /^\/api\/admin\/guides\/([^/]+)$/;
 
 export default {
@@ -44,6 +57,11 @@ export default {
         return Response.redirect(url.toString(), 308);
       }
 
+      const coverMatch = COVER_SERVE_PATH.exec(url.pathname);
+      if (coverMatch) {
+        return await handleCoverServe(request, env, coverMatch[1]);
+      }
+
       // Static export: pages, /images/*, _next/*, etc.
       return env.ASSETS.fetch(request);
     }
@@ -55,6 +73,14 @@ export default {
       const unpublishMatch = ADMIN_GUIDE_UNPUBLISH_PATH.exec(url.pathname);
       if (unpublishMatch) {
         return await handleAdminGuideUnpublish(request, env, decodeURIComponent(unpublishMatch[1]));
+      }
+      const coverUploadMatch = ADMIN_GUIDE_COVER_PATH.exec(url.pathname);
+      if (coverUploadMatch) {
+        return await handleAdminGuideCoverUpload(request, env, decodeURIComponent(coverUploadMatch[1]));
+      }
+      const pdfUploadMatch = ADMIN_GUIDE_PDF_PATH.exec(url.pathname);
+      if (pdfUploadMatch) {
+        return await handleAdminGuidePdfUpload(request, env, decodeURIComponent(pdfUploadMatch[1]));
       }
       const guideDetailMatch = ADMIN_GUIDE_DETAIL_PATH.exec(url.pathname);
       if (guideDetailMatch) {

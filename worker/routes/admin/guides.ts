@@ -110,6 +110,14 @@ export async function handleAdminGuideDetail(
             `Cannot change slug: ${counts.total} order${counts.total === 1 ? "" : "s"} reference "${slug}". Unpublish or leave the slug as-is.`,
           );
         }
+        if (existing.pdf_path) {
+          return jsonError(
+            req,
+            409,
+            "slug_locked",
+            `Cannot change slug: this guide already has a PDF uploaded (${existing.pdf_path}). Re-upload under the new slug instead.`,
+          );
+        }
         if (await slugExists(env, input.slug)) {
           return jsonError(req, 409, "slug_taken", `A guide with slug "${input.slug}" already exists.`);
         }
@@ -118,6 +126,19 @@ export async function handleAdminGuideDetail(
       if (input.status === "published") {
         const blocked = publishBlockedReason(existing.cover_path, existing.pdf_path);
         if (blocked) return jsonError(req, 400, "cannot_publish", blocked);
+
+        // A saved path is not proof of a file — confirm the PDF Phase 2's
+        // download route will later serve is actually sitting in R2, not
+        // just recorded in D1 (e.g. after a failed or partial upload).
+        const object = await env.BOOK_FILES.head(existing.pdf_path!);
+        if (!object) {
+          return jsonError(
+            req,
+            400,
+            "cannot_publish",
+            `Cannot publish: the PDF recorded for this guide (${existing.pdf_path}) was not found in storage. Re-upload it.`,
+          );
+        }
       }
 
       await updateGuide(env, slug, input);

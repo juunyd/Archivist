@@ -150,6 +150,20 @@ export async function updateGuide(
     .run();
 }
 
+export async function setGuideCoverPath(env: WorkerEnv, slug: string, coverPath: string): Promise<void> {
+  await env.DB
+    .prepare(`UPDATE books SET cover_path = ?2, updated_at = ?3 WHERE slug = ?1`)
+    .bind(slug, coverPath, nowIso())
+    .run();
+}
+
+export async function setGuidePdfPath(env: WorkerEnv, slug: string, pdfPath: string): Promise<void> {
+  await env.DB
+    .prepare(`UPDATE books SET pdf_path = ?2, updated_at = ?3 WHERE slug = ?1`)
+    .bind(slug, pdfPath, nowIso())
+    .run();
+}
+
 export async function unpublishGuide(env: WorkerEnv, slug: string): Promise<boolean> {
   const row = await env.DB
     .prepare(
@@ -194,7 +208,10 @@ export function serializeGuideDetail(row: AdminGuideDetailRow, paidOrders: numbe
     updatedAt: row.updated_at,
     paidOrders,
     totalOrders,
-    slugLocked: totalOrders > 0,
+    // The slug is locked by either having orders, or already having a PDF —
+    // see worker/routes/admin/guides.ts's PUT handler for why a PDF alone
+    // blocks a rename even with zero orders.
+    slugLocked: totalOrders > 0 || row.pdf_path != null,
   };
 }
 
