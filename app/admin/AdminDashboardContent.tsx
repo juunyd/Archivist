@@ -1,29 +1,37 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getJson, postJson } from "@/lib/api";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { getJson } from "@/lib/api";
 import { RevenueSpendChart, type ChartDay } from "./RevenueSpendChart";
+import { AdminFilterBar, type RangeValue } from "./AdminFilterBar";
+import { TrendDownIcon, TrendUpIcon } from "./icons";
 
 interface WindowStats {
-  label: string;
   startDate: string | null;
+  endDate: string;
   revenuePaise: number;
   paidOrders: number;
+  avgOrderValuePaise: number;
   checkoutsStarted: number;
-  failedPayments: number;
   conversionRatePercent: number;
+  failedPayments: number;
   adSpendPaise: number;
   costPerPurchasePaise: number | null;
   roas: number | null;
-  estimatedProfitPerSalePaise: number | null;
+  estimatedProfitPaise: number | null;
+  downloads: number;
+  newCustomers: number;
+  repeatCustomers: number;
 }
 
 interface PerGuideStats {
   slug: string;
   title: string;
-  status: string | null;
   revenuePaise: number;
   paidOrders: number;
+  checkoutsStarted: number;
+  conversionRatePercent: number;
 }
 
 interface RecentOrder {
@@ -37,22 +45,14 @@ interface RecentOrder {
 interface StatsResponse {
   generatedAt: string;
   feeAssumptions: { paymentFeePercent: number; gstOnFeePercent: number };
-  windows: { today: WindowStats; last7: WindowStats; last30: WindowStats; allTime: WindowStats };
-  perGuide: PerGuideStats[];
-  downloads: { total: number };
-  resendRequests: { last7Days: number };
+  range: { key: string; startDate: string | null; endDate: string; previousStartDate: string | null; previousEndDate: string | null };
+  current: WindowStats;
+  previous: WindowStats | null;
+  bestSellers: PerGuideStats[] | null;
+  weakest: PerGuideStats[] | null;
   chart: ChartDay[];
   recentOrders: RecentOrder[];
 }
-
-type WindowKey = "today" | "last7" | "last30" | "allTime";
-
-const WINDOW_TABS: { key: WindowKey; label: string }[] = [
-  { key: "today", label: "Today" },
-  { key: "last7", label: "7 days" },
-  { key: "last30", label: "30 days" },
-  { key: "allTime", label: "All time" },
-];
 
 function formatRupees(paise: number): string {
   return `₹${(paise / 100).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
@@ -60,6 +60,10 @@ function formatRupees(paise: number): string {
 
 function formatRupeesPrecise(paise: number): string {
   return `₹${(paise / 100).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function formatInt(n: number): string {
+  return n.toLocaleString("en-IN");
 }
 
 function formatDateTimeIST(iso: string): string {
@@ -76,249 +80,272 @@ function todayISTDateString(): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(new Date());
 }
 
-function yesterdayISTDateString(): string {
+function daysAgoISTDateString(days: number): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(
-    new Date(Date.now() - 24 * 60 * 60 * 1000),
+    new Date(Date.now() - days * 24 * 60 * 60 * 1000),
+  );
+}
+
+type Direction = "higherIsBetter" | "lowerIsBetter";
+
+interface CardDef {
+  key: string;
+  label: string;
+  format: (w: WindowStats) => string;
+  raw: (w: WindowStats) => number | null;
+  sub?: (w: WindowStats) => string | null;
+  direction: Direction;
+}
+
+const CARDS: CardDef[] = [
+  { key: "revenue", label: "Revenue", format: (w) => formatRupees(w.revenuePaise), raw: (w) => w.revenuePaise, direction: "higherIsBetter" },
+  { key: "orders", label: "Orders", format: (w) => formatInt(w.paidOrders), raw: (w) => w.paidOrders, direction: "higherIsBetter" },
+  { key: "aov", label: "Average order value", format: (w) => formatRupeesPrecise(w.avgOrderValuePaise), raw: (w) => w.avgOrderValuePaise, direction: "higherIsBetter" },
+  { key: "checkouts", label: "Checkouts started", format: (w) => formatInt(w.checkoutsStarted), raw: (w) => w.checkoutsStarted, direction: "higherIsBetter" },
+  {
+    key: "conversion",
+    label: "Conversion",
+    format: (w) => `${w.conversionRatePercent.toFixed(1)}%`,
+    raw: (w) => w.conversionRatePercent,
+    sub: (w) => `${w.paidOrders} paid / ${w.checkoutsStarted} started`,
+    direction: "higherIsBetter",
+  },
+  { key: "failed", label: "Failed payments", format: (w) => formatInt(w.failedPayments), raw: (w) => w.failedPayments, direction: "lowerIsBetter" },
+  { key: "adSpend", label: "Ad spend", format: (w) => formatRupees(w.adSpendPaise), raw: (w) => w.adSpendPaise, direction: "lowerIsBetter" },
+  {
+    key: "cpp",
+    label: "Cost per purchase",
+    format: (w) => (w.costPerPurchasePaise === null ? "—" : formatRupeesPrecise(w.costPerPurchasePaise)),
+    raw: (w) => w.costPerPurchasePaise,
+    direction: "lowerIsBetter",
+  },
+  {
+    key: "roas",
+    label: "ROAS",
+    format: (w) => (w.roas === null ? "—" : `${w.roas.toFixed(2)}×`),
+    raw: (w) => w.roas,
+    direction: "higherIsBetter",
+  },
+  {
+    key: "profit",
+    label: "Estimated profit",
+    format: (w) => (w.estimatedProfitPaise === null ? "—" : formatRupees(w.estimatedProfitPaise)),
+    raw: (w) => w.estimatedProfitPaise,
+    direction: "higherIsBetter",
+  },
+  { key: "downloads", label: "Downloads", format: (w) => formatInt(w.downloads), raw: (w) => w.downloads, direction: "higherIsBetter" },
+  { key: "newCustomers", label: "New customers", format: (w) => formatInt(w.newCustomers), raw: (w) => w.newCustomers, direction: "higherIsBetter" },
+  { key: "repeatCustomers", label: "Repeat customers", format: (w) => formatInt(w.repeatCustomers), raw: (w) => w.repeatCustomers, direction: "higherIsBetter" },
+];
+
+function DeltaBadge({ current, previous, direction }: { current: number | null; previous: number | null; direction: Direction }) {
+  if (current === null || previous === null) return null;
+  if (previous === 0) {
+    if (current === 0) return null;
+    return (
+      <span className="admin__delta admin__delta--good">
+        <TrendUpIcon /> new
+      </span>
+    );
+  }
+  const changePercent = ((current - previous) / previous) * 100;
+  if (Math.abs(changePercent) < 0.05) return null;
+  const up = changePercent > 0;
+  const good = direction === "higherIsBetter" ? up : !up;
+  return (
+    <span className={`admin__delta ${good ? "admin__delta--good" : "admin__delta--bad"}`}>
+      {up ? <TrendUpIcon /> : <TrendDownIcon />}
+      {Math.abs(changePercent).toFixed(0)}%
+    </span>
+  );
+}
+
+function GuideBarList({
+  title,
+  guides,
+  variant,
+  renderValue,
+  barPercent,
+}: {
+  title: string;
+  guides: PerGuideStats[];
+  variant: "good" | "weak";
+  renderValue: (g: PerGuideStats) => string;
+  barPercent: (g: PerGuideStats) => number;
+}) {
+  return (
+    <div className="admin__card admin__card--list">
+      <h2 className="admin__section-title">{title}</h2>
+      {guides.length === 0 && <p className="admin__state admin__state--inline">No data for this period.</p>}
+      <ul className="admin__bar-list">
+        {guides.map((g) => (
+          <li key={g.slug} className="admin__bar-row">
+            <div className="admin__bar-row-top">
+              <span className="admin__bar-row-label">{g.title}</span>
+              <span className="admin__bar-row-value">{renderValue(g)}</span>
+            </div>
+            <div className="admin__bar-track">
+              <div
+                className={`admin__bar-fill admin__bar-fill--${variant}`}
+                style={{ width: `${Math.max(2, Math.min(100, barPercent(g)))}%` }}
+              />
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
 export function AdminDashboardContent() {
   const [stats, setStats] = useState<StatsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [activeWindow, setActiveWindow] = useState<WindowKey>("last7");
+  const [rangeValue, setRangeValue] = useState<RangeValue>({
+    range: "7d",
+    start: daysAgoISTDateString(6),
+    end: todayISTDateString(),
+  });
+  const [guideValue, setGuideValue] = useState("all");
 
-  const [spendDate, setSpendDate] = useState(yesterdayISTDateString());
-  const [spendAmount, setSpendAmount] = useState("");
-  const [spendNote, setSpendNote] = useState("");
-  const [spendSaving, setSpendSaving] = useState(false);
-  const [spendMessage, setSpendMessage] = useState<{ text: string; error?: boolean } | null>(null);
-
-  async function loadStats() {
-    try {
-      const data = await getJson<StatsResponse>("/api/admin/stats", {});
-      setStats(data);
-      setError(null);
-    } catch {
-      setError("Could not load dashboard data. Refresh to try again.");
-    }
-  }
+  const canFetch = rangeValue.range !== "custom" || (!!rangeValue.start && !!rangeValue.end && rangeValue.start <= rangeValue.end);
 
   useEffect(() => {
-    void loadStats();
-  }, []);
-
-  async function handleSpendSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const amountRupees = Number.parseFloat(spendAmount);
-    if (!Number.isFinite(amountRupees) || amountRupees < 0) {
-      setSpendMessage({ text: "Enter a valid amount.", error: true });
-      return;
+    if (!canFetch) return;
+    let cancelled = false;
+    const params: Record<string, string> = { range: rangeValue.range };
+    if (rangeValue.range === "custom") {
+      params.start = rangeValue.start;
+      params.end = rangeValue.end;
     }
-    setSpendSaving(true);
-    setSpendMessage(null);
-    try {
-      await postJson("/api/admin/ad-spend", {
-        date: spendDate,
-        amountPaise: Math.round(amountRupees * 100),
-        note: spendNote || undefined,
+    if (guideValue !== "all") params.guide = guideValue;
+
+    getJson<StatsResponse>("/api/admin/stats", params)
+      .then((data) => {
+        if (cancelled) return;
+        setStats(data);
+        setError(null);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setError("Could not load dashboard data. Refresh to try again.");
       });
-      setSpendMessage({ text: "Saved." });
-      setSpendNote("");
-      void loadStats();
-    } catch {
-      setSpendMessage({ text: "Could not save. Try again.", error: true });
-    } finally {
-      setSpendSaving(false);
-    }
-  }
+    return () => {
+      cancelled = true;
+    };
+  }, [rangeValue.range, rangeValue.start, rangeValue.end, guideValue, canFetch]);
 
-  if (error) return <p className="admin__state">{error}</p>;
-  if (!stats) return <p className="admin__state">Loading dashboard…</p>;
-
-  const w = stats.windows[activeWindow];
+  const bestSellerMax = useMemo(
+    () => Math.max(1, ...(stats?.bestSellers ?? []).map((g) => g.revenuePaise)),
+    [stats],
+  );
 
   return (
     <>
-      <section className="admin__section">
-        <div className="admin__window-tabs" role="tablist" aria-label="Time range">
-          {WINDOW_TABS.map((tab) => (
-            <button
-              key={tab.key}
-              type="button"
-              className="admin__window-tab"
-              aria-pressed={activeWindow === tab.key}
-              onClick={() => setActiveWindow(tab.key)}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+      <AdminFilterBar
+        rangeValue={rangeValue}
+        onRangeChange={setRangeValue}
+        guideValue={guideValue}
+        onGuideChange={setGuideValue}
+      />
 
-        <div className="admin__cards">
-          <div className="admin__card">
-            <p className="admin__card-label">Revenue</p>
-            <p className="admin__card-value">{formatRupees(w.revenuePaise)}</p>
-            <p className="admin__card-sub">{w.paidOrders} paid order{w.paidOrders === 1 ? "" : "s"}</p>
-          </div>
-          <div className="admin__card">
-            <p className="admin__card-label">Conversion</p>
-            <p className="admin__card-value">{w.conversionRatePercent.toFixed(1)}%</p>
-            <p className="admin__card-sub">
-              {w.paidOrders} paid / {w.checkoutsStarted} started
+      {error && <p className="admin__state">{error}</p>}
+      {!error && !stats && <p className="admin__state">Loading dashboard…</p>}
+
+      {stats && (
+        <>
+          <section className="admin__section">
+            <div className="admin__cards">
+              {CARDS.map((card) => (
+                <div className="admin__card" key={card.key}>
+                  <p className="admin__card-label">{card.label}</p>
+                  <div className="admin__card-value-row">
+                    <p className="admin__card-value">{card.format(stats.current)}</p>
+                    <DeltaBadge
+                      current={card.raw(stats.current)}
+                      previous={stats.previous ? card.raw(stats.previous) : null}
+                      direction={card.direction}
+                    />
+                  </div>
+                  {card.sub && <p className="admin__card-sub">{card.sub(stats.current)}</p>}
+                </div>
+              ))}
+            </div>
+            <p className="admin__fee-note">
+              Profit estimate assumes a {stats.feeAssumptions.paymentFeePercent}% payment fee plus{" "}
+              {stats.feeAssumptions.gstOnFeePercent}% GST on that fee, then subtracts ad spend for the same window.
+              Downloads and new/repeat customers are attributed to the order's checkout date, same as every other
+              number here. Ad spend has no per-guide breakdown, so it (and anything derived from it) stays the same
+              when a single guide is selected.
             </p>
-          </div>
-          <div className="admin__card">
-            <p className="admin__card-label">Failed payments</p>
-            <p className="admin__card-value">{w.failedPayments}</p>
-          </div>
-          <div className="admin__card">
-            <p className="admin__card-label">Ad spend</p>
-            <p className="admin__card-value">{formatRupees(w.adSpendPaise)}</p>
-          </div>
-          <div className="admin__card">
-            <p className="admin__card-label">Cost per purchase</p>
-            <p className="admin__card-value">
-              {w.costPerPurchasePaise === null ? "—" : formatRupeesPrecise(w.costPerPurchasePaise)}
-            </p>
-          </div>
-          <div className="admin__card">
-            <p className="admin__card-label">ROAS</p>
-            <p className="admin__card-value">{w.roas === null ? "—" : `${w.roas.toFixed(2)}×`}</p>
-          </div>
-          <div className="admin__card">
-            <p className="admin__card-label">Est. profit / sale</p>
-            <p className="admin__card-value">
-              {w.estimatedProfitPerSalePaise === null ? "—" : formatRupeesPrecise(w.estimatedProfitPerSalePaise)}
-            </p>
-          </div>
-          <div className="admin__card">
-            <p className="admin__card-label">Downloads (all time)</p>
-            <p className="admin__card-value">{stats.downloads.total}</p>
-            <p className="admin__card-sub">{stats.resendRequests.last7Days} resend request(s), last 7 days</p>
-          </div>
-        </div>
+          </section>
 
-        <p className="admin__fee-note">
-          Profit estimate assumes a {stats.feeAssumptions.paymentFeePercent}% payment fee plus{" "}
-          {stats.feeAssumptions.gstOnFeePercent}% GST on that fee, then subtracts cost per purchase for the same
-          window. Edit these assumptions in worker/lib/fees.ts.
-        </p>
-      </section>
+          <section className="admin__section">
+            <div className="admin__card">
+              <h2 className="admin__section-title">Revenue vs ad spend, last 30 days</h2>
+              <RevenueSpendChart data={stats.chart} />
+            </div>
+          </section>
 
-      <section className="admin__section">
-        <h2 className="admin__section-title">Revenue vs ad spend, last 30 days</h2>
-        <RevenueSpendChart data={stats.chart} />
-      </section>
-
-      <section className="admin__section">
-        <h2 className="admin__section-title">Record yesterday&apos;s ad spend</h2>
-        <form className="admin__form" onSubmit={handleSpendSubmit}>
-          <div className="admin__field">
-            <label htmlFor="spend-date">Date</label>
-            <input
-              id="spend-date"
-              type="date"
-              value={spendDate}
-              max={todayISTDateString()}
-              onChange={(e) => setSpendDate(e.target.value)}
-              required
-            />
-          </div>
-          <div className="admin__field">
-            <label htmlFor="spend-amount">Amount (₹)</label>
-            <input
-              id="spend-amount"
-              type="number"
-              min="0"
-              step="0.01"
-              inputMode="decimal"
-              value={spendAmount}
-              onChange={(e) => setSpendAmount(e.target.value)}
-              required
-            />
-          </div>
-          <div className="admin__field admin__field--note">
-            <label htmlFor="spend-note">Note (optional)</label>
-            <input id="spend-note" type="text" value={spendNote} onChange={(e) => setSpendNote(e.target.value)} />
-          </div>
-          <button className="admin__form-submit" type="submit" disabled={spendSaving}>
-            {spendSaving ? "Saving…" : "Save spend"}
-          </button>
-          {spendMessage && (
-            <span className={`admin__form-message${spendMessage.error ? " admin__form-message--error" : ""}`}>
-              {spendMessage.text}
-            </span>
+          {stats.bestSellers && stats.weakest && (
+            <section className="admin__section admin__grid-2">
+              <GuideBarList
+                title="Best sellers"
+                guides={stats.bestSellers}
+                variant="good"
+                renderValue={(g) => `${formatRupees(g.revenuePaise)} · ${g.paidOrders} order${g.paidOrders === 1 ? "" : "s"}`}
+                barPercent={(g) => (g.revenuePaise / bestSellerMax) * 100}
+              />
+              <GuideBarList
+                title="Weakest"
+                guides={stats.weakest}
+                variant="weak"
+                renderValue={(g) => `${g.conversionRatePercent.toFixed(0)}% · ${g.paidOrders}/${g.checkoutsStarted}`}
+                barPercent={(g) => g.conversionRatePercent}
+              />
+            </section>
           )}
-        </form>
-      </section>
 
-      <section className="admin__section">
-        <h2 className="admin__section-title">Revenue by guide (all time, paid orders)</h2>
-        <div className="admin__table-wrap">
-          <table className="admin__table">
-            <thead>
-              <tr>
-                <th>Guide</th>
-                <th>Status</th>
-                <th>Orders</th>
-                <th>Revenue</th>
-              </tr>
-            </thead>
-            <tbody>
-              {stats.perGuide.length === 0 && (
-                <tr>
-                  <td colSpan={4}>No paid orders yet.</td>
-                </tr>
-              )}
-              {stats.perGuide.map((g) => (
-                <tr key={g.slug}>
-                  <td>{g.title}</td>
-                  <td>
-                    {g.status && <span className={`admin__status admin__status--${g.status}`}>{g.status}</span>}
-                  </td>
-                  <td>{g.paidOrders}</td>
-                  <td>{formatRupees(g.revenuePaise)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section className="admin__section">
-        <h2 className="admin__section-title">Recent orders</h2>
-        <div className="admin__table-wrap">
-          <table className="admin__table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Guide</th>
-                <th>Amount</th>
-                <th>Email</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {stats.recentOrders.length === 0 && (
-                <tr>
-                  <td colSpan={5}>No orders yet.</td>
-                </tr>
-              )}
-              {stats.recentOrders.map((o, i) => (
-                <tr key={i}>
-                  <td>{formatDateTimeIST(o.date)}</td>
-                  <td>{o.guideTitle}</td>
-                  <td>{formatRupees(o.amountPaise)}</td>
-                  <td>{o.maskedEmail ?? "—"}</td>
-                  <td>
-                    <span className={`admin__status admin__status--${o.status}`}>{o.status}</span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+          <section className="admin__section">
+            <div className="admin__card-header-row">
+              <h2 className="admin__section-title">Recent orders</h2>
+              <Link href="/admin/orders/" className="admin__view-all">
+                View all orders →
+              </Link>
+            </div>
+            <div className="admin__table-wrap">
+              <table className="admin__table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Guide</th>
+                    <th>Amount</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stats.recentOrders.length === 0 && (
+                    <tr>
+                      <td colSpan={5}>No orders in this period.</td>
+                    </tr>
+                  )}
+                  {stats.recentOrders.map((o, i) => (
+                    <tr key={i}>
+                      <td>{formatDateTimeIST(o.date)}</td>
+                      <td>{o.guideTitle}</td>
+                      <td>{formatRupees(o.amountPaise)}</td>
+                      <td>{o.maskedEmail ?? "—"}</td>
+                      <td>
+                        <span className={`admin__status admin__status--${o.status}`}>{o.status}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </>
+      )}
     </>
   );
 }

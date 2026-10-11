@@ -2,21 +2,8 @@
 // POST /api/admin/ad-spend { date, amountPaise, note? } -> upsert one day's spend.
 import { json, jsonError, methodNotAllowed, readJson } from "../../lib/http";
 import { requireAccess } from "../../lib/access";
-import { istDateDaysAgo } from "../../lib/ist";
+import { istDateDaysAgo, isIstDateString } from "../../lib/ist";
 import type { WorkerEnv } from "../../lib/env";
-
-const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-
-function isValidDate(value: unknown): value is string {
-  if (typeof value !== "string" || !DATE_RE.test(value)) return false;
-  const [y, m, d] = value.split("-").map(Number);
-  const asDate = new Date(Date.UTC(y, m - 1, d));
-  return (
-    asDate.getUTCFullYear() === y &&
-    asDate.getUTCMonth() === m - 1 &&
-    asDate.getUTCDate() === d
-  );
-}
 
 function isValidAmountPaise(value: unknown): value is number {
   return typeof value === "number" && Number.isInteger(value) && value >= 0 && value <= 1_000_000_000;
@@ -59,7 +46,7 @@ export async function handleAdminAdSpend(req: Request, env: WorkerEnv): Promise<
 
   if (req.method === "POST") {
     const body = await readJson<{ date?: unknown; amountPaise?: unknown; note?: unknown }>(req);
-    if (!body || !isValidDate(body.date)) {
+    if (!body || !isIstDateString(body.date)) {
       return jsonError(req, 400, "invalid_request", "A valid date (YYYY-MM-DD) is required.");
     }
     if (!isValidAmountPaise(body.amountPaise)) {
