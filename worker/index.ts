@@ -14,6 +14,7 @@ import { handleDownload } from "./routes/download";
 import { handleResendLink } from "./routes/resend-link";
 import { handleAdminStats } from "./routes/admin/stats";
 import { handleAdminAdSpend } from "./routes/admin/ad-spend";
+import { handleCatalog } from "./routes/catalog";
 
 // Guide pages used to live at /books/[slug]/ and were flattened to /[slug]/.
 // Redirected here (not via next.config.js redirects, which static export
@@ -57,6 +58,8 @@ export default {
           return await handleAdminStats(request, env);
         case "/api/admin/ad-spend":
           return await handleAdminAdSpend(request, env);
+        case "/api/catalog":
+          return await handleCatalog(request, env);
         default:
           return jsonError(request, 404, "not_found", "Not found.");
       }
