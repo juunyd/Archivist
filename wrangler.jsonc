@@ -16,7 +16,17 @@
 	// same as they were Supabase Edge Function secrets before.
 	"vars": {
 		"SITE_URL": "https://archivist.in",
-		"EMAIL_FROM": "Archivist <noreply@archivist.in>"
+		"EMAIL_FROM": "Archivist <noreply@archivist.in>",
+		// Cloudflare Access config for verifying /api/admin/* requests (see
+		// worker/lib/access.ts). Not secrets, but fill these in with your real
+		// values before deploying — every admin route 500s until they're set.
+		// CF_ACCESS_TEAM_DOMAIN: Zero Trust dashboard -> Settings -> Custom Pages
+		// (or the URL bar on your team's Access login page), e.g.
+		// "yourteam.cloudflareaccess.com".
+		// CF_ACCESS_AUD: the /admin Access application's Overview tab -> "Application Audience (AUD) Tag".
+		// See ADMIN.md for the full setup walkthrough.
+		"CF_ACCESS_TEAM_DOMAIN": "autumn-snow-fc56.cloudflareaccess.com",
+		"CF_ACCESS_AUD": "571be00718dd48f8043e00a92cbcef8ca24aa922c7f775ae21d2843367ab9aff"
 	},
 	"d1_databases": [
 		{

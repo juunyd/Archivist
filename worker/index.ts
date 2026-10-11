@@ -12,6 +12,8 @@ import { handleWebhook } from "./routes/webhook";
 import { handleOrderStatus } from "./routes/order-status";
 import { handleDownload } from "./routes/download";
 import { handleResendLink } from "./routes/resend-link";
+import { handleAdminStats } from "./routes/admin/stats";
+import { handleAdminAdSpend } from "./routes/admin/ad-spend";
 
 // Guide pages used to live at /books/[slug]/ and were flattened to /[slug]/.
 // Redirected here (not via next.config.js redirects, which static export
@@ -51,6 +53,10 @@ export default {
           return await handleDownload(request, env);
         case "/api/resend-link":
           return await handleResendLink(request, env);
+        case "/api/admin/stats":
+          return await handleAdminStats(request, env);
+        case "/api/admin/ad-spend":
+          return await handleAdminAdSpend(request, env);
         default:
           return jsonError(request, 404, "not_found", "Not found.");
       }

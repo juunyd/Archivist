@@ -37,6 +37,14 @@ export interface WorkerEnv {
   META_PIXEL_ID?: string;
   META_CAPI_ACCESS_TOKEN?: string;
   META_TEST_EVENT_CODE?: string;
+
+  // Cloudflare Access, for verifying the Cf-Access-Jwt-Assertion header on
+  // every /api/admin/* request (see worker/lib/access.ts). Not secrets —
+  // both are identifiers, not credentials — but set as Worker vars/secrets
+  // rather than NEXT_PUBLIC_* since the browser never needs them; the Access
+  // proxy attaches the JWT itself. See ADMIN.md for where to find each value.
+  CF_ACCESS_TEAM_DOMAIN?: string; // e.g. "yourteam.cloudflareaccess.com"
+  CF_ACCESS_AUD?: string; // the Access application's Audience (AUD) tag
 }
 
 type StringEnvKey =
@@ -47,7 +55,9 @@ type StringEnvKey =
   | "RAZORPAY_WEBHOOK_SECRET"
   | "RESEND_API_KEY"
   | "META_PIXEL_ID"
-  | "META_CAPI_ACCESS_TOKEN";
+  | "META_CAPI_ACCESS_TOKEN"
+  | "CF_ACCESS_TEAM_DOMAIN"
+  | "CF_ACCESS_AUD";
 
 /** Reads a required secret/var, failing loudly at request time rather than mid-payment. */
 export function requireEnv(env: WorkerEnv, key: StringEnvKey): string {
