@@ -14,6 +14,11 @@ import { handleDownload } from "./routes/download";
 import { handleResendLink } from "./routes/resend-link";
 import { handleAdminStats } from "./routes/admin/stats";
 import { handleAdminAdSpend } from "./routes/admin/ad-spend";
+import {
+  handleAdminGuideDetail,
+  handleAdminGuideUnpublish,
+  handleAdminGuidesList,
+} from "./routes/admin/guides";
 import { handleCatalog } from "./routes/catalog";
 
 // Guide pages used to live at /books/[slug]/ and were flattened to /[slug]/.
@@ -21,6 +26,12 @@ import { handleCatalog } from "./routes/catalog";
 // does not support) so old links and search results keep working instead of
 // 404ing.
 const OLD_BOOK_PATH = /^\/books\/([^/]+)\/?$/;
+
+// /api/admin/guides/:slug and /api/admin/guides/:slug/unpublish carry a
+// dynamic segment, so they're matched here before the exact-path switch
+// below (which only ever sees static routes).
+const ADMIN_GUIDE_UNPUBLISH_PATH = /^\/api\/admin\/guides\/([^/]+)\/unpublish$/;
+const ADMIN_GUIDE_DETAIL_PATH = /^\/api\/admin\/guides\/([^/]+)$/;
 
 export default {
   async fetch(request: Request, env: WorkerEnv, ctx: ExecutionContext): Promise<Response> {
@@ -41,6 +52,15 @@ export default {
     if (preflightResponse) return preflightResponse;
 
     try {
+      const unpublishMatch = ADMIN_GUIDE_UNPUBLISH_PATH.exec(url.pathname);
+      if (unpublishMatch) {
+        return await handleAdminGuideUnpublish(request, env, decodeURIComponent(unpublishMatch[1]));
+      }
+      const guideDetailMatch = ADMIN_GUIDE_DETAIL_PATH.exec(url.pathname);
+      if (guideDetailMatch) {
+        return await handleAdminGuideDetail(request, env, decodeURIComponent(guideDetailMatch[1]));
+      }
+
       switch (url.pathname) {
         case "/api/create-order":
           return await handleCreateOrder(request, env);
@@ -58,6 +78,8 @@ export default {
           return await handleAdminStats(request, env);
         case "/api/admin/ad-spend":
           return await handleAdminAdSpend(request, env);
+        case "/api/admin/guides":
+          return await handleAdminGuidesList(request, env);
         case "/api/catalog":
           return await handleCatalog(request, env);
         default:

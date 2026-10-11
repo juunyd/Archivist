@@ -8,7 +8,7 @@ const ALLOWED_ORIGINS = [
 
 const BASE_HEADERS: Record<string, string> = {
   "Access-Control-Allow-Headers": "content-type",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS",
   "Access-Control-Max-Age": "86400",
   Vary: "Origin",
 };
