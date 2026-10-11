@@ -20,6 +20,7 @@ import {
   handleAdminGuidesList,
 } from "./routes/admin/guides";
 import { handleAdminGuideCoverUpload, handleAdminGuidePdfUpload } from "./routes/admin/guide-uploads";
+import { handleAdminRebuild, handleAdminRebuildStatus } from "./routes/admin/rebuild";
 import { handleCatalog } from "./routes/catalog";
 import { handleCoverServe } from "./routes/cover-serve";
 
@@ -106,6 +107,10 @@ export default {
           return await handleAdminAdSpend(request, env);
         case "/api/admin/guides":
           return await handleAdminGuidesList(request, env);
+        case "/api/admin/rebuild":
+          return await handleAdminRebuild(request, env);
+        case "/api/admin/rebuild-status":
+          return await handleAdminRebuildStatus(request, env);
         case "/api/catalog":
           return await handleCatalog(request, env);
         default:

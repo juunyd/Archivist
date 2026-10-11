@@ -48,6 +48,14 @@ export function postJson<T>(path: string, payload: unknown): Promise<T> {
   });
 }
 
+export function putJson<T>(path: string, payload: unknown): Promise<T> {
+  return request<T>(path, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
 export function getJson<T>(path: string, params: Record<string, string>): Promise<T> {
   return request<T>(`${path}?${new URLSearchParams(params).toString()}`, { method: "GET" });
 }

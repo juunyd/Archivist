@@ -136,30 +136,51 @@ const allStatements = migrationFiles.flatMap((f) => {
   return f.startsWith("0008_") ? [realBooksInsert, ...statements] : statements;
 });
 
-// --- Start Miniflare with a fresh in-memory D1 + R2, JWKS intercepted ---
-const mf = new Miniflare(
-  convertV4MiniflareOptions({
-    name: "main",
-    modules: true,
-    script: workerScript,
-    compatibilityDate: "2026-09-18",
-    bindings: {
-      SITE_URL: "https://archivist.in",
-      EMAIL_FROM: "Archivist <noreply@archivist.in>",
-      CF_ACCESS_TEAM_DOMAIN: TEAM_DOMAIN,
-      CF_ACCESS_AUD: AUD,
-    },
-    d1Databases: { DB: "test-admin-guides-db" },
-    r2Buckets: { BOOK_FILES: "test-admin-guides-bucket" },
-    outboundService(request) {
-      const url = new URL(request.url);
-      if (url.hostname === TEAM_DOMAIN && url.pathname === "/cdn-cgi/access/certs") {
-        return new Response(JSON.stringify(jwks), { headers: { "content-type": "application/json" } });
-      }
-      return new Response("unexpected outbound request in test", { status: 502 });
-    },
-  }),
-);
+// Builds a fresh worker instance (its own in-memory D1 + R2), with the
+// Access JWKS endpoint always intercepted. `extraBindings` and
+// `extraOutbound` let a test add its own vars/secrets (e.g.
+// CLOUDFLARE_DEPLOY_HOOK_URL) and intercept whatever outbound request that
+// implies, without touching the main instance's setup.
+function buildWorker({ name, extraBindings = {}, extraOutbound } = {}) {
+  return new Miniflare(
+    convertV4MiniflareOptions({
+      name: name ?? "main",
+      modules: true,
+      script: workerScript,
+      compatibilityDate: "2026-09-18",
+      bindings: {
+        SITE_URL: "https://archivist.in",
+        EMAIL_FROM: "Archivist <noreply@archivist.in>",
+        CF_ACCESS_TEAM_DOMAIN: TEAM_DOMAIN,
+        CF_ACCESS_AUD: AUD,
+        ...extraBindings,
+      },
+      d1Databases: { DB: `test-admin-guides-db-${name ?? "main"}` },
+      r2Buckets: { BOOK_FILES: `test-admin-guides-bucket-${name ?? "main"}` },
+      // Production's ASSETS binding serves the static export; this test
+      // harness has no build output to serve, so stub it as an always-404
+      // Fetcher — enough to prove a path falls through to "not the static
+      // site either" without needing a real out/ directory.
+      serviceBindings: {
+        ASSETS: () => new Response("Not found.", { status: 404 }),
+      },
+      outboundService(request) {
+        const url = new URL(request.url);
+        if (url.hostname === TEAM_DOMAIN && url.pathname === "/cdn-cgi/access/certs") {
+          return new Response(JSON.stringify(jwks), { headers: { "content-type": "application/json" } });
+        }
+        if (extraOutbound) {
+          const handled = extraOutbound(request, url);
+          if (handled) return handled;
+        }
+        return new Response("unexpected outbound request in test", { status: 502 });
+      },
+    }),
+  );
+}
+
+// --- Start the main worker instance: fresh in-memory D1 + R2, JWKS intercepted ---
+const mf = buildWorker({ name: "main" });
 
 await mf.ready;
 const db = await mf.getD1Database("DB");
@@ -458,8 +479,138 @@ try {
     `got "${allowedMethods}"`,
   );
   check("13b. preflight still allows GET and POST", allowedMethods.includes("GET") && allowedMethods.includes("POST"), `got "${allowedMethods}"`);
+
+  // =====================================================================
+  // Step 3, safety check 1: "covers" can never be a guide slug, and the
+  // /covers route can structurally never serve a PDF.
+  // =====================================================================
+
+  const coversSlugBody = { ...newGuideBody, slug: "covers" };
+  const coversSlugRes = await adminFetch("/api/admin/guides", { method: "POST", body: coversSlugBody });
+  const coversSlugResBody = await coversSlugRes.json();
+  check("14a. creating a guide slugged \"covers\" -> 400", coversSlugRes.status === 400, `got ${coversSlugRes.status}`);
+  check(
+    "14b. error message calls out the reserved slug",
+    (coversSlugResBody.error?.message ?? "").toLowerCase().includes("reserved"),
+    JSON.stringify(coversSlugResBody),
+  );
+
+  // Try to reach the real PDF through the cover-serving route, three ways:
+  // a direct path to the PDF's real key, the same with a traversal attempt,
+  // and an otherwise-valid-looking cover filename that happens to share the
+  // slug. None of these should ever return the PDF's bytes.
+  const pdfViaCoversRes1 = await adminFetch("/covers/test-guide-automated/test-guide-automated.pdf", { token: null });
+  check("15a. /covers/<slug>/<slug>.pdf -> not served as a cover (404)", pdfViaCoversRes1.status === 404, `got ${pdfViaCoversRes1.status}`);
+
+  const pdfViaCoversRes2 = await adminFetch("/covers/..%2Ftest-guide-automated%2Ftest-guide-automated.pdf", { token: null });
+  check(
+    "15b. path-traversal attempt through /covers -> not served (404)",
+    pdfViaCoversRes2.status === 404,
+    `got ${pdfViaCoversRes2.status}`,
+  );
+
+  const pdfViaCoversRes3 = await adminFetch("/covers/test-guide-automated.pdf", { token: null });
+  check(
+    "15c. /covers/<slug>.pdf (wrong extension) -> not matched by the cover route (404)",
+    pdfViaCoversRes3.status === 404,
+    `got ${pdfViaCoversRes3.status}`,
+  );
+  check(
+    "15d. that 404 is the generic not-found page, not PDF bytes",
+    (pdfViaCoversRes3.headers.get("content-type") ?? "").includes("application/pdf") === false,
+    `content-type=${pdfViaCoversRes3.headers.get("content-type")}`,
+  );
+
+  // =====================================================================
+  // Step 3, safety check 2 (part A): with no deploy hook secret set — the
+  // realistic state of a fresh environment — both routes say so clearly.
+  // =====================================================================
+
+  const rebuildStatusRes = await adminFetch("/api/admin/rebuild-status");
+  const rebuildStatusBody = await rebuildStatusRes.json();
+  check("16a. GET /api/admin/rebuild-status -> 200", rebuildStatusRes.status === 200, `got ${rebuildStatusRes.status}`);
+  check("16b. configured: false when the secret isn't set", rebuildStatusBody.configured === false, JSON.stringify(rebuildStatusBody));
+  check(
+    "16c. reason explains what to do",
+    (rebuildStatusBody.reason ?? "").includes("CLOUDFLARE_DEPLOY_HOOK_URL"),
+    JSON.stringify(rebuildStatusBody),
+  );
+
+  const rebuildNotConfiguredRes = await adminFetch("/api/admin/rebuild", { method: "POST" });
+  const rebuildNotConfiguredBody = await rebuildNotConfiguredRes.json();
+  check("16d. POST /api/admin/rebuild without the secret -> 503", rebuildNotConfiguredRes.status === 503, `got ${rebuildNotConfiguredRes.status}`);
+  check(
+    "16e. error code is not_configured",
+    rebuildNotConfiguredBody.error?.code === "not_configured",
+    JSON.stringify(rebuildNotConfiguredBody),
+  );
 } finally {
   await mf.dispose();
+}
+
+// =====================================================================
+// Step 3, safety check 2 (part B): a deploy hook that IS set, but doesn't
+// point at Cloudflare's API, is treated the same as unset — not trusted
+// just because a value is present.
+// =====================================================================
+{
+  const badHookMf = buildWorker({
+    name: "bad-hook",
+    extraBindings: { CLOUDFLARE_DEPLOY_HOOK_URL: "https://evil.example.com/not-a-real-hook" },
+  });
+  try {
+    await badHookMf.ready;
+    const statusRes = await badHookMf.dispatchFetch("http://worker.local/api/admin/rebuild-status", {
+      headers: { "Cf-Access-Jwt-Assertion": VALID_TOKEN },
+    });
+    const statusBody = await statusRes.json();
+    check("17a. a non-Cloudflare hook URL -> configured: false", statusBody.configured === false, JSON.stringify(statusBody));
+
+    const rebuildRes = await badHookMf.dispatchFetch("http://worker.local/api/admin/rebuild", {
+      method: "POST",
+      headers: { "Cf-Access-Jwt-Assertion": VALID_TOKEN },
+    });
+    check("17b. POST /api/admin/rebuild with a non-Cloudflare hook -> 503", rebuildRes.status === 503, `got ${rebuildRes.status}`);
+  } finally {
+    await badHookMf.dispose();
+  }
+}
+
+// =====================================================================
+// Step 3, safety check 2 (part C): once a genuine https://api.cloudflare.com
+// hook is set, the button's backing endpoint actually works.
+// =====================================================================
+{
+  const REAL_HOOK_URL = "https://api.cloudflare.com/client/v4/pages/webhooks/deploy_hooks/fake-hook-id";
+  let hookWasCalled = false;
+  const goodHookMf = buildWorker({
+    name: "good-hook",
+    extraBindings: { CLOUDFLARE_DEPLOY_HOOK_URL: REAL_HOOK_URL },
+    extraOutbound(request, url) {
+      if (url.origin === "https://api.cloudflare.com" && request.method === "POST") {
+        hookWasCalled = true;
+        return new Response(JSON.stringify({ success: true }), { headers: { "content-type": "application/json" } });
+      }
+      return null;
+    },
+  });
+  try {
+    await goodHookMf.ready;
+    const statusRes = await goodHookMf.dispatchFetch("http://worker.local/api/admin/rebuild-status", {
+      headers: { "Cf-Access-Jwt-Assertion": VALID_TOKEN },
+    });
+    const statusBody = await statusRes.json();
+    check("18a. a genuine Cloudflare hook URL -> configured: true", statusBody.configured === true, JSON.stringify(statusBody));
+
+    const rebuildRes = await goodHookMf.dispatchFetch("http://worker.local/api/admin/rebuild", {
+      method: "POST",
+      headers: { "Cf-Access-Jwt-Assertion": VALID_TOKEN },
+    });
+    check("18b. POST /api/admin/rebuild with a real hook -> 200", rebuildRes.status === 200, `got ${rebuildRes.status}`);
+    check("18c. the deploy hook was actually called", hookWasCalled);
+  } finally {
+    await goodHookMf.dispose();
+  }
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);

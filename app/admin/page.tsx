@@ -1,4 +1,5 @@
 import { AdminDashboardContent } from "./AdminDashboardContent";
+import { AdminNav } from "./AdminNav";
 
 export default function AdminPage() {
   return (
@@ -8,11 +9,7 @@ export default function AdminPage() {
           <h1 className="admin__title">Archivist Admin</h1>
           <p className="admin__subtitle">Analytics — all times IST.</p>
         </div>
-        <nav className="admin__nav" aria-label="Admin sections">
-          <a href="/admin/" aria-current="page">
-            Dashboard
-          </a>
-        </nav>
+        <AdminNav current="dashboard" />
       </header>
       <AdminDashboardContent />
     </>

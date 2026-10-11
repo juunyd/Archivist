@@ -45,6 +45,14 @@ export interface WorkerEnv {
   // proxy attaches the JWT itself. See ADMIN.md for where to find each value.
   CF_ACCESS_TEAM_DOMAIN?: string; // e.g. "yourteam.cloudflareaccess.com"
   CF_ACCESS_AUD?: string; // the Access application's Audience (AUD) tag
+
+  // Cloudflare Pages/Workers Builds deploy hook, called by POST
+  // /api/admin/rebuild (see worker/routes/admin/rebuild.ts) to publish guide
+  // edits. Deliberately NOT read with requireEnv: an unset hook is an
+  // expected, everyday state (a fresh environment before setup) that the
+  // route and the admin UI both need to detect and explain clearly, not
+  // throw a generic 500 for.
+  CLOUDFLARE_DEPLOY_HOOK_URL?: string;
 }
 
 type StringEnvKey =

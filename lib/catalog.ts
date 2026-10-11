@@ -61,6 +61,9 @@ export const RESERVED_TOP_LEVEL_PATHS = [
   "thank-you",
   "api",
   "admin",
+  // worker/routes/cover-serve.ts serves every uploaded cover under
+  // /covers/* — a guide named "covers" would collide with that route.
+  "covers",
 ];
 
 interface CatalogApiGuide {
