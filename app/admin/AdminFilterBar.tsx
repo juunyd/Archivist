@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getJson } from "@/lib/api";
+import { useGuideOptions } from "./useGuideOptions";
 
 export type RangeKey = "today" | "7d" | "30d" | "all" | "custom";
 
@@ -19,11 +18,6 @@ const RANGE_OPTIONS: { key: RangeKey; label: string }[] = [
   { key: "custom", label: "Custom" },
 ];
 
-interface GuideOption {
-  slug: string;
-  title: string;
-}
-
 interface AdminFilterBarProps {
   rangeValue: RangeValue;
   onRangeChange: (value: RangeValue) => void;
@@ -36,13 +30,7 @@ function todayISTDateString(): string {
 }
 
 export function AdminFilterBar({ rangeValue, onRangeChange, guideValue, onGuideChange }: AdminFilterBarProps) {
-  const [guides, setGuides] = useState<GuideOption[]>([]);
-
-  useEffect(() => {
-    getJson<{ guides: GuideOption[] }>("/api/admin/guides", {})
-      .then((data) => setGuides(data.guides))
-      .catch(() => setGuides([]));
-  }, []);
+  const guides = useGuideOptions();
 
   const today = todayISTDateString();
 

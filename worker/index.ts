@@ -14,6 +14,7 @@ import { handleDownload } from "./routes/download";
 import { handleResendLink } from "./routes/resend-link";
 import { handleAdminStats } from "./routes/admin/stats";
 import { handleAdminAdSpend } from "./routes/admin/ad-spend";
+import { handleAdminOrderDetail, handleAdminOrdersList } from "./routes/admin/orders";
 import {
   handleAdminGuideDetail,
   handleAdminGuideUnpublish,
@@ -46,6 +47,7 @@ const ADMIN_GUIDE_UNPUBLISH_PATH = /^\/api\/admin\/guides\/([^/]+)\/unpublish$/;
 const ADMIN_GUIDE_COVER_PATH = /^\/api\/admin\/guides\/([^/]+)\/cover$/;
 const ADMIN_GUIDE_PDF_PATH = /^\/api\/admin\/guides\/([^/]+)\/pdf$/;
 const ADMIN_GUIDE_DETAIL_PATH = /^\/api\/admin\/guides\/([^/]+)$/;
+const ADMIN_ORDER_DETAIL_PATH = /^\/api\/admin\/orders\/([^/]+)$/;
 
 export default {
   async fetch(request: Request, env: WorkerEnv, ctx: ExecutionContext): Promise<Response> {
@@ -87,6 +89,10 @@ export default {
       if (guideDetailMatch) {
         return await handleAdminGuideDetail(request, env, decodeURIComponent(guideDetailMatch[1]));
       }
+      const orderDetailMatch = ADMIN_ORDER_DETAIL_PATH.exec(url.pathname);
+      if (orderDetailMatch) {
+        return await handleAdminOrderDetail(request, env, decodeURIComponent(orderDetailMatch[1]));
+      }
 
       switch (url.pathname) {
         case "/api/create-order":
@@ -105,6 +111,8 @@ export default {
           return await handleAdminStats(request, env);
         case "/api/admin/ad-spend":
           return await handleAdminAdSpend(request, env);
+        case "/api/admin/orders":
+          return await handleAdminOrdersList(request, env);
         case "/api/admin/guides":
           return await handleAdminGuidesList(request, env);
         case "/api/admin/rebuild":
