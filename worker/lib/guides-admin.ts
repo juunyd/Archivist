@@ -34,6 +34,7 @@ export interface AdminGuideDetailRow {
   whats_inside: string | null;
   faqs: string | null;
   badge: string | null;
+  button_text: string | null;
   cover_path: string | null;
   pdf_path: string | null;
   status: "draft" | "published";
@@ -87,11 +88,11 @@ export async function insertGuide(env: WorkerEnv, input: ValidatedGuideInput): P
     `INSERT INTO books
        (slug, title, price_paise, currency, status,
         number, subtitle, blurb, description, page_count, chapter_count,
-        whats_inside, faqs, badge, compare_at_price_paise, sort_order, updated_at)
+        whats_inside, faqs, badge, button_text, compare_at_price_paise, sort_order, updated_at)
      VALUES
        (?1, ?2, ?3, 'INR', ?4,
         ?5, ?6, ?7, ?8, ?9, ?10,
-        ?11, ?12, ?13, ?14, ?15, ?16)`,
+        ?11, ?12, ?13, ?14, ?15, ?16, ?17)`,
   )
     .bind(
       input.slug,
@@ -107,6 +108,7 @@ export async function insertGuide(env: WorkerEnv, input: ValidatedGuideInput): P
       JSON.stringify(input.whatsInside),
       JSON.stringify(input.faqs),
       input.badge,
+      input.buttonText,
       input.compareAtPricePaise,
       input.sortOrder,
       nowIso(),
@@ -125,8 +127,8 @@ export async function updateGuide(
        slug = ?1, title = ?2, price_paise = ?3, status = ?4,
        number = ?5, subtitle = ?6, blurb = ?7, description = ?8,
        page_count = ?9, chapter_count = ?10, whats_inside = ?11, faqs = ?12,
-       badge = ?13, compare_at_price_paise = ?14, sort_order = ?15, updated_at = ?16
-     WHERE slug = ?17`,
+       badge = ?13, button_text = ?14, compare_at_price_paise = ?15, sort_order = ?16, updated_at = ?17
+     WHERE slug = ?18`,
   )
     .bind(
       input.slug,
@@ -142,6 +144,7 @@ export async function updateGuide(
       JSON.stringify(input.whatsInside),
       JSON.stringify(input.faqs),
       input.badge,
+      input.buttonText,
       input.compareAtPricePaise,
       input.sortOrder,
       nowIso(),
@@ -200,6 +203,7 @@ export function serializeGuideDetail(row: AdminGuideDetailRow, paidOrders: numbe
     whatsInside: parseJsonArray(row.whats_inside),
     faqs: parseJsonArray(row.faqs),
     badge: row.badge,
+    buttonText: row.button_text,
     coverPath: row.cover_path,
     pdfPath: row.pdf_path,
     status: row.status,

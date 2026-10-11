@@ -3,9 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import type { Guide } from "@/lib/catalog";
 import { startCheckout, type CheckoutPhase } from "@/lib/checkout";
+import { resolveButtonText } from "@/lib/button-text";
 
 interface CtaButtonProps {
-  guide: Pick<Guide, "slug" | "title" | "price">;
+  guide: Pick<Guide, "slug" | "title" | "price" | "buttonText">;
   label?: string;
   size?: "default" | "compact";
   /** Match however the surrounding section aligns its button. */
@@ -103,7 +104,7 @@ export function CtaButton({
     return (
       <div className={wrapClass}>
         <button type="button" onClick={openForm} className={buttonClass}>
-          <span>{label ?? `Get Instant Access - ₹${guide.price}`}</span>
+          <span>{label ?? `${resolveButtonText(guide.buttonText)} - ₹${guide.price}`}</span>
           <span className="cta-button__arrow" aria-hidden="true">
             →
           </span>

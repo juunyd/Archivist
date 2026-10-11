@@ -19,6 +19,11 @@ export const RESERVED_SLUGS = [
 
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
+// The price is always appended by the frontend from price_paise, never typed
+// here, so this field is text only — see components/CtaButton.tsx.
+export const BUTTON_TEXT_MAX_LENGTH = 30;
+const HTML_TAG_RE = /<[^>]*>/;
+
 export interface WhatsInsideItemInput {
   title: string;
   description: string;
@@ -43,6 +48,7 @@ export interface ValidatedGuideInput {
   whatsInside: WhatsInsideItemInput[];
   faqs: FaqItemInput[];
   badge: string | null;
+  buttonText: string | null;
   status: "draft" | "published";
   sortOrder: number | null;
 }
@@ -115,6 +121,24 @@ export function validateGuideInput(body: unknown): GuideValidationResult {
     errors.push("faqs must be a non-empty array of { question, answer } with non-empty strings.");
   }
 
+  // Empty/undefined means "use the default label" and is valid; whitespace-
+  // only text is a distinct, rejected case, since the admin clearly typed
+  // something but it renders as nothing.
+  let buttonText: string | null = null;
+  if (b.buttonText !== undefined && b.buttonText !== null && b.buttonText !== "") {
+    if (typeof b.buttonText !== "string") {
+      errors.push("buttonText must be a string.");
+    } else if (b.buttonText.trim().length === 0) {
+      errors.push("buttonText cannot be only spaces.");
+    } else if (HTML_TAG_RE.test(b.buttonText)) {
+      errors.push("buttonText cannot contain HTML tags.");
+    } else if (b.buttonText.trim().length > BUTTON_TEXT_MAX_LENGTH) {
+      errors.push(`buttonText must be ${BUTTON_TEXT_MAX_LENGTH} characters or fewer.`);
+    } else {
+      buttonText = b.buttonText.trim();
+    }
+  }
+
   const status = b.status === "published" || b.status === "draft" ? b.status : null;
   if (!status) errors.push('status must be "draft" or "published".');
 
@@ -145,6 +169,7 @@ export function validateGuideInput(body: unknown): GuideValidationResult {
       whatsInside: b.whatsInside as WhatsInsideItemInput[],
       faqs: b.faqs as FaqItemInput[],
       badge: isNonEmptyString(b.badge) ? (b.badge as string).trim() : null,
+      buttonText,
       status: status as "draft" | "published",
       sortOrder,
     },

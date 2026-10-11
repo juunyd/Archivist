@@ -41,6 +41,8 @@ export interface Guide {
   chapterCount?: number;
   coverImage: string;
   badge?: string;
+  /** Overrides the buy button's label (price is always appended separately — never typed here). Falls back to "Get Instant Access" when unset. */
+  buttonText?: string;
   whatsInside: WhatsInsideItem[];
   faqs: FaqItem[];
 }
@@ -79,6 +81,7 @@ interface CatalogApiGuide {
   chapterCount: number | null;
   coverPath: string | null;
   badge: string | null;
+  buttonText: string | null;
   whatsInside: WhatsInsideItem[];
   faqs: FaqItem[];
 }
@@ -126,6 +129,7 @@ function mapApiGuide(g: CatalogApiGuide): Guide {
     ...(g.chapterCount != null ? { chapterCount: g.chapterCount } : {}),
     coverImage: g.coverPath ?? "",
     ...(g.badge != null ? { badge: g.badge } : {}),
+    ...(g.buttonText != null ? { buttonText: g.buttonText } : {}),
     whatsInside: g.whatsInside,
     faqs: g.faqs,
   };

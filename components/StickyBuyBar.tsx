@@ -3,9 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import type { Guide } from "@/lib/catalog";
 import { CtaButton } from "./CtaButton";
+import { compactButtonText, resolveButtonText } from "@/lib/button-text";
 
 interface StickyBuyBarProps {
-  guide: Pick<Guide, "slug" | "title" | "price" | "compareAtPrice">;
+  guide: Pick<Guide, "slug" | "title" | "price" | "compareAtPrice" | "buttonText">;
   sentinelId: string;
 }
 
@@ -44,7 +45,12 @@ export function StickyBuyBar({ guide, sentinelId }: StickyBuyBarProps) {
           <span className="sticky-buy-bar__compare-at-price">&#8377;{guide.compareAtPrice}</span>
         )}
       </span>
-      <CtaButton guide={guide} label="Get Instant Access" size="compact" className="sticky-buy-bar__cta" />
+      <CtaButton
+        guide={guide}
+        label={compactButtonText(resolveButtonText(guide.buttonText))}
+        size="compact"
+        className="sticky-buy-bar__cta"
+      />
     </div>
   );
 }

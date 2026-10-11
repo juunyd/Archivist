@@ -29,9 +29,10 @@ const { FormData } = undici;
 // undici's own FormData/Request correctly), so there's no need for an
 // undici-specific Blob.
 import * as esbuild from "esbuild";
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync, mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { generateKeyPairSync, sign as cryptoSign } from "node:crypto";
 import { join } from "node:path";
+import { tmpdir } from "node:os";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const TEAM_DOMAIN = "autumn-snow-fc56.cloudflareaccess.com";
@@ -544,6 +545,69 @@ try {
     rebuildNotConfiguredBody.error?.code === "not_configured",
     JSON.stringify(rebuildNotConfiguredBody),
   );
+
+  // =====================================================================
+  // Per-guide button text: validation, round-trip, and that it never shows
+  // up for a guide that hasn't set it (the "no change" guarantee for the
+  // four live guides).
+  // =====================================================================
+
+  const tooLongButtonText = { ...publishAttempt, buttonText: "This Button Text Is Definitely Too Long" };
+  const tooLongRes = await adminFetch("/api/admin/guides/test-guide-automated", { method: "PUT", body: tooLongButtonText });
+  const tooLongBody = await tooLongRes.json();
+  check("19a. buttonText over 30 chars -> 400", tooLongRes.status === 400, `got ${tooLongRes.status}`);
+  check(
+    "19b. error mentions the 30-character limit",
+    (tooLongBody.error?.message ?? "").includes("30"),
+    JSON.stringify(tooLongBody),
+  );
+
+  const spacesButtonText = { ...publishAttempt, buttonText: "    " };
+  const spacesRes = await adminFetch("/api/admin/guides/test-guide-automated", { method: "PUT", body: spacesButtonText });
+  const spacesBody = await spacesRes.json();
+  check("20a. whitespace-only buttonText -> 400", spacesRes.status === 400, `got ${spacesRes.status}`);
+  check(
+    "20b. error calls out that it's blank",
+    (spacesBody.error?.message ?? "").toLowerCase().includes("space"),
+    JSON.stringify(spacesBody),
+  );
+
+  const htmlButtonText = { ...publishAttempt, buttonText: "Buy now <b>today</b>" };
+  const htmlRes = await adminFetch("/api/admin/guides/test-guide-automated", { method: "PUT", body: htmlButtonText });
+  const htmlBody = await htmlRes.json();
+  check("21a. buttonText with an HTML tag -> 400", htmlRes.status === 400, `got ${htmlRes.status}`);
+  check(
+    "21b. error mentions HTML tags",
+    (htmlBody.error?.message ?? "").toLowerCase().includes("html"),
+    JSON.stringify(htmlBody),
+  );
+
+  const customButtonText = "Grab My Copy Now";
+  const validButtonTextPayload = { ...publishAttempt, buttonText: customButtonText };
+  const setButtonTextRes = await adminFetch("/api/admin/guides/test-guide-automated", { method: "PUT", body: validButtonTextPayload });
+  const setButtonTextBody = await setButtonTextRes.json();
+  check("22a. valid custom buttonText -> 200", setButtonTextRes.status === 200, `got ${setButtonTextRes.status}: ${JSON.stringify(setButtonTextBody)}`);
+  check(
+    "22b. buttonText round-trips on the detail endpoint",
+    setButtonTextBody.guide?.buttonText === customButtonText,
+    JSON.stringify(setButtonTextBody.guide),
+  );
+
+  const catalogRes = await adminFetch("/api/catalog", { token: null });
+  const catalogBody = await catalogRes.json();
+  const customGuideInCatalog = catalogBody.guides?.find((g) => g.slug === "test-guide-automated");
+  check(
+    "23a. /api/catalog surfaces the custom buttonText for the guide that set one",
+    customGuideInCatalog?.buttonText === customButtonText,
+    JSON.stringify(customGuideInCatalog),
+  );
+
+  const untouchedGuideInCatalog = catalogBody.guides?.find((g) => g.slug === "the-revenge-trading-cure");
+  check(
+    "23b. /api/catalog reports buttonText: null for a guide that never set one (the four live guides)",
+    untouchedGuideInCatalog != null && untouchedGuideInCatalog.buttonText === null,
+    JSON.stringify(untouchedGuideInCatalog),
+  );
 } finally {
   await mf.dispose();
 }
@@ -610,6 +674,58 @@ try {
     check("18c. the deploy hook was actually called", hookWasCalled);
   } finally {
     await goodHookMf.dispose();
+  }
+}
+
+// =====================================================================
+// lib/button-text.ts: the pure functions CtaButton and StickyBuyBar use to
+// resolve and (for the sticky bar) truncate the button label. Bundled with
+// esbuild and imported directly — no Miniflare needed, this is plain
+// frontend TS — so these assertions run against the real implementation,
+// not a re-typed copy of its logic.
+// =====================================================================
+{
+  const buttonTextBundle = await esbuild.build({
+    entryPoints: [join(ROOT, "lib/button-text.ts")],
+    bundle: true,
+    format: "esm",
+    platform: "neutral",
+    target: "es2022",
+    write: false,
+    absWorkingDir: ROOT,
+  });
+  const tmpDir = mkdtempSync(join(tmpdir(), "archivist-button-text-"));
+  const tmpModulePath = join(tmpDir, "button-text.mjs");
+  writeFileSync(tmpModulePath, buttonTextBundle.outputFiles[0].text);
+  try {
+    const { resolveButtonText, compactButtonText, DEFAULT_BUTTON_TEXT, BUTTON_TEXT_MAX_LENGTH } = await import(
+      `file://${tmpModulePath}`
+    );
+
+    check("24a. DEFAULT_BUTTON_TEXT is \"Get Instant Access\"", DEFAULT_BUTTON_TEXT === "Get Instant Access");
+    check("24b. BUTTON_TEXT_MAX_LENGTH is 30", BUTTON_TEXT_MAX_LENGTH === 30);
+    check(
+      "24c. resolveButtonText(undefined) falls back to the default (no buttonText set — the four live guides today)",
+      resolveButtonText(undefined) === DEFAULT_BUTTON_TEXT,
+    );
+    check(
+      "24d. resolveButtonText(\"\") also falls back to the default",
+      resolveButtonText("") === DEFAULT_BUTTON_TEXT,
+    );
+    check(
+      "24e. resolveButtonText passes through a real custom value",
+      resolveButtonText("Grab My Copy Now") === "Grab My Copy Now",
+    );
+    check(
+      "24f. compactButtonText leaves the default label unchanged in the sticky bar (no change for the four live guides)",
+      compactButtonText(resolveButtonText(undefined)) === "Get Instant Access",
+    );
+    check(
+      "24g. compactButtonText trims a long custom label to its first few words",
+      compactButtonText("This Button Text Is Definitely Too Long For The Sticky Bar") === "This Button Text",
+    );
+  } finally {
+    rmSync(tmpDir, { recursive: true, force: true });
   }
 }
 

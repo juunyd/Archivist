@@ -29,6 +29,7 @@ interface CatalogRow {
   chapter_count: number | null;
   cover_path: string | null;
   badge: string | null;
+  button_text: string | null;
   whats_inside: string | null;
   faqs: string | null;
   sort_order: number | null;
@@ -53,7 +54,7 @@ export async function handleCatalog(req: Request, env: WorkerEnv): Promise<Respo
       .prepare(
         `SELECT slug, number, title, subtitle, blurb, description,
                 price_paise, compare_at_price_paise, page_count, chapter_count,
-                cover_path, badge, whats_inside, faqs, sort_order
+                cover_path, badge, button_text, whats_inside, faqs, sort_order
            FROM books
           WHERE status = 'published'
           ORDER BY sort_order ASC, slug ASC`,
@@ -77,6 +78,7 @@ export async function handleCatalog(req: Request, env: WorkerEnv): Promise<Respo
     chapterCount: row.chapter_count,
     coverPath: row.cover_path,
     badge: row.badge,
+    buttonText: row.button_text,
     whatsInside: parseJsonArray(row.whats_inside),
     faqs: parseJsonArray(row.faqs),
   }));

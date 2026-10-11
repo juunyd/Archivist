@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { FunctionError, getJson, postJson, putJson } from "@/lib/api";
 import { TwoFieldListEditor, type TwoFieldItem } from "../TwoFieldListEditor";
 import { PublishChangesButton } from "../PublishChangesButton";
+import { BUTTON_TEXT_MAX_LENGTH, DEFAULT_BUTTON_TEXT } from "@/lib/button-text";
 
 interface AdminGuideDetail {
   slug: string;
@@ -21,6 +22,7 @@ interface AdminGuideDetail {
   whatsInside: { title: string; description: string }[];
   faqs: { question: string; answer: string }[];
   badge: string | null;
+  buttonText: string | null;
   coverPath: string | null;
   pdfPath: string | null;
   status: "draft" | "published";
@@ -44,6 +46,7 @@ interface FormState {
   pageCount: string;
   chapterCount: string;
   badge: string;
+  buttonText: string;
   sortOrder: string;
   status: "draft" | "published";
   whatsInside: TwoFieldItem[];
@@ -62,6 +65,7 @@ const EMPTY_FORM: FormState = {
   pageCount: "",
   chapterCount: "",
   badge: "",
+  buttonText: "",
   sortOrder: "",
   status: "draft",
   whatsInside: [],
@@ -81,6 +85,7 @@ function guideToForm(guide: AdminGuideDetail): FormState {
     pageCount: guide.pageCount != null ? String(guide.pageCount) : "",
     chapterCount: guide.chapterCount != null ? String(guide.chapterCount) : "",
     badge: guide.badge ?? "",
+    buttonText: guide.buttonText ?? "",
     sortOrder: guide.sortOrder != null ? String(guide.sortOrder) : "",
     status: guide.status,
     whatsInside: guide.whatsInside.map((w) => ({ a: w.title, b: w.description })),
@@ -185,6 +190,7 @@ export function GuideEditContent() {
       whatsInside: form.whatsInside.map((item) => ({ title: item.a.trim(), description: item.b.trim() })),
       faqs: form.faqs.map((item) => ({ question: item.a.trim(), answer: item.b.trim() })),
       badge: form.badge.trim() || undefined,
+      buttonText: form.buttonText.trim() || undefined,
       status: form.status,
       sortOrder: form.sortOrder ? Number.parseInt(form.sortOrder, 10) : undefined,
     };
@@ -393,6 +399,21 @@ export function GuideEditContent() {
         <div className="admin__field">
           <label htmlFor="g-badge">Badge (optional)</label>
           <input id="g-badge" type="text" value={form.badge} onChange={(e) => updateField("badge", e.target.value)} />
+        </div>
+
+        <div className="admin__field">
+          <label htmlFor="g-button-text">Button text (optional)</label>
+          <input
+            id="g-button-text"
+            type="text"
+            value={form.buttonText}
+            onChange={(e) => updateField("buttonText", e.target.value)}
+            maxLength={BUTTON_TEXT_MAX_LENGTH}
+            placeholder={DEFAULT_BUTTON_TEXT}
+          />
+          <span className="admin__field-hint">
+            {form.buttonText.length}/{BUTTON_TEXT_MAX_LENGTH} — shown as &quot;{form.buttonText.trim() || DEFAULT_BUTTON_TEXT} - ₹{form.priceRupees || "…"} →&quot;. Leave empty for the default.
+          </span>
         </div>
 
         <div className="admin__field">
