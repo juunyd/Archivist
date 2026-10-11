@@ -6,12 +6,14 @@
 // of splitting across two depending on which column you ask. The trade-off:
 // a checkout started on the last day of a window and paid after it ends
 // still counts as that last day's revenue. For how fast Razorpay checkouts
-// resolve, that's the right call. "New vs repeat customer" and "downloads"
-// follow the same convention for consistency, even though paid_at would be
-// the more literal answer for those two.
+// resolve, that's the right call. "New customers" and "downloads" follow the
+// same convention for consistency, even though paid_at would be the more
+// literal answer for those two. Guide page views (page_views_daily) are
+// already stored by IST calendar date, so they line up with the same
+// window boundaries directly.
 import { maskEmail, methodNotAllowed, json, jsonError } from "../../lib/http";
 import { requireAccess } from "../../lib/access";
-import { feeAssumptions, netOfPaymentFees } from "../../lib/fees";
+import { trackingStartDate, viewsForPeriod } from "../../lib/page-views";
 import {
   istDateDaysAgo,
   istDaysBetween,
@@ -63,17 +65,11 @@ interface WindowStats {
   endDate: string;
   revenuePaise: number;
   paidOrders: number;
-  avgOrderValuePaise: number;
   checkoutsStarted: number;
-  conversionRatePercent: number;
+  views: number;
   failedPayments: number;
-  adSpendPaise: number;
-  costPerPurchasePaise: number | null;
-  roas: number | null;
-  estimatedProfitPaise: number | null;
   downloads: number;
   newCustomers: number;
-  repeatCustomers: number;
 }
 
 interface OrderAggRow {
@@ -86,7 +82,6 @@ interface OrderAggRow {
 
 interface CustomerAggRow {
   new_customers: number;
-  repeat_customers: number;
 }
 
 async function windowStats(
@@ -96,7 +91,7 @@ async function windowStats(
 ): Promise<WindowStats> {
   const { startDate, endDate } = period;
 
-  const [orderRow, spendRow, customerRow] = await Promise.all([
+  const [orderRow, views, customerRow] = await Promise.all([
     env.DB
       .prepare(
         `SELECT
@@ -112,16 +107,8 @@ async function windowStats(
       )
       .bind(startDate, endDate, guideSlug)
       .first<OrderAggRow>(),
-    env.DB
-      .prepare(
-        `SELECT COALESCE(SUM(amount_paise), 0) AS spend_paise
-           FROM daily_ad_spend
-          WHERE (?1 IS NULL OR date >= ?1) AND date <= ?2`,
-      )
-      .bind(startDate, endDate)
-      .first<{ spend_paise: number }>(),
+    viewsForPeriod(env, startDate, endDate, guideSlug),
     // "New" = this buyer's earliest-ever paid order falls inside the window.
-    // "Repeat" = they already had a paid order before the window started.
     // Guide filter narrows which buyers count as "in the window" but first-
     // purchase lookup always looks across all guides — a buyer isn't "new"
     // just because it's their first order *of this guide*.
@@ -143,8 +130,7 @@ async function windowStats(
               AND (?3 IS NULL OR book_slug = ?3)
          )
          SELECT
-           SUM(CASE WHEN fo.first_date >= COALESCE(?1, '0000-01-01') THEN 1 ELSE 0 END) AS new_customers,
-           SUM(CASE WHEN fo.first_date <  COALESCE(?1, '0000-01-01') THEN 1 ELSE 0 END) AS repeat_customers
+           SUM(CASE WHEN fo.first_date >= COALESCE(?1, '0000-01-01') THEN 1 ELSE 0 END) AS new_customers
          FROM window_buyers wb
          JOIN first_order fo ON fo.email = wb.email`,
       )
@@ -152,33 +138,16 @@ async function windowStats(
       .first<CustomerAggRow>(),
   ]);
 
-  const checkoutsStarted = orderRow?.checkouts_started ?? 0;
-  const revenuePaise = orderRow?.revenue_paise ?? 0;
-  const paidOrders = orderRow?.paid_orders ?? 0;
-  const failedPayments = orderRow?.failed_payments ?? 0;
-  const downloads = orderRow?.downloads ?? 0;
-  const adSpendPaise = spendRow?.spend_paise ?? 0;
-
-  const costPerPurchasePaise = paidOrders > 0 ? adSpendPaise / paidOrders : null;
-  const roas = adSpendPaise > 0 ? revenuePaise / adSpendPaise : null;
-  const estimatedProfitPaise = paidOrders > 0 ? netOfPaymentFees(revenuePaise) - adSpendPaise : null;
-
   return {
     startDate,
     endDate,
-    revenuePaise,
-    paidOrders,
-    avgOrderValuePaise: paidOrders > 0 ? revenuePaise / paidOrders : 0,
-    checkoutsStarted,
-    conversionRatePercent: checkoutsStarted > 0 ? (paidOrders / checkoutsStarted) * 100 : 0,
-    failedPayments,
-    adSpendPaise,
-    costPerPurchasePaise,
-    roas,
-    estimatedProfitPaise,
-    downloads,
+    revenuePaise: orderRow?.revenue_paise ?? 0,
+    paidOrders: orderRow?.paid_orders ?? 0,
+    checkoutsStarted: orderRow?.checkouts_started ?? 0,
+    views,
+    failedPayments: orderRow?.failed_payments ?? 0,
+    downloads: orderRow?.downloads ?? 0,
     newCustomers: customerRow?.new_customers ?? 0,
-    repeatCustomers: customerRow?.repeat_customers ?? 0,
   };
 }
 
@@ -225,6 +194,67 @@ async function perGuideStats(env: WorkerEnv, period: Period): Promise<PerGuideSt
   }));
 }
 
+interface PerGuideFunnelDbRow {
+  slug: string;
+  title: string | null;
+  views: number;
+  checkouts_started: number;
+  paid: number;
+}
+
+interface PerGuideFunnel {
+  slug: string;
+  title: string;
+  views: number;
+  checkoutsStarted: number;
+  paidOrders: number;
+  viewsToCheckoutPercent: number | null;
+  checkoutToPaidPercent: number | null;
+}
+
+/** One row per guide with any activity (views or checkouts) in `period`. Not filterable by guide — that's a single-row case the caller skips instead. */
+async function perGuideFunnel(env: WorkerEnv, period: Period): Promise<PerGuideFunnel[]> {
+  const result = await env.DB
+    .prepare(
+      `WITH v AS (
+         SELECT slug, SUM(views) AS views
+           FROM page_views_daily
+          WHERE (?1 IS NULL OR date >= ?1) AND date <= ?2
+          GROUP BY slug
+       ),
+       o AS (
+         SELECT book_slug AS slug,
+                COUNT(*) AS checkouts_started,
+                COUNT(CASE WHEN status = 'paid' THEN 1 END) AS paid
+           FROM orders
+          WHERE (?1 IS NULL OR strftime('%Y-%m-%d', created_at, '${IST_OFFSET_SQL_MODIFIER}') >= ?1)
+            AND strftime('%Y-%m-%d', created_at, '${IST_OFFSET_SQL_MODIFIER}') <= ?2
+          GROUP BY book_slug
+       )
+       SELECT b.slug AS slug, b.title AS title,
+              COALESCE(v.views, 0) AS views,
+              COALESCE(o.checkouts_started, 0) AS checkouts_started,
+              COALESCE(o.paid, 0) AS paid
+         FROM books b
+         LEFT JOIN v ON v.slug = b.slug
+         LEFT JOIN o ON o.slug = b.slug
+        WHERE COALESCE(v.views, 0) > 0 OR COALESCE(o.checkouts_started, 0) > 0
+        ORDER BY views DESC, checkouts_started DESC`,
+    )
+    .bind(period.startDate, period.endDate)
+    .all<PerGuideFunnelDbRow>();
+
+  return (result.results ?? []).map((row) => ({
+    slug: row.slug,
+    title: row.title ?? row.slug,
+    views: row.views,
+    checkoutsStarted: row.checkouts_started,
+    paidOrders: row.paid,
+    viewsToCheckoutPercent: row.views > 0 ? (row.checkouts_started / row.views) * 100 : null,
+    checkoutToPaidPercent: row.checkouts_started > 0 ? (row.paid / row.checkouts_started) * 100 : null,
+  }));
+}
+
 interface ChartDayRevenue {
   day: string;
   revenue_paise: number;
@@ -258,20 +288,22 @@ export async function handleAdminStats(req: Request, env: WorkerEnv): Promise<Re
   const prevPeriod = previousPeriod(period);
 
   try {
-    const [current, previous] = await Promise.all([
+    const [current, previous, trackingStart] = await Promise.all([
       windowStats(env, period, guideSlug),
       prevPeriod ? windowStats(env, prevPeriod, guideSlug) : Promise.resolve(null),
+      trackingStartDate(env),
     ]);
 
-    const [bestSellers, weakest] = guideSlug
-      ? [null, null]
+    const [bestSellers, weakest, perGuideFunnelRows] = guideSlug
+      ? [null, null, null]
       : await (async () => {
           const guides = (await perGuideStats(env, period)).filter((g) => g.checkoutsStarted > 0);
           const byRevenue = [...guides].sort((a, b) => b.revenuePaise - a.revenuePaise).slice(0, 5);
           const byConversion = [...guides]
             .sort((a, b) => a.conversionRatePercent - b.conversionRatePercent)
             .slice(0, 5);
-          return [byRevenue, byConversion];
+          const funnelRows = await perGuideFunnel(env, period);
+          return [byRevenue, byConversion, funnelRows];
         })();
 
     // The big chart always shows the trailing 30 days, independent of the
@@ -279,35 +311,25 @@ export async function handleAdminStats(req: Request, env: WorkerEnv): Promise<Re
     // single-bar chart) — same window the dashboard has always charted,
     // now also respecting the Guide filter.
     const chartStart = istDateDaysAgo(29);
-    const [revenueByDay, spendRows] = await Promise.all([
-      env.DB
-        .prepare(
-          `SELECT strftime('%Y-%m-%d', created_at, '${IST_OFFSET_SQL_MODIFIER}') AS day,
-                  COALESCE(SUM(amount_paise), 0) AS revenue_paise
-             FROM orders
-            WHERE status = 'paid'
-              AND strftime('%Y-%m-%d', created_at, '${IST_OFFSET_SQL_MODIFIER}') >= ?1
-              AND (?2 IS NULL OR book_slug = ?2)
-            GROUP BY day`,
-        )
-        .bind(chartStart, guideSlug)
-        .all<ChartDayRevenue>(),
-      env.DB
-        .prepare(`SELECT date, amount_paise FROM daily_ad_spend WHERE date >= ?1`)
-        .bind(chartStart)
-        .all<{ date: string; amount_paise: number }>(),
-    ]);
+    const revenueByDay = await env.DB
+      .prepare(
+        `SELECT strftime('%Y-%m-%d', created_at, '${IST_OFFSET_SQL_MODIFIER}') AS day,
+                COALESCE(SUM(amount_paise), 0) AS revenue_paise
+           FROM orders
+          WHERE status = 'paid'
+            AND strftime('%Y-%m-%d', created_at, '${IST_OFFSET_SQL_MODIFIER}') >= ?1
+            AND (?2 IS NULL OR book_slug = ?2)
+          GROUP BY day`,
+      )
+      .bind(chartStart, guideSlug)
+      .all<ChartDayRevenue>();
 
     const revenueByDate = new Map((revenueByDay.results ?? []).map((r) => [r.day, r.revenue_paise]));
-    const spendByDate = new Map((spendRows.results ?? []).map((r) => [r.date, r.amount_paise]));
     const chart = Array.from({ length: 30 }, (_, i) => {
       const date = istDateDaysAgo(29 - i);
       return {
         date,
         revenuePaise: revenueByDate.get(date) ?? 0,
-        // Ad spend has no per-guide breakdown in this schema, so it's always
-        // the whole-catalogue number even when a single guide is selected.
-        spendPaise: spendByDate.get(date) ?? 0,
       };
     });
 
@@ -328,7 +350,6 @@ export async function handleAdminStats(req: Request, env: WorkerEnv): Promise<Re
 
     return json(req, {
       generatedAt: new Date().toISOString(),
-      feeAssumptions,
       range: {
         key,
         startDate: period.startDate,
@@ -338,8 +359,10 @@ export async function handleAdminStats(req: Request, env: WorkerEnv): Promise<Re
       },
       current,
       previous,
+      trackingStartDate: trackingStart,
       bestSellers,
       weakest,
+      perGuideFunnel: perGuideFunnelRows,
       chart,
       recentOrders: (recentOrdersResult.results ?? []).map((row) => ({
         date: row.created_at,

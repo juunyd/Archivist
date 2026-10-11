@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { getJson } from "@/lib/api";
-import { RevenueSpendChart, type ChartDay } from "./RevenueSpendChart";
+import { RevenueChart, type ChartDay } from "./RevenueChart";
+import { FunnelSection, type PerGuideFunnel } from "./FunnelSection";
 import { AdminFilterBar, type RangeValue } from "./AdminFilterBar";
 import { TrendDownIcon, TrendUpIcon } from "./icons";
 
@@ -12,17 +13,11 @@ interface WindowStats {
   endDate: string;
   revenuePaise: number;
   paidOrders: number;
-  avgOrderValuePaise: number;
   checkoutsStarted: number;
-  conversionRatePercent: number;
+  views: number;
   failedPayments: number;
-  adSpendPaise: number;
-  costPerPurchasePaise: number | null;
-  roas: number | null;
-  estimatedProfitPaise: number | null;
   downloads: number;
   newCustomers: number;
-  repeatCustomers: number;
 }
 
 interface PerGuideStats {
@@ -44,22 +39,19 @@ interface RecentOrder {
 
 interface StatsResponse {
   generatedAt: string;
-  feeAssumptions: { paymentFeePercent: number; gstOnFeePercent: number };
   range: { key: string; startDate: string | null; endDate: string; previousStartDate: string | null; previousEndDate: string | null };
   current: WindowStats;
   previous: WindowStats | null;
+  trackingStartDate: string | null;
   bestSellers: PerGuideStats[] | null;
   weakest: PerGuideStats[] | null;
+  perGuideFunnel: PerGuideFunnel[] | null;
   chart: ChartDay[];
   recentOrders: RecentOrder[];
 }
 
 function formatRupees(paise: number): string {
   return `₹${(paise / 100).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
-}
-
-function formatRupeesPrecise(paise: number): string {
-  return `₹${(paise / 100).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function formatInt(n: number): string {
@@ -93,49 +85,15 @@ interface CardDef {
   label: string;
   format: (w: WindowStats) => string;
   raw: (w: WindowStats) => number | null;
-  sub?: (w: WindowStats) => string | null;
   direction: Direction;
 }
 
 const CARDS: CardDef[] = [
   { key: "revenue", label: "Revenue", format: (w) => formatRupees(w.revenuePaise), raw: (w) => w.revenuePaise, direction: "higherIsBetter" },
   { key: "orders", label: "Orders", format: (w) => formatInt(w.paidOrders), raw: (w) => w.paidOrders, direction: "higherIsBetter" },
-  { key: "aov", label: "Average order value", format: (w) => formatRupeesPrecise(w.avgOrderValuePaise), raw: (w) => w.avgOrderValuePaise, direction: "higherIsBetter" },
-  { key: "checkouts", label: "Checkouts started", format: (w) => formatInt(w.checkoutsStarted), raw: (w) => w.checkoutsStarted, direction: "higherIsBetter" },
-  {
-    key: "conversion",
-    label: "Conversion",
-    format: (w) => `${w.conversionRatePercent.toFixed(1)}%`,
-    raw: (w) => w.conversionRatePercent,
-    sub: (w) => `${w.paidOrders} paid / ${w.checkoutsStarted} started`,
-    direction: "higherIsBetter",
-  },
   { key: "failed", label: "Failed payments", format: (w) => formatInt(w.failedPayments), raw: (w) => w.failedPayments, direction: "lowerIsBetter" },
-  { key: "adSpend", label: "Ad spend", format: (w) => formatRupees(w.adSpendPaise), raw: (w) => w.adSpendPaise, direction: "lowerIsBetter" },
-  {
-    key: "cpp",
-    label: "Cost per purchase",
-    format: (w) => (w.costPerPurchasePaise === null ? "—" : formatRupeesPrecise(w.costPerPurchasePaise)),
-    raw: (w) => w.costPerPurchasePaise,
-    direction: "lowerIsBetter",
-  },
-  {
-    key: "roas",
-    label: "ROAS",
-    format: (w) => (w.roas === null ? "—" : `${w.roas.toFixed(2)}×`),
-    raw: (w) => w.roas,
-    direction: "higherIsBetter",
-  },
-  {
-    key: "profit",
-    label: "Estimated profit",
-    format: (w) => (w.estimatedProfitPaise === null ? "—" : formatRupees(w.estimatedProfitPaise)),
-    raw: (w) => w.estimatedProfitPaise,
-    direction: "higherIsBetter",
-  },
   { key: "downloads", label: "Downloads", format: (w) => formatInt(w.downloads), raw: (w) => w.downloads, direction: "higherIsBetter" },
   { key: "newCustomers", label: "New customers", format: (w) => formatInt(w.newCustomers), raw: (w) => w.newCustomers, direction: "higherIsBetter" },
-  { key: "repeatCustomers", label: "Repeat customers", format: (w) => formatInt(w.repeatCustomers), raw: (w) => w.repeatCustomers, direction: "higherIsBetter" },
 ];
 
 function DeltaBadge({ current, previous, direction }: { current: number | null; previous: number | null; direction: Direction }) {
@@ -266,23 +224,23 @@ export function AdminDashboardContent() {
                       direction={card.direction}
                     />
                   </div>
-                  {card.sub && <p className="admin__card-sub">{card.sub(stats.current)}</p>}
                 </div>
               ))}
             </div>
-            <p className="admin__fee-note">
-              Profit estimate assumes a {stats.feeAssumptions.paymentFeePercent}% payment fee plus{" "}
-              {stats.feeAssumptions.gstOnFeePercent}% GST on that fee, then subtracts ad spend for the same window.
-              Downloads and new/repeat customers are attributed to the order's checkout date, same as every other
-              number here. Ad spend has no per-guide breakdown, so it (and anything derived from it) stays the same
-              when a single guide is selected.
-            </p>
           </section>
+
+          <FunnelSection
+            views={stats.current.views}
+            checkoutsStarted={stats.current.checkoutsStarted}
+            paidOrders={stats.current.paidOrders}
+            trackingStartDate={stats.trackingStartDate}
+            perGuideFunnel={stats.perGuideFunnel}
+          />
 
           <section className="admin__section">
             <div className="admin__card">
-              <h2 className="admin__section-title">Revenue vs ad spend, last 30 days</h2>
-              <RevenueSpendChart data={stats.chart} />
+              <h2 className="admin__section-title">Revenue, last 30 days</h2>
+              <RevenueChart data={stats.chart} />
             </div>
           </section>
 

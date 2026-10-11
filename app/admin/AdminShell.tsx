@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { AdSpendIcon, GuidesIcon, OrdersIcon, OverviewIcon } from "./icons";
+import { GuidesIcon, OrdersIcon, OverviewIcon } from "./icons";
 
 interface NavItem {
   href: string;
@@ -15,7 +15,6 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/admin/", label: "Overview", icon: OverviewIcon },
   { href: "/admin/orders/", label: "Orders", icon: OrdersIcon },
   { href: "/admin/guides/", label: "Guides", icon: GuidesIcon },
-  { href: "/admin/ad-spend/", label: "Ad spend", icon: AdSpendIcon },
 ];
 
 function isActive(pathname: string, href: string): boolean {

@@ -13,8 +13,8 @@ import { handleOrderStatus } from "./routes/order-status";
 import { handleDownload } from "./routes/download";
 import { handleResendLink } from "./routes/resend-link";
 import { handleAdminStats } from "./routes/admin/stats";
-import { handleAdminAdSpend } from "./routes/admin/ad-spend";
 import { handleAdminOrderDetail, handleAdminOrdersList } from "./routes/admin/orders";
+import { handleTrackView } from "./routes/track-view";
 import {
   handleAdminGuideDetail,
   handleAdminGuideUnpublish,
@@ -109,8 +109,8 @@ export default {
           return await handleResendLink(request, env);
         case "/api/admin/stats":
           return await handleAdminStats(request, env);
-        case "/api/admin/ad-spend":
-          return await handleAdminAdSpend(request, env);
+        case "/api/track/view":
+          return await handleTrackView(request, env, ctx);
         case "/api/admin/orders":
           return await handleAdminOrdersList(request, env);
         case "/api/admin/guides":

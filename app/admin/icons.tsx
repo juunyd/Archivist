@@ -1,5 +1,5 @@
 // Minimal hand-rolled stroke icons (20x20, 1.6 stroke) — the project has no
-// icon library (see RevenueSpendChart.tsx for the same hand-rolled-SVG
+// icon library (see RevenueChart.tsx for the same hand-rolled-SVG
 // pattern applied to charts), so nav/trend icons follow suit instead of
 // adding a dependency for a handful of glyphs.
 import type { SVGProps } from "react";
@@ -49,17 +49,6 @@ export function GuidesIcon(props: SVGProps<SVGSVGElement>) {
     <Icon {...props}>
       <path d="M4 4.5A1.5 1.5 0 0 1 5.5 3H11v18H5.5A1.5 1.5 0 0 1 4 19.5v-15Z" />
       <path d="M20 4.5A1.5 1.5 0 0 0 18.5 3H13v18h5.5a1.5 1.5 0 0 0 1.5-1.5v-15Z" />
-    </Icon>
-  );
-}
-
-export function AdSpendIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <Icon {...props}>
-      <path d="M3 17V10l6-2v10" />
-      <path d="M9 8l9-4v15l-9-3" />
-      <path d="M3 10h0" />
-      <path d="M6 19v2M3 19v2" />
     </Icon>
   );
 }
