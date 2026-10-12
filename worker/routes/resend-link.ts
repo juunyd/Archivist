@@ -6,8 +6,8 @@
 // Ports the old Supabase Edge Functions.
 import { isEmail, json, jsonError, methodNotAllowed, readJson } from "../lib/http";
 import { allowResendRequest } from "../lib/rate-limit";
-import { paidOrdersForEmail } from "../lib/orders";
-import { downloadUrlFor, coverUrlFor } from "../lib/links";
+import { paidOrdersForEmail, grantBonusIfEligible, resolveBonusEligible } from "../lib/orders";
+import { downloadUrlFor, coverUrlFor, bonusDownloadUrlFor, bonusCoverUrlFor } from "../lib/links";
 import { sendEmail } from "../lib/email";
 import { downloadLinksEmail } from "../lib/templates";
 import type { WorkerEnv } from "../lib/env";
@@ -43,13 +43,33 @@ export async function handleResendLink(req: Request, env: WorkerEnv): Promise<Re
       return json(req, GENERIC_REPLY);
     }
 
-    const message = downloadLinksEmail(
-      guides.map((guide) => ({
-        guideTitle: guide.guide_title,
-        downloadUrl: downloadUrlFor(env, guide.download_token),
-        coverUrl: coverUrlFor(env, guide.book_slug),
-      })),
+    const items = await Promise.all(
+      guides.map(async (guide) => {
+        const bonusEligible = resolveBonusEligible({
+          bonusGranted: guide.bonus_granted,
+          bonusEnabled: guide.bonus_enabled === 1,
+          bonusPdfPath: guide.bonus_pdf_path,
+        });
+        await grantBonusIfEligible(env, guide.order_id, bonusEligible);
+
+        return {
+          guideTitle: guide.guide_title,
+          downloadUrl: downloadUrlFor(env, guide.download_token),
+          coverUrl: coverUrlFor(env, guide.book_slug),
+          ...(bonusEligible && guide.bonus_title != null
+            ? {
+                bonus: {
+                  title: guide.bonus_title,
+                  downloadUrl: bonusDownloadUrlFor(env, guide.download_token),
+                  coverUrl: guide.bonus_cover_path ? bonusCoverUrlFor(env, guide.bonus_cover_path) : null,
+                },
+              }
+            : {}),
+        };
+      }),
     );
+
+    const message = downloadLinksEmail(items);
 
     const sent = await sendEmail(env, { to: email, ...message });
     if (!sent) {

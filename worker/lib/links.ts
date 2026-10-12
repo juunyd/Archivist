@@ -17,3 +17,16 @@ export const downloadUrlFor = (env: WorkerEnv, token: string): string =>
  */
 export const coverUrlFor = (env: WorkerEnv, guideSlug: string): string =>
   `${siteUrl(env)}/images/covers/${guideSlug}.png`;
+
+/** The buyer-facing bonus download — same token, same /api/download route, just a different file selector. */
+export const bonusDownloadUrlFor = (env: WorkerEnv, token: string): string =>
+  `${siteUrl(env)}/api/download?token=${token}&file=bonus`;
+
+/**
+ * Bonus cover art for an email. Unlike coverUrlFor above, this has no legacy
+ * static-asset path to fall back to — bonus_cover_path is always a real,
+ * already-correct R2-served path (/covers/{slug}-bonus.{ext}) once set, so
+ * this just resolves it against the site origin.
+ */
+export const bonusCoverUrlFor = (env: WorkerEnv, bonusCoverPath: string): string =>
+  `${siteUrl(env)}${bonusCoverPath}`;

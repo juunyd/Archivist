@@ -51,6 +51,9 @@ export interface ValidatedGuideInput {
   buttonText: string | null;
   status: "draft" | "published";
   sortOrder: number | null;
+  bonusTitle: string | null;
+  bonusDescription: string | null;
+  bonusEnabled: boolean;
 }
 
 export type GuideValidationResult =
@@ -151,6 +154,38 @@ export function validateGuideInput(body: unknown): GuideValidationResult {
     }
   }
 
+  // The bonus toggle can be switched on only once title/cover/PDF all exist
+  // (enforced in worker/routes/admin/guides.ts via bonusEnableBlockedReason),
+  // but an admin may type a bonus title before ever uploading files, so
+  // these fields are optional here regardless of bonusEnabled.
+  let bonusTitle: string | null = null;
+  if (b.bonusTitle !== undefined && b.bonusTitle !== null && b.bonusTitle !== "") {
+    if (typeof b.bonusTitle !== "string") {
+      errors.push("bonusTitle must be a string.");
+    } else if (b.bonusTitle.trim().length === 0) {
+      errors.push("bonusTitle cannot be only spaces.");
+    } else if (HTML_TAG_RE.test(b.bonusTitle)) {
+      errors.push("bonusTitle cannot contain HTML tags.");
+    } else {
+      bonusTitle = b.bonusTitle.trim();
+    }
+  }
+
+  let bonusDescription: string | null = null;
+  if (b.bonusDescription !== undefined && b.bonusDescription !== null && b.bonusDescription !== "") {
+    if (typeof b.bonusDescription !== "string") {
+      errors.push("bonusDescription must be a string.");
+    } else if (b.bonusDescription.trim().length === 0) {
+      errors.push("bonusDescription cannot be only spaces.");
+    } else if (HTML_TAG_RE.test(b.bonusDescription)) {
+      errors.push("bonusDescription cannot contain HTML tags.");
+    } else {
+      bonusDescription = b.bonusDescription.trim();
+    }
+  }
+
+  const bonusEnabled = b.bonusEnabled === true;
+
   if (errors.length > 0) return { ok: false, errors };
 
   return {
@@ -172,6 +207,9 @@ export function validateGuideInput(body: unknown): GuideValidationResult {
       buttonText,
       status: status as "draft" | "published",
       sortOrder,
+      bonusTitle,
+      bonusDescription,
+      bonusEnabled,
     },
   };
 }
@@ -183,4 +221,18 @@ export function publishBlockedReason(coverPath: string | null, pdfPath: string |
   if (!pdfPath) missing.push("a PDF");
   if (missing.length === 0) return null;
   return `Cannot publish: this guide is missing ${missing.join(" and ")}. Upload ${missing.length > 1 ? "them" : "it"} first.`;
+}
+
+/** A guide's free bonus can only be switched on once it has a title, a cover, and a PDF — mirrors publishBlockedReason's model. */
+export function bonusEnableBlockedReason(
+  bonusTitle: string | null,
+  bonusCoverPath: string | null,
+  bonusPdfPath: string | null,
+): string | null {
+  const missing: string[] = [];
+  if (!bonusTitle) missing.push("a bonus title");
+  if (!bonusCoverPath) missing.push("a bonus cover image");
+  if (!bonusPdfPath) missing.push("a bonus PDF");
+  if (missing.length === 0) return null;
+  return `Cannot enable the free bonus: it is missing ${missing.join(", ")}. Upload ${missing.length > 1 ? "them" : "it"} first.`;
 }

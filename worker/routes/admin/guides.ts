@@ -20,7 +20,7 @@ import {
   unpublishGuide,
   updateGuide,
 } from "../../lib/guides-admin";
-import { publishBlockedReason, validateGuideInput } from "../../lib/guide-validation";
+import { bonusEnableBlockedReason, publishBlockedReason, validateGuideInput } from "../../lib/guide-validation";
 
 export async function handleAdminGuidesList(req: Request, env: WorkerEnv): Promise<Response> {
   const access = await requireAccess(req, env);
@@ -48,6 +48,11 @@ export async function handleAdminGuidesList(req: Request, env: WorkerEnv): Promi
       // A brand-new guide has no cover or PDF yet — those are uploaded
       // (Step 2) after creation, against this same slug.
       return jsonError(req, 400, "cannot_publish", publishBlockedReason(null, null)!);
+    }
+
+    if (input.bonusEnabled) {
+      // Same reasoning: a brand-new guide has no bonus cover or PDF yet either.
+      return jsonError(req, 400, "cannot_enable_bonus", bonusEnableBlockedReason(null, null, null)!);
     }
 
     try {
@@ -137,6 +142,22 @@ export async function handleAdminGuideDetail(
             400,
             "cannot_publish",
             `Cannot publish: the PDF recorded for this guide (${existing.pdf_path}) was not found in storage. Re-upload it.`,
+          );
+        }
+      }
+
+      if (input.bonusEnabled) {
+        const blocked = bonusEnableBlockedReason(input.bonusTitle, existing.bonus_cover_path, existing.bonus_pdf_path);
+        if (blocked) return jsonError(req, 400, "cannot_enable_bonus", blocked);
+
+        // Same existence re-check as the main PDF above, applied to the bonus PDF.
+        const bonusObject = await env.BOOK_FILES.head(existing.bonus_pdf_path!);
+        if (!bonusObject) {
+          return jsonError(
+            req,
+            400,
+            "cannot_enable_bonus",
+            `Cannot enable the free bonus: the PDF recorded (${existing.bonus_pdf_path}) was not found in storage. Re-upload it.`,
           );
         }
       }

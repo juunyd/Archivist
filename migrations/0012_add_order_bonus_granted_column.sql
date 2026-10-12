@@ -1,0 +1,16 @@
+-- Additive only: records, per order, whether that buyer has ever been
+-- granted the guide's free bonus. Nullable with NO default, and only ever
+-- written as NULL (never evaluated) or 1 (granted) — never 0 — so there
+-- is no ambiguity between "never checked" and "explicitly denied". See
+-- worker/lib/orders.ts's resolveBonusEligible()/grantBonusIfEligible():
+--   effective eligibility = bonus_granted = 1
+--     OR (bonus_granted IS NULL AND books.bonus_enabled = 1
+--                               AND books.bonus_pdf_path IS NOT NULL)
+-- This lets an order placed before a guide had a bonus still receive it
+-- once the bonus exists and is on (eligibility is dynamic, not time-
+-- locked), and lets a later admin switch-off never revoke it from a buyer
+-- who was already granted it (grandfathering).
+--
+-- Never touch any existing column in this table — this project has live
+-- paying customers.
+ALTER TABLE orders ADD COLUMN bonus_granted INTEGER;

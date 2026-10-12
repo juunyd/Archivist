@@ -1,8 +1,9 @@
 import type { WorkerEnv } from "./env";
 import type { OrderRow } from "./orders";
+import { grantBonusIfEligible, resolveBonusEligible } from "./orders";
 import { sendEmail } from "./email";
 import { deliveryEmail } from "./templates";
-import { downloadUrlFor, coverUrlFor } from "./links";
+import { downloadUrlFor, coverUrlFor, bonusDownloadUrlFor, bonusCoverUrlFor } from "./links";
 import { sendPurchaseEvent } from "./meta-capi";
 
 export type FulfilResult =
@@ -40,7 +41,7 @@ export async function fulfilOrder(
           AND status = 'paid'
           AND fulfilled_at IS NULL
         RETURNING id, book_slug, buyer_email, buyer_phone, download_token, amount_paise, currency,
-                  paid_at, client_ip, client_user_agent, meta_event_id`,
+                  paid_at, client_ip, client_user_agent, meta_event_id, bonus_granted`,
     )
     .bind(orderId, new Date().toISOString())
     .first<
@@ -57,6 +58,7 @@ export async function fulfilOrder(
         | "client_ip"
         | "client_user_agent"
         | "meta_event_id"
+        | "bonus_granted"
       >
     >();
 
@@ -93,9 +95,26 @@ export async function fulfilOrder(
   }
 
   const guide = await env.DB
-    .prepare(`SELECT title FROM books WHERE slug = ?1`)
+    .prepare(
+      `SELECT title, bonus_title, bonus_description, bonus_cover_path, bonus_pdf_path, bonus_enabled
+         FROM books WHERE slug = ?1`,
+    )
     .bind(claimed.book_slug)
-    .first<{ title: string }>();
+    .first<{
+      title: string;
+      bonus_title: string | null;
+      bonus_description: string | null;
+      bonus_cover_path: string | null;
+      bonus_pdf_path: string | null;
+      bonus_enabled: number;
+    }>();
+
+  const bonusEligible = resolveBonusEligible({
+    bonusGranted: claimed.bonus_granted,
+    bonusEnabled: guide?.bonus_enabled === 1,
+    bonusPdfPath: guide?.bonus_pdf_path ?? null,
+  });
+  await grantBonusIfEligible(env, claimed.id, bonusEligible);
 
   const message = deliveryEmail({
     guideTitle: guide?.title ?? "your Archivist guide",
@@ -104,6 +123,15 @@ export async function fulfilOrder(
     amountPaise: claimed.amount_paise,
     paidAt: claimed.paid_at ?? new Date().toISOString(),
     coverUrl: coverUrlFor(env, claimed.book_slug),
+    ...(bonusEligible && guide?.bonus_title != null
+      ? {
+          bonus: {
+            title: guide.bonus_title,
+            downloadUrl: bonusDownloadUrlFor(env, claimed.download_token),
+            coverUrl: guide.bonus_cover_path ? bonusCoverUrlFor(env, guide.bonus_cover_path) : null,
+          },
+        }
+      : {}),
   });
 
   const sent = await sendEmail(env, { to: claimed.buyer_email, ...message });

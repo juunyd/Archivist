@@ -45,6 +45,12 @@ export interface Guide {
   buttonText?: string;
   whatsInside: WhatsInsideItem[];
   faqs: FaqItem[];
+  /** A second, free PDF (with its own cover) included with the purchase — absent when the guide has none. */
+  bonus?: {
+    title: string;
+    description?: string;
+    coverImage: string;
+  };
 }
 
 /**
@@ -84,6 +90,11 @@ interface CatalogApiGuide {
   buttonText: string | null;
   whatsInside: WhatsInsideItem[];
   faqs: FaqItem[];
+  bonus?: {
+    title: string;
+    description: string | null;
+    coverPath: string;
+  };
 }
 
 function assertValidApiGuide(value: unknown): CatalogApiGuide {
@@ -132,6 +143,15 @@ function mapApiGuide(g: CatalogApiGuide): Guide {
     ...(g.buttonText != null ? { buttonText: g.buttonText } : {}),
     whatsInside: g.whatsInside,
     faqs: g.faqs,
+    ...(g.bonus != null
+      ? {
+          bonus: {
+            title: g.bonus.title,
+            ...(g.bonus.description != null ? { description: g.bonus.description } : {}),
+            coverImage: g.bonus.coverPath,
+          },
+        }
+      : {}),
   };
 }
 

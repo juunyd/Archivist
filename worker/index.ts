@@ -20,7 +20,12 @@ import {
   handleAdminGuideUnpublish,
   handleAdminGuidesList,
 } from "./routes/admin/guides";
-import { handleAdminGuideCoverUpload, handleAdminGuidePdfUpload } from "./routes/admin/guide-uploads";
+import {
+  handleAdminGuideCoverUpload,
+  handleAdminGuidePdfUpload,
+  handleAdminGuideBonusCoverUpload,
+  handleAdminGuideBonusPdfUpload,
+} from "./routes/admin/guide-uploads";
 import { handleAdminRebuild, handleAdminRebuildStatus } from "./routes/admin/rebuild";
 import { handleCatalog } from "./routes/catalog";
 import { handleCoverServe } from "./routes/cover-serve";
@@ -46,6 +51,8 @@ const COVER_SERVE_PATH = /^\/covers\/([a-z0-9-]+\.(?:png|jpg|webp))$/;
 const ADMIN_GUIDE_UNPUBLISH_PATH = /^\/api\/admin\/guides\/([^/]+)\/unpublish$/;
 const ADMIN_GUIDE_COVER_PATH = /^\/api\/admin\/guides\/([^/]+)\/cover$/;
 const ADMIN_GUIDE_PDF_PATH = /^\/api\/admin\/guides\/([^/]+)\/pdf$/;
+const ADMIN_GUIDE_BONUS_COVER_PATH = /^\/api\/admin\/guides\/([^/]+)\/bonus-cover$/;
+const ADMIN_GUIDE_BONUS_PDF_PATH = /^\/api\/admin\/guides\/([^/]+)\/bonus-pdf$/;
 const ADMIN_GUIDE_DETAIL_PATH = /^\/api\/admin\/guides\/([^/]+)$/;
 const ADMIN_ORDER_DETAIL_PATH = /^\/api\/admin\/orders\/([^/]+)$/;
 
@@ -84,6 +91,14 @@ export default {
       const pdfUploadMatch = ADMIN_GUIDE_PDF_PATH.exec(url.pathname);
       if (pdfUploadMatch) {
         return await handleAdminGuidePdfUpload(request, env, decodeURIComponent(pdfUploadMatch[1]));
+      }
+      const bonusCoverUploadMatch = ADMIN_GUIDE_BONUS_COVER_PATH.exec(url.pathname);
+      if (bonusCoverUploadMatch) {
+        return await handleAdminGuideBonusCoverUpload(request, env, decodeURIComponent(bonusCoverUploadMatch[1]));
+      }
+      const bonusPdfUploadMatch = ADMIN_GUIDE_BONUS_PDF_PATH.exec(url.pathname);
+      if (bonusPdfUploadMatch) {
+        return await handleAdminGuideBonusPdfUpload(request, env, decodeURIComponent(bonusPdfUploadMatch[1]));
       }
       const guideDetailMatch = ADMIN_GUIDE_DETAIL_PATH.exec(url.pathname);
       if (guideDetailMatch) {

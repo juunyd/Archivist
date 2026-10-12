@@ -505,6 +505,119 @@ button {
   border: 0;
 }
 
+/* Bonus card — advertises a guide's free second PDF, shown only when one is
+   set. Positioned relative so the FREE tag can sit half off its top edge. */
+.bonus-card-wrap {
+  width: 100%;
+  max-width: 400px;
+  margin-top: var(--space-5);
+}
+
+.bonus-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  border-radius: 14px;
+  border: 1px solid var(--gray-300);
+  background: var(--color-white);
+  color: var(--color-ink);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.bonus-card__media {
+  flex: 0 0 auto;
+}
+
+.bonus-card__cover {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  object-fit: cover;
+  display: block;
+}
+
+.bonus-card__body {
+  min-width: 0;
+}
+
+.bonus-card__title {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.bonus-card__description {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--gray-900);
+}
+
+.bonus-card__tag {
+  position: absolute;
+  top: -10px;
+  left: var(--space-4);
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--color-brand-red);
+  color: var(--color-white);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  overflow: hidden;
+}
+
+/* The shine only exists for visitors who haven't asked for reduced motion —
+   additive-by-default-off, never the reverse. */
+@media (prefers-reduced-motion: no-preference) {
+  .bonus-card__tag::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -150%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.65), transparent);
+    animation: bonus-tag-shine 1.4s ease-out 0.5s 1 both;
+  }
+
+  @keyframes bonus-tag-shine {
+    to {
+      left: 150%;
+    }
+  }
+}
+
+.bonus-card__caption {
+  margin: var(--space-2) 0 0;
+  font-size: 12px;
+  color: var(--gray-800);
+}
+
+@media (max-width: 600px) {
+  .bonus-card {
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .bonus-card__cover {
+    width: 52px;
+    height: 52px;
+  }
+
+  .bonus-card__title {
+    font-size: 13px;
+  }
+
+  .bonus-card__description {
+    font-size: 12px;
+  }
+}
+
 /* Checkout button states. The wrapper keeps the inline error attached to the
    button that produced it, since a page can show several buy buttons.
    display:contents keeps every existing layout exactly as it was — the form
@@ -616,6 +729,11 @@ button {
 .download__cta {
   margin: 0 auto;
   text-decoration: none;
+}
+
+.download__cta--bonus {
+  margin-top: var(--space-4);
+  background: var(--color-ink);
 }
 
 .download__body {

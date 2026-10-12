@@ -9,7 +9,8 @@
     "lint": "next lint",
     "preview": "npm run build && wrangler dev",
     "deploy": "npm run build && wrangler deploy",
-    "parity-check": "node scripts/catalog-parity-check.mjs"
+    "parity-check": "node scripts/catalog-parity-check.mjs",
+    "test:bonus": "node scripts/test-bonus.mjs"
   },
   "dependencies": {
     "next": "^16.3.5",

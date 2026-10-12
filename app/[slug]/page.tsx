@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { CtaButton } from "@/components/CtaButton";
+import { BonusCard } from "@/components/BonusCard";
 import { FaqAccordion } from "@/components/FaqAccordion";
 import { StickyBuyBar } from "@/components/StickyBuyBar";
 import { GuideViewTracker } from "@/components/GuideViewTracker";
@@ -107,6 +108,8 @@ export default async function GuidePage({ params }: GuidePageProps) {
               </div>
 
               <CtaButton guide={guide} />
+
+              {guide.bonus && <BonusCard bonus={guide.bonus} />}
 
               {guide.chapterCount && (
                 <p className={styles.formatLine}>

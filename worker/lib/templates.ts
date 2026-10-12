@@ -108,6 +108,25 @@ const coverImage = (coverUrl: string | null | undefined, alt: string): string =>
 
 const P = `margin:0 0 24px;font-size:16px;line-height:1.6;color:#111111;`;
 
+export interface EmailBonusInput {
+  title: string;
+  downloadUrl: string;
+  coverUrl?: string | null;
+}
+
+/** The HTML+text block for a free bonus, shared by deliveryEmail() and downloadLinksEmail() so the two can't drift. */
+function bonusBlockHtml(bonus: EmailBonusInput): string {
+  return `
+      <p style="margin:28px 0 12px;font-size:13px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:#ff3431;">Free bonus included</p>
+      ${coverImage(bonus.coverUrl, `${bonus.title} cover`)}
+      ${button(bonus.downloadUrl, `Download ${bonus.title}`)}
+      ${plainLinkFallback(bonus.downloadUrl)}`;
+}
+
+function bonusBlockText(bonus: EmailBonusInput): string[] {
+  return ["", "Free bonus included:", bonus.title, `Download ${bonus.title}:`, bonus.downloadUrl];
+}
+
 export interface DeliveryEmailInput {
   guideTitle: string;
   downloadUrl: string;
@@ -115,6 +134,7 @@ export interface DeliveryEmailInput {
   amountPaise: number;
   paidAt: string;
   coverUrl?: string | null;
+  bonus?: EmailBonusInput | null;
 }
 
 export function deliveryEmail(input: DeliveryEmailInput) {
@@ -146,6 +166,7 @@ export function deliveryEmail(input: DeliveryEmailInput) {
         ${summaryRow("Amount paid", `&#8377;${escapeHtml(amountLabel)}`)}
         ${summaryRow("Format", "PDF")}
       </table>
+      ${input.bonus ? bonusBlockHtml(input.bonus) : ""}
       <p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#111111;">
         This link keeps working, so you can download the guide again whenever you need it.
       </p>
@@ -167,6 +188,7 @@ export function deliveryEmail(input: DeliveryEmailInput) {
       `Date: ${dateLabel}`,
       `Amount paid: ₹${amountLabel}`,
       `Format: PDF`,
+      ...(input.bonus ? bonusBlockText(input.bonus) : []),
       ``,
       `This link keeps working, so you can download the guide again whenever you need it.`,
       ``,
@@ -183,6 +205,7 @@ export interface DownloadLinkItem {
   guideTitle: string;
   downloadUrl: string;
   coverUrl?: string | null;
+  bonus?: EmailBonusInput | null;
 }
 
 export function downloadLinksEmail(items: DownloadLinkItem[]) {
@@ -198,6 +221,7 @@ export function downloadLinksEmail(items: DownloadLinkItem[]) {
             <p style="margin:0 0 14px;font-size:17px;line-height:1.4;font-weight:700;">${escapeHtml(item.guideTitle)}</p>
             ${button(item.downloadUrl, "Download the PDF")}
             ${plainLinkFallback(item.downloadUrl)}
+            ${item.bonus ? bonusBlockHtml(item.bonus) : ""}
           </td>
         </tr>
       </table>`,
@@ -208,6 +232,7 @@ export function downloadLinksEmail(items: DownloadLinkItem[]) {
     item.guideTitle,
     `Download the PDF:`,
     item.downloadUrl,
+    ...(item.bonus ? bonusBlockText(item.bonus) : []),
     ``,
   ]);
 

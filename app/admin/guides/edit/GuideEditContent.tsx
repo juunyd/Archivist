@@ -32,6 +32,11 @@ interface AdminGuideDetail {
   paidOrders: number;
   totalOrders: number;
   slugLocked: boolean;
+  bonusTitle: string | null;
+  bonusDescription: string | null;
+  bonusCoverPath: string | null;
+  bonusPdfPath: string | null;
+  bonusEnabled: boolean;
 }
 
 interface FormState {
@@ -51,6 +56,9 @@ interface FormState {
   status: "draft" | "published";
   whatsInside: TwoFieldItem[];
   faqs: TwoFieldItem[];
+  bonusTitle: string;
+  bonusDescription: string;
+  bonusEnabled: boolean;
 }
 
 const EMPTY_FORM: FormState = {
@@ -70,6 +78,9 @@ const EMPTY_FORM: FormState = {
   status: "draft",
   whatsInside: [],
   faqs: [],
+  bonusTitle: "",
+  bonusDescription: "",
+  bonusEnabled: false,
 };
 
 function guideToForm(guide: AdminGuideDetail): FormState {
@@ -90,6 +101,9 @@ function guideToForm(guide: AdminGuideDetail): FormState {
     status: guide.status,
     whatsInside: guide.whatsInside.map((w) => ({ a: w.title, b: w.description })),
     faqs: guide.faqs.map((f) => ({ a: f.question, b: f.answer })),
+    bonusTitle: guide.bonusTitle ?? "",
+    bonusDescription: guide.bonusDescription ?? "",
+    bonusEnabled: guide.bonusEnabled,
   };
 }
 
@@ -125,6 +139,14 @@ export function GuideEditContent() {
   const [pdfUploading, setPdfUploading] = useState(false);
   const [pdfMessage, setPdfMessage] = useState<{ text: string; error?: boolean } | null>(null);
 
+  const [bonusCoverFile, setBonusCoverFile] = useState<File | null>(null);
+  const [bonusCoverUploading, setBonusCoverUploading] = useState(false);
+  const [bonusCoverMessage, setBonusCoverMessage] = useState<{ text: string; error?: boolean } | null>(null);
+
+  const [bonusPdfFile, setBonusPdfFile] = useState<File | null>(null);
+  const [bonusPdfUploading, setBonusPdfUploading] = useState(false);
+  const [bonusPdfMessage, setBonusPdfMessage] = useState<{ text: string; error?: boolean } | null>(null);
+
   const [unpublishing, setUnpublishing] = useState(false);
 
   useEffect(() => {
@@ -155,6 +177,16 @@ export function GuideEditContent() {
       if (coverPreviewUrl) URL.revokeObjectURL(coverPreviewUrl);
     };
   }, [coverPreviewUrl]);
+
+  const bonusCoverPreviewUrl = useMemo(
+    () => (bonusCoverFile ? URL.createObjectURL(bonusCoverFile) : null),
+    [bonusCoverFile],
+  );
+  useEffect(() => {
+    return () => {
+      if (bonusCoverPreviewUrl) URL.revokeObjectURL(bonusCoverPreviewUrl);
+    };
+  }, [bonusCoverPreviewUrl]);
 
   const priceChanged =
     initialPriceRupees !== null &&
@@ -193,6 +225,9 @@ export function GuideEditContent() {
       buttonText: form.buttonText.trim() || undefined,
       status: form.status,
       sortOrder: form.sortOrder ? Number.parseInt(form.sortOrder, 10) : undefined,
+      bonusTitle: form.bonusTitle.trim() || undefined,
+      bonusDescription: form.bonusDescription.trim() || undefined,
+      bonusEnabled: form.bonusEnabled,
     };
 
     setSaving(true);
@@ -265,6 +300,56 @@ export function GuideEditContent() {
       setPdfMessage({ text: error instanceof Error ? error.message : "Could not upload the PDF.", error: true });
     } finally {
       setPdfUploading(false);
+    }
+  }
+
+  async function handleBonusCoverUpload() {
+    if (!bonusCoverFile || !guide) return;
+    setBonusCoverUploading(true);
+    setBonusCoverMessage(null);
+    try {
+      const body = new FormData();
+      body.set("file", bonusCoverFile);
+      const res = await fetch(`/api/admin/guides/${encodeURIComponent(guide.slug)}/bonus-cover`, { method: "POST", body });
+      const parsed = (await res.json()) as { guide?: AdminGuideDetail; error?: { message?: string } };
+      if (!res.ok) throw new Error(parsed.error?.message ?? "Could not upload the bonus cover.");
+      setGuide(parsed.guide!);
+      setBonusCoverFile(null);
+      setBonusCoverMessage({ text: "Bonus cover uploaded." });
+    } catch (error) {
+      setBonusCoverMessage({ text: error instanceof Error ? error.message : "Could not upload the bonus cover.", error: true });
+    } finally {
+      setBonusCoverUploading(false);
+    }
+  }
+
+  async function handleBonusPdfUpload(confirmOverwrite: boolean) {
+    if (!bonusPdfFile || !guide) return;
+    if (guide.bonusPdfPath && !confirmOverwrite) {
+      const ok = window.confirm(
+        "This guide already has a bonus PDF, and paying customers download that exact file. Replace it?",
+      );
+      if (!ok) return;
+      return handleBonusPdfUpload(true);
+    }
+    setBonusPdfUploading(true);
+    setBonusPdfMessage(null);
+    try {
+      const url = `/api/admin/guides/${encodeURIComponent(guide.slug)}/bonus-pdf${confirmOverwrite ? "?confirm=true" : ""}`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/pdf" },
+        body: bonusPdfFile,
+      });
+      const parsed = (await res.json()) as { guide?: AdminGuideDetail; error?: { message?: string } };
+      if (!res.ok) throw new Error(parsed.error?.message ?? "Could not upload the bonus PDF.");
+      setGuide(parsed.guide!);
+      setBonusPdfFile(null);
+      setBonusPdfMessage({ text: "Bonus PDF uploaded." });
+    } catch (error) {
+      setBonusPdfMessage({ text: error instanceof Error ? error.message : "Could not upload the bonus PDF.", error: true });
+    } finally {
+      setBonusPdfUploading(false);
     }
   }
 
@@ -526,6 +611,95 @@ export function GuideEditContent() {
                 </button>
                 {pdfMessage && (
                   <span className={`admin__form-message${pdfMessage.error ? " admin__form-message--error" : ""}`}>{pdfMessage.text}</span>
+                )}
+              </div>
+            </div>
+          </section>
+
+          <section className="admin__section">
+            <h2 className="admin__section-title">Free bonus</h2>
+            <div className="admin__guide-form-grid">
+              <div className="admin__field">
+                <label htmlFor="g-bonus-title">Bonus title</label>
+                <input
+                  id="g-bonus-title"
+                  type="text"
+                  value={form.bonusTitle}
+                  onChange={(e) => updateField("bonusTitle", e.target.value)}
+                />
+              </div>
+
+              <div className="admin__field">
+                <label htmlFor="g-bonus-enabled">Show bonus</label>
+                <select
+                  id="g-bonus-enabled"
+                  value={form.bonusEnabled ? "on" : "off"}
+                  onChange={(e) => updateField("bonusEnabled", e.target.value === "on")}
+                >
+                  <option value="off">Off</option>
+                  <option value="on">On</option>
+                </select>
+              </div>
+
+              <div className="admin__field admin__field--wide">
+                <label htmlFor="g-bonus-description">Bonus description (short)</label>
+                <textarea
+                  id="g-bonus-description"
+                  value={form.bonusDescription}
+                  onChange={(e) => updateField("bonusDescription", e.target.value)}
+                  rows={2}
+                />
+              </div>
+            </div>
+
+            <div className="admin__upload-row">
+              <div className="admin__upload-preview">
+                {bonusCoverPreviewUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={bonusCoverPreviewUrl} alt="Selected bonus cover preview" className="admin__guide-thumb admin__guide-thumb--large" />
+                ) : guide.bonusCoverPath ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={guide.bonusCoverPath} alt="Current bonus cover" className="admin__guide-thumb admin__guide-thumb--large" />
+                ) : (
+                  <span className="admin__guide-thumb admin__guide-thumb--large admin__guide-thumb--empty" aria-hidden="true" />
+                )}
+              </div>
+              <div className="admin__upload-controls">
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={(e) => setBonusCoverFile(e.target.files?.[0] ?? null)}
+                />
+                {bonusCoverFile && (
+                  <span className="admin__upload-filename">
+                    {bonusCoverFile.name} ({formatFileSize(bonusCoverFile.size)})
+                  </span>
+                )}
+                <button type="button" className="admin__form-submit" onClick={handleBonusCoverUpload} disabled={!bonusCoverFile || bonusCoverUploading}>
+                  {bonusCoverUploading ? "Uploading…" : "Upload bonus cover"}
+                </button>
+                {bonusCoverMessage && (
+                  <span className={`admin__form-message${bonusCoverMessage.error ? " admin__form-message--error" : ""}`}>{bonusCoverMessage.text}</span>
+                )}
+              </div>
+            </div>
+
+            <div className="admin__upload-row">
+              <div className="admin__upload-controls">
+                <p className="admin__upload-current">
+                  {guide.bonusPdfPath ? `Current file: ${guide.bonusPdfPath}` : "No bonus PDF uploaded yet."}
+                </p>
+                <input type="file" accept="application/pdf" onChange={(e) => setBonusPdfFile(e.target.files?.[0] ?? null)} />
+                {bonusPdfFile && (
+                  <span className="admin__upload-filename">
+                    {bonusPdfFile.name} ({formatFileSize(bonusPdfFile.size)})
+                  </span>
+                )}
+                <button type="button" className="admin__form-submit" onClick={() => handleBonusPdfUpload(false)} disabled={!bonusPdfFile || bonusPdfUploading}>
+                  {bonusPdfUploading ? "Uploading…" : guide.bonusPdfPath ? "Replace bonus PDF" : "Upload bonus PDF"}
+                </button>
+                {bonusPdfMessage && (
+                  <span className={`admin__form-message${bonusPdfMessage.error ? " admin__form-message--error" : ""}`}>{bonusPdfMessage.text}</span>
                 )}
               </div>
             </div>

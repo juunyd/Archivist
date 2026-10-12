@@ -12,6 +12,11 @@ export interface GuideRow {
   currency: string;
   pdf_path: string | null;
   status: "draft" | "published";
+  bonus_title: string | null;
+  bonus_description: string | null;
+  bonus_cover_path: string | null;
+  bonus_pdf_path: string | null;
+  bonus_enabled: number;
 }
 
 export interface OrderRow {
@@ -36,6 +41,8 @@ export interface OrderRow {
   client_user_agent: string | null;
   /** UUID the browser generated for its own Purchase pixel event; reused by the server event so Meta dedupes them. */
   meta_event_id: string | null;
+  /** NULL (never checked) or 1 (granted) — never 0. See resolveBonusEligible(). */
+  bonus_granted: number | null;
 }
 
 const nowIso = () => new Date().toISOString();
@@ -53,7 +60,11 @@ export async function getPublishedGuide(env: WorkerEnv, slug: string): Promise<G
 
 export async function getGuideBySlug(env: WorkerEnv, slug: string): Promise<GuideRow | null> {
   return env.DB
-    .prepare(`SELECT slug, title, price_paise, currency, pdf_path, status FROM books WHERE slug = ?1`)
+    .prepare(
+      `SELECT slug, title, price_paise, currency, pdf_path, status,
+              bonus_title, bonus_description, bonus_cover_path, bonus_pdf_path, bonus_enabled
+         FROM books WHERE slug = ?1`,
+    )
     .bind(slug)
     .first<GuideRow>();
 }
@@ -107,6 +118,42 @@ export async function findOrderByRazorpayOrderId(
 
 export async function findOrderById(env: WorkerEnv, orderId: string): Promise<OrderRow | null> {
   return env.DB.prepare(`SELECT * FROM orders WHERE id = ?1`).bind(orderId).first<OrderRow>();
+}
+
+export async function findOrderByDownloadToken(env: WorkerEnv, token: string): Promise<OrderRow | null> {
+  return env.DB.prepare(`SELECT * FROM orders WHERE download_token = ?1`).bind(token).first<OrderRow>();
+}
+
+export interface BonusEligibilityInput {
+  bonusGranted: number | null;
+  bonusEnabled: boolean;
+  bonusPdfPath: string | null;
+}
+
+/**
+ * Pure — no DB. `bonus_granted = 1` always wins (grandfathered, survives a
+ * later admin switch-off). Otherwise eligibility is dynamic: an order placed
+ * before a guide had a bonus becomes eligible the moment the bonus exists
+ * and is on, not before.
+ */
+export function resolveBonusEligible(input: BonusEligibilityInput): boolean {
+  return (
+    input.bonusGranted === 1 ||
+    (input.bonusGranted == null && input.bonusEnabled && input.bonusPdfPath != null)
+  );
+}
+
+/**
+ * Persists a grant once eligibility is true, so it survives a later
+ * admin switch-off. Only ever writes 1, never 0 — a no-op otherwise, and a
+ * no-op if already granted.
+ */
+export async function grantBonusIfEligible(env: WorkerEnv, orderId: string, eligible: boolean): Promise<void> {
+  if (!eligible) return;
+  await env.DB
+    .prepare(`UPDATE orders SET bonus_granted = 1 WHERE id = ?1 AND bonus_granted IS NOT 1`)
+    .bind(orderId)
+    .run();
 }
 
 export type PaymentCheck =
@@ -194,6 +241,7 @@ export interface DownloadClaim {
   order_id: string;
   book_slug: string;
   download_count: number;
+  bonus_granted: number | null;
 }
 
 /**
@@ -217,16 +265,23 @@ export async function claimDownload(
         WHERE download_token = ?1
           AND status = 'paid'
           AND download_count < ?2
-        RETURNING id AS order_id, book_slug, download_count`,
+        RETURNING id AS order_id, book_slug, download_count, bonus_granted`,
     )
     .bind(token, limit)
     .first<DownloadClaim>();
 }
 
 export interface PurchasedGuide {
+  order_id: string;
   book_slug: string;
   guide_title: string;
   download_token: string;
+  bonus_granted: number | null;
+  bonus_enabled: number;
+  bonus_pdf_path: string | null;
+  bonus_title: string | null;
+  bonus_description: string | null;
+  bonus_cover_path: string | null;
 }
 
 /**
@@ -242,10 +297,19 @@ export interface PurchasedGuide {
 export async function paidOrdersForEmail(env: WorkerEnv, email: string): Promise<PurchasedGuide[]> {
   const result = await env.DB
     .prepare(
-      `SELECT book_slug, guide_title, download_token FROM (
-         SELECT o.book_slug AS book_slug,
+      `SELECT order_id, book_slug, guide_title, download_token,
+              bonus_granted, bonus_enabled, bonus_pdf_path, bonus_title, bonus_description, bonus_cover_path
+         FROM (
+         SELECT o.id AS order_id,
+                o.book_slug AS book_slug,
                 b.title AS guide_title,
                 o.download_token AS download_token,
+                o.bonus_granted AS bonus_granted,
+                b.bonus_enabled AS bonus_enabled,
+                b.bonus_pdf_path AS bonus_pdf_path,
+                b.bonus_title AS bonus_title,
+                b.bonus_description AS bonus_description,
+                b.bonus_cover_path AS bonus_cover_path,
                 ROW_NUMBER() OVER (
                   PARTITION BY o.book_slug
                   ORDER BY o.paid_at DESC

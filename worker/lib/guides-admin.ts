@@ -17,6 +17,7 @@ export interface AdminGuideListRow {
   pdf_path: string | null;
   sort_order: number | null;
   paid_orders: number;
+  bonus_enabled: number;
 }
 
 export interface AdminGuideDetailRow {
@@ -41,6 +42,11 @@ export interface AdminGuideDetailRow {
   sort_order: number | null;
   created_at: string;
   updated_at: string | null;
+  bonus_title: string | null;
+  bonus_description: string | null;
+  bonus_cover_path: string | null;
+  bonus_pdf_path: string | null;
+  bonus_enabled: number;
 }
 
 export async function listAdminGuides(env: WorkerEnv): Promise<AdminGuideListRow[]> {
@@ -48,7 +54,7 @@ export async function listAdminGuides(env: WorkerEnv): Promise<AdminGuideListRow
     `SELECT b.slug AS slug, b.title AS title, b.number AS number,
             b.price_paise AS price_paise, b.compare_at_price_paise AS compare_at_price_paise,
             b.status AS status, b.cover_path AS cover_path, b.pdf_path AS pdf_path,
-            b.sort_order AS sort_order,
+            b.sort_order AS sort_order, b.bonus_enabled AS bonus_enabled,
             COUNT(CASE WHEN o.status = 'paid' THEN 1 END) AS paid_orders
        FROM books b
        LEFT JOIN orders o ON o.book_slug = b.slug
@@ -88,11 +94,13 @@ export async function insertGuide(env: WorkerEnv, input: ValidatedGuideInput): P
     `INSERT INTO books
        (slug, title, price_paise, currency, status,
         number, subtitle, blurb, description, page_count, chapter_count,
-        whats_inside, faqs, badge, button_text, compare_at_price_paise, sort_order, updated_at)
+        whats_inside, faqs, badge, button_text, compare_at_price_paise, sort_order, updated_at,
+        bonus_title, bonus_description, bonus_enabled)
      VALUES
        (?1, ?2, ?3, 'INR', ?4,
         ?5, ?6, ?7, ?8, ?9, ?10,
-        ?11, ?12, ?13, ?14, ?15, ?16, ?17)`,
+        ?11, ?12, ?13, ?14, ?15, ?16, ?17,
+        ?18, ?19, ?20)`,
   )
     .bind(
       input.slug,
@@ -112,6 +120,9 @@ export async function insertGuide(env: WorkerEnv, input: ValidatedGuideInput): P
       input.compareAtPricePaise,
       input.sortOrder,
       nowIso(),
+      input.bonusTitle,
+      input.bonusDescription,
+      input.bonusEnabled ? 1 : 0,
     )
     .run();
 }
@@ -127,8 +138,9 @@ export async function updateGuide(
        slug = ?1, title = ?2, price_paise = ?3, status = ?4,
        number = ?5, subtitle = ?6, blurb = ?7, description = ?8,
        page_count = ?9, chapter_count = ?10, whats_inside = ?11, faqs = ?12,
-       badge = ?13, button_text = ?14, compare_at_price_paise = ?15, sort_order = ?16, updated_at = ?17
-     WHERE slug = ?18`,
+       badge = ?13, button_text = ?14, compare_at_price_paise = ?15, sort_order = ?16, updated_at = ?17,
+       bonus_title = ?18, bonus_description = ?19, bonus_enabled = ?20
+     WHERE slug = ?21`,
   )
     .bind(
       input.slug,
@@ -148,6 +160,9 @@ export async function updateGuide(
       input.compareAtPricePaise,
       input.sortOrder,
       nowIso(),
+      input.bonusTitle,
+      input.bonusDescription,
+      input.bonusEnabled ? 1 : 0,
       currentSlug,
     )
     .run();
@@ -163,6 +178,20 @@ export async function setGuideCoverPath(env: WorkerEnv, slug: string, coverPath:
 export async function setGuidePdfPath(env: WorkerEnv, slug: string, pdfPath: string): Promise<void> {
   await env.DB
     .prepare(`UPDATE books SET pdf_path = ?2, updated_at = ?3 WHERE slug = ?1`)
+    .bind(slug, pdfPath, nowIso())
+    .run();
+}
+
+export async function setGuideBonusCoverPath(env: WorkerEnv, slug: string, coverPath: string): Promise<void> {
+  await env.DB
+    .prepare(`UPDATE books SET bonus_cover_path = ?2, updated_at = ?3 WHERE slug = ?1`)
+    .bind(slug, coverPath, nowIso())
+    .run();
+}
+
+export async function setGuideBonusPdfPath(env: WorkerEnv, slug: string, pdfPath: string): Promise<void> {
+  await env.DB
+    .prepare(`UPDATE books SET bonus_pdf_path = ?2, updated_at = ?3 WHERE slug = ?1`)
     .bind(slug, pdfPath, nowIso())
     .run();
 }
@@ -216,6 +245,11 @@ export function serializeGuideDetail(row: AdminGuideDetailRow, paidOrders: numbe
     // see worker/routes/admin/guides.ts's PUT handler for why a PDF alone
     // blocks a rename even with zero orders.
     slugLocked: totalOrders > 0 || row.pdf_path != null,
+    bonusTitle: row.bonus_title,
+    bonusDescription: row.bonus_description,
+    bonusCoverPath: row.bonus_cover_path,
+    bonusPdfPath: row.bonus_pdf_path,
+    bonusEnabled: row.bonus_enabled === 1,
   };
 }
 
@@ -231,5 +265,6 @@ export function serializeGuideListRow(row: AdminGuideListRow) {
     hasPdf: row.pdf_path != null,
     sortOrder: row.sort_order,
     paidOrders: row.paid_orders,
+    hasBonus: row.bonus_enabled === 1,
   };
 }
