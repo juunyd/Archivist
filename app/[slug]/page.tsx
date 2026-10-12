@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -9,6 +8,7 @@ import { FaqAccordion } from "@/components/FaqAccordion";
 import { StickyBuyBar } from "@/components/StickyBuyBar";
 import { GuideViewTracker } from "@/components/GuideViewTracker";
 import { ViewCounter } from "@/components/ViewCounter";
+import { GuideGallery } from "@/components/GuideGallery";
 import { getAllGuideSlugs, getGuideBySlug } from "@/lib/catalog";
 import { homepageFaqs } from "@/lib/site";
 import styles from "./page.module.css";
@@ -82,16 +82,18 @@ export default async function GuidePage({ params }: GuidePageProps) {
       <section className={styles.hero}>
         <div className={styles.heroInner}>
           <div className={styles.heroGrid}>
-            <div className={styles.heroMedia}>
-              <Image
-                src={guide.coverImage}
-                alt={guide.title}
-                width={900}
-                height={1200}
-                className={styles.cover}
-                priority
-              />
-            </div>
+            <GuideGallery
+              wrapperClassName={styles.heroMedia}
+              imageClassName={styles.cover}
+              images={[
+                { src: guide.coverImage, alt: guide.title },
+                ...guide.previewImages.map((image, index) => ({
+                  src: image.path,
+                  alt: `Preview page ${index + 1} of ${guide.title}`,
+                  caption: image.caption,
+                })),
+              ]}
+            />
 
             <div className={styles.heroText}>
               {guide.badge && <span className={styles.badge}>{guide.badge}</span>}

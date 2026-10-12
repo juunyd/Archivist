@@ -7,8 +7,10 @@ import { FunctionError, getJson, postJson, putJson } from "@/lib/api";
 import { PublishChangesButton } from "../PublishChangesButton";
 import { BUTTON_TEXT_MAX_LENGTH, DEFAULT_BUTTON_TEXT, resolveButtonText } from "@/lib/button-text";
 import { siteConfig } from "@/lib/site";
+import { GuideGallery } from "@/components/GuideGallery";
 import { ArrowDownIcon, ArrowUpIcon, BackArrowIcon, PlusIcon, TrashIcon } from "../../icons";
 import { LiveField, LiveImagePicker, LiveSwitch } from "./LiveField";
+import { PreviewImagesCard } from "./PreviewImagesCard";
 import pageStyles from "../../../[slug]/page.module.css";
 
 interface AdminGuideDetail {
@@ -38,6 +40,7 @@ interface AdminGuideDetail {
   bonusCoverPath: string | null;
   bonusPdfPath: string | null;
   bonusEnabled: boolean;
+  previewImages: { path: string; caption: string | null }[];
 }
 
 interface InsideItem {
@@ -623,29 +626,43 @@ export function GuideEditContent() {
           <section className={`${pageStyles.hero} admin__live-hero`}>
             <div className={pageStyles.heroInner}>
               <div className={`${pageStyles.heroGrid} admin__live-hero-grid`}>
-                <div className={pageStyles.heroMedia}>
-                  {canUploadFiles ? (
-                    <LiveImagePicker
-                      id="g-cover-file"
-                      accept="image/png,image/jpeg,image/webp"
-                      previewSrc={previewCover}
-                      uploaded={!!guide?.coverPath}
-                      alt={form.title || "Cover"}
-                      imgClassName={pageStyles.cover}
-                      onFile={setCoverFile}
-                      pendingFile={coverFile}
-                      onUpload={handleCoverUpload}
-                      uploading={coverUploading}
-                      message={coverMessage}
-                      formatFileSize={formatFileSize}
-                    />
-                  ) : (
+                {canUploadFiles ? (
+                  <GuideGallery
+                    wrapperClassName={pageStyles.heroMedia}
+                    imageClassName={pageStyles.cover}
+                    images={[
+                      { src: previewCover ?? "", alt: form.title || "Cover" },
+                      ...(guide?.previewImages ?? []).map((image, index) => ({
+                        src: image.path,
+                        alt: `Preview page ${index + 1} of ${form.title || "this guide"}`,
+                        ...(image.caption != null ? { caption: image.caption } : {}),
+                      })),
+                    ]}
+                    renderCoverSlot={() => (
+                      <LiveImagePicker
+                        id="g-cover-file"
+                        accept="image/png,image/jpeg,image/webp"
+                        previewSrc={previewCover}
+                        uploaded={!!guide?.coverPath}
+                        alt={form.title || "Cover"}
+                        imgClassName={pageStyles.cover}
+                        onFile={setCoverFile}
+                        pendingFile={coverFile}
+                        onUpload={handleCoverUpload}
+                        uploading={coverUploading}
+                        message={coverMessage}
+                        formatFileSize={formatFileSize}
+                      />
+                    )}
+                  />
+                ) : (
+                  <div className={pageStyles.heroMedia}>
                     <div className="admin__live-media">
                       <span className={`${pageStyles.cover} admin__live-media-empty`} aria-hidden="true" />
                       <p className="admin__file-state admin__file-state--empty">Save the guide first to upload a cover</p>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
 
                 <div className={`${pageStyles.heroText} admin__live-hero-text`}>
                   <LiveField
@@ -1031,6 +1048,19 @@ export function GuideEditContent() {
               </>
             ) : (
               <p className="admin__file-state admin__file-state--empty">Save the guide first to upload bonus files</p>
+            )}
+          </section>
+
+          <section className="admin__card admin__side-card">
+            <h2 className="admin__edit-card-title">Preview pages</h2>
+            {canUploadFiles && guide ? (
+              <PreviewImagesCard
+                slug={guide.slug}
+                previewImages={guide.previewImages}
+                onChange={(previewImages) => setGuide((g) => (g ? { ...g, previewImages } : g))}
+              />
+            ) : (
+              <p className="admin__file-state admin__file-state--empty">Save the guide first to add preview pages</p>
             )}
           </section>
 

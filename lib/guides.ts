@@ -59,6 +59,8 @@ export interface Guide {
   /** Optional. When set, renders the "N pages · N chapters" line near the hero trust ticks. */
   chapterCount?: number;
   coverImage: string;
+  /** Extra "preview page" images shown after the cover in the hero gallery. Always present — empty when the guide has none. */
+  previewImages: { path: string; caption?: string }[];
   /** Optional small claim badge shown above the hero title. */
   badge?: string;
   whatsInside: WhatsInsideItem[];
@@ -101,6 +103,7 @@ export const guides: Guide[] = [
     pageCount: 44,
     chapterCount: 21,
     coverImage: "/images/covers/i-lost-money-in-fno.png",
+    previewImages: [],
     badge: "93% lose money. This is what comes next.",
     whatsInside: [
       {
@@ -150,6 +153,7 @@ export const guides: Guide[] = [
     compareAtPrice: 499,
     pageCount: 61,
     coverImage: "/images/covers/the-revenge-trading-cure.png",
+    previewImages: [],
     whatsInside: [
       {
         title: "What revenge trading actually is",
@@ -198,6 +202,7 @@ export const guides: Guide[] = [
     compareAtPrice: 499,
     pageCount: 43,
     coverImage: "/images/covers/should-i-quit-trading.png",
+    previewImages: [],
     whatsInside: [
       {
         title: "Why this decision is so hard",
@@ -241,6 +246,7 @@ export const guides: Guide[] = [
     compareAtPrice: 499,
     pageCount: 65,
     coverImage: "/images/covers/the-comeback-plan.png",
+    previewImages: [],
     whatsInside: [
       {
         title: "Small is not shameful",

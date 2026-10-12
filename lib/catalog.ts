@@ -27,6 +27,11 @@ export interface WhatsInsideItem {
   description: string;
 }
 
+export interface GalleryImage {
+  path: string;
+  caption?: string;
+}
+
 export interface Guide {
   slug: string;
   no: string;
@@ -40,6 +45,8 @@ export interface Guide {
   pageCount?: number;
   chapterCount?: number;
   coverImage: string;
+  /** Extra "preview page" images shown after the cover in the hero gallery. Always present — empty when the guide has none. */
+  previewImages: GalleryImage[];
   badge?: string;
   /** Overrides the buy button's label (price is always appended separately — never typed here). Falls back to "Get Instant Access" when unset. */
   buttonText?: string;
@@ -85,6 +92,7 @@ interface CatalogApiGuide {
   pageCount: number | null;
   chapterCount: number | null;
   coverPath: string | null;
+  previewImages?: { path: string; caption: string | null }[];
   badge: string | null;
   buttonText: string | null;
   whatsInside: WhatsInsideItem[];
@@ -136,6 +144,10 @@ function mapApiGuide(g: CatalogApiGuide): Guide {
     ...(g.pageCount != null ? { pageCount: g.pageCount } : {}),
     ...(g.chapterCount != null ? { chapterCount: g.chapterCount } : {}),
     coverImage: g.coverPath ?? "",
+    previewImages: (g.previewImages ?? []).map((img) => ({
+      path: img.path,
+      ...(img.caption != null ? { caption: img.caption } : {}),
+    })),
     ...(g.badge != null ? { badge: g.badge } : {}),
     ...(g.buttonText != null ? { buttonText: g.buttonText } : {}),
     whatsInside: g.whatsInside,

@@ -26,6 +26,10 @@ import {
   handleAdminGuideBonusCoverUpload,
   handleAdminGuideBonusPdfUpload,
 } from "./routes/admin/guide-uploads";
+import {
+  handleAdminGuidePreviewImages,
+  handleAdminGuidePreviewImageItem,
+} from "./routes/admin/guide-preview-images";
 import { handleAdminRebuild, handleAdminRebuildStatus } from "./routes/admin/rebuild";
 import { handleCatalog } from "./routes/catalog";
 import { handleCoverServe } from "./routes/cover-serve";
@@ -53,6 +57,8 @@ const ADMIN_GUIDE_COVER_PATH = /^\/api\/admin\/guides\/([^/]+)\/cover$/;
 const ADMIN_GUIDE_PDF_PATH = /^\/api\/admin\/guides\/([^/]+)\/pdf$/;
 const ADMIN_GUIDE_BONUS_COVER_PATH = /^\/api\/admin\/guides\/([^/]+)\/bonus-cover$/;
 const ADMIN_GUIDE_BONUS_PDF_PATH = /^\/api\/admin\/guides\/([^/]+)\/bonus-pdf$/;
+const ADMIN_GUIDE_PREVIEW_IMAGES_PATH = /^\/api\/admin\/guides\/([^/]+)\/preview-images$/;
+const ADMIN_GUIDE_PREVIEW_IMAGE_ITEM_PATH = /^\/api\/admin\/guides\/([^/]+)\/preview-images\/([^/]+)$/;
 const ADMIN_GUIDE_DETAIL_PATH = /^\/api\/admin\/guides\/([^/]+)$/;
 const ADMIN_ORDER_DETAIL_PATH = /^\/api\/admin\/orders\/([^/]+)$/;
 
@@ -99,6 +105,19 @@ export default {
       const bonusPdfUploadMatch = ADMIN_GUIDE_BONUS_PDF_PATH.exec(url.pathname);
       if (bonusPdfUploadMatch) {
         return await handleAdminGuideBonusPdfUpload(request, env, decodeURIComponent(bonusPdfUploadMatch[1]));
+      }
+      const previewImageItemMatch = ADMIN_GUIDE_PREVIEW_IMAGE_ITEM_PATH.exec(url.pathname);
+      if (previewImageItemMatch) {
+        return await handleAdminGuidePreviewImageItem(
+          request,
+          env,
+          decodeURIComponent(previewImageItemMatch[1]),
+          decodeURIComponent(previewImageItemMatch[2]),
+        );
+      }
+      const previewImagesMatch = ADMIN_GUIDE_PREVIEW_IMAGES_PATH.exec(url.pathname);
+      if (previewImagesMatch) {
+        return await handleAdminGuidePreviewImages(request, env, decodeURIComponent(previewImagesMatch[1]));
       }
       const guideDetailMatch = ADMIN_GUIDE_DETAIL_PATH.exec(url.pathname);
       if (guideDetailMatch) {

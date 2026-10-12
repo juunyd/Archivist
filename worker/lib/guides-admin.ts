@@ -44,6 +44,12 @@ export interface AdminGuideDetailRow {
   bonus_cover_path: string | null;
   bonus_pdf_path: string | null;
   bonus_enabled: number;
+  preview_images: string | null;
+}
+
+export interface PreviewImage {
+  path: string;
+  caption: string | null;
 }
 
 export async function listAdminGuides(env: WorkerEnv): Promise<AdminGuideListRow[]> {
@@ -197,6 +203,17 @@ export async function setGuideBonusPdfPath(env: WorkerEnv, slug: string, pdfPath
     .run();
 }
 
+export async function setGuidePreviewImages(env: WorkerEnv, slug: string, images: PreviewImage[]): Promise<void> {
+  await env.DB
+    .prepare(`UPDATE books SET preview_images = ?2, updated_at = ?3 WHERE slug = ?1`)
+    .bind(slug, JSON.stringify(images), nowIso())
+    .run();
+}
+
+export function parsePreviewImages(row: AdminGuideDetailRow): PreviewImage[] {
+  return parseJsonArray(row.preview_images) as PreviewImage[];
+}
+
 export async function unpublishGuide(env: WorkerEnv, slug: string): Promise<boolean> {
   const row = await env.DB
     .prepare(
@@ -248,6 +265,7 @@ export function serializeGuideDetail(row: AdminGuideDetailRow, paidOrders: numbe
     bonusCoverPath: row.bonus_cover_path,
     bonusPdfPath: row.bonus_pdf_path,
     bonusEnabled: row.bonus_enabled === 1,
+    previewImages: parsePreviewImages(row),
   };
 }
 

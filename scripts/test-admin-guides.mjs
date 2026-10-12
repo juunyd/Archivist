@@ -676,6 +676,133 @@ try {
     noFaqGuideRes.status === 201,
     `got ${noFaqGuideRes.status}: ${JSON.stringify(noFaqGuideBody)}`,
   );
+
+  // =====================================================================
+  // Step 4: preview-images gallery (add/reorder/caption/remove, the 8-image
+  // cap, and that an untouched guide still reports previewImages: []).
+  // =====================================================================
+  const PREVIEW_SLUG = "test-guide-automated";
+
+  function previewImagesForm(count) {
+    const form = new FormData();
+    for (let i = 0; i < count; i++) {
+      form.append("files", new Blob([PNG_1X1], { type: "image/png" }), `preview-${i}.png`);
+    }
+    return form;
+  }
+
+  function basename(path) {
+    const parts = path.split("/");
+    return parts[parts.length - 1];
+  }
+
+  const firstPreviewRes = await adminFetch(`/api/admin/guides/${PREVIEW_SLUG}/preview-images`, {
+    method: "POST",
+    body: previewImagesForm(1),
+  });
+  const firstPreviewBody = await firstPreviewRes.json();
+  check("26a. POST .../preview-images (1 valid PNG) -> 200", firstPreviewRes.status === 200, `got ${firstPreviewRes.status}: ${JSON.stringify(firstPreviewBody)}`);
+  check(
+    "26b. previewImages has 1 entry under /covers/",
+    firstPreviewBody.guide?.previewImages?.length === 1 && firstPreviewBody.guide.previewImages[0].path.startsWith("/covers/"),
+    JSON.stringify(firstPreviewBody.guide?.previewImages),
+  );
+
+  const badTypePreviewForm = new FormData();
+  badTypePreviewForm.append("files", new Blob([Buffer.from("not an image")], { type: "text/plain" }), "preview.txt");
+  const badTypePreviewRes = await adminFetch(`/api/admin/guides/${PREVIEW_SLUG}/preview-images`, { method: "POST", body: badTypePreviewForm });
+  check("26c. preview image with unsupported type -> 415", badTypePreviewRes.status === 415, `got ${badTypePreviewRes.status}`);
+
+  const oversizedPreviewForm = new FormData();
+  oversizedPreviewForm.append("files", new Blob([Buffer.alloc(2 * 1024 * 1024 + 1, 1)], { type: "image/png" }), "preview.png");
+  const oversizedPreviewRes = await adminFetch(`/api/admin/guides/${PREVIEW_SLUG}/preview-images`, { method: "POST", body: oversizedPreviewForm });
+  check("26d. oversized preview image (>2MB) -> 413", oversizedPreviewRes.status === 413, `got ${oversizedPreviewRes.status}`);
+
+  const afterBadUploadsRes = await adminFetch(`/api/admin/guides/${PREVIEW_SLUG}`);
+  const afterBadUploadsBody = await afterBadUploadsRes.json();
+  check(
+    "26e. rejected uploads left the count unchanged (still 1)",
+    afterBadUploadsBody.guide?.previewImages?.length === 1,
+    JSON.stringify(afterBadUploadsBody.guide?.previewImages),
+  );
+
+  // Fill up to the 8-image cap (1 already there, add 7 more in one batch).
+  const fillRes = await adminFetch(`/api/admin/guides/${PREVIEW_SLUG}/preview-images`, { method: "POST", body: previewImagesForm(7) });
+  const fillBody = await fillRes.json();
+  check("27a. POST adding 7 more (reaching the 8-image cap) -> 200", fillRes.status === 200, `got ${fillRes.status}: ${JSON.stringify(fillBody)}`);
+  check("27b. previewImages now has 8 entries", fillBody.guide?.previewImages?.length === 8, JSON.stringify(fillBody.guide?.previewImages?.length));
+
+  const ninthRes = await adminFetch(`/api/admin/guides/${PREVIEW_SLUG}/preview-images`, { method: "POST", body: previewImagesForm(1) });
+  const ninthBody = await ninthRes.json();
+  check("27c. a 9th preview image -> 400 too_many_images", ninthRes.status === 400, `got ${ninthRes.status}`);
+  check("27d. error code is too_many_images", ninthBody.error?.code === "too_many_images", JSON.stringify(ninthBody));
+
+  const afterNinthRes = await adminFetch(`/api/admin/guides/${PREVIEW_SLUG}`);
+  const afterNinthBody = await afterNinthRes.json();
+  check("27e. rejected 9th image left the count at 8", afterNinthBody.guide?.previewImages?.length === 8, JSON.stringify(afterNinthBody.guide?.previewImages?.length));
+
+  const currentImages = afterNinthBody.guide.previewImages;
+  const reordered = [currentImages[1], currentImages[0], ...currentImages.slice(2)];
+  const reorderRes = await adminFetch(`/api/admin/guides/${PREVIEW_SLUG}/preview-images`, {
+    method: "PUT",
+    body: { images: reordered },
+  });
+  const reorderBody = await reorderRes.json();
+  check("28a. PUT reordering -> 200", reorderRes.status === 200, `got ${reorderRes.status}: ${JSON.stringify(reorderBody)}`);
+  check(
+    "28b. new order reflected on the next GET",
+    reorderBody.guide?.previewImages?.[0]?.path === currentImages[1].path && reorderBody.guide?.previewImages?.[1]?.path === currentImages[0].path,
+    JSON.stringify(reorderBody.guide?.previewImages),
+  );
+
+  const unknownPathRes = await adminFetch(`/api/admin/guides/${PREVIEW_SLUG}/preview-images`, {
+    method: "PUT",
+    body: { images: [{ path: "/covers/not-a-real-image.png", caption: null }, ...currentImages.slice(1)] },
+  });
+  check("28c. PUT with a path that isn't one of the guide's images -> 400", unknownPathRes.status === 400, `got ${unknownPathRes.status}`);
+
+  const captioned = reorderBody.guide.previewImages.map((img, i) => (i === 0 ? { ...img, caption: "The opening chapter" } : img));
+  const captionRes = await adminFetch(`/api/admin/guides/${PREVIEW_SLUG}/preview-images`, { method: "PUT", body: { images: captioned } });
+  const captionBody = await captionRes.json();
+  check("29a. PUT setting a caption -> 200", captionRes.status === 200, `got ${captionRes.status}`);
+  check(
+    "29b. caption round-trips",
+    captionBody.guide?.previewImages?.[0]?.caption === "The opening chapter",
+    JSON.stringify(captionBody.guide?.previewImages?.[0]),
+  );
+
+  const toRemove = captionBody.guide.previewImages[0].path;
+  const removeRes = await adminFetch(`/api/admin/guides/${PREVIEW_SLUG}/preview-images/${basename(toRemove)}`, { method: "DELETE" });
+  const removeBody = await removeRes.json();
+  check("30a. DELETE one preview image -> 200", removeRes.status === 200, `got ${removeRes.status}: ${JSON.stringify(removeBody)}`);
+  check("30b. previewImages shrank to 7", removeBody.guide?.previewImages?.length === 7, JSON.stringify(removeBody.guide?.previewImages?.length));
+
+  const removedServeRes = await adminFetch(`/covers/${basename(toRemove)}`, { token: null });
+  check("30c. the removed image's R2 object is actually gone (GET /covers/:file -> 404)", removedServeRes.status === 404, `got ${removedServeRes.status}`);
+
+  const missingSlugUploadRes = await adminFetch("/api/admin/guides/does-not-exist/preview-images", { method: "POST", body: previewImagesForm(1) });
+  check("31a. upload against a missing guide -> 404", missingSlugUploadRes.status === 404, `got ${missingSlugUploadRes.status}`);
+  const missingSlugPutRes = await adminFetch("/api/admin/guides/does-not-exist/preview-images", { method: "PUT", body: { images: [] } });
+  check("31b. reorder against a missing guide -> 404", missingSlugPutRes.status === 404, `got ${missingSlugPutRes.status}`);
+  const missingSlugDeleteRes = await adminFetch("/api/admin/guides/does-not-exist/preview-images/whatever.png", { method: "DELETE" });
+  check("31c. remove against a missing guide -> 404", missingSlugDeleteRes.status === 404, `got ${missingSlugDeleteRes.status}`);
+  const missingFileDeleteRes = await adminFetch(`/api/admin/guides/${PREVIEW_SLUG}/preview-images/not-a-real-file.png`, { method: "DELETE" });
+  check("31d. remove a filename that isn't one of the guide's images -> 404", missingFileDeleteRes.status === 404, `got ${missingFileDeleteRes.status}`);
+
+  const catalogAfterPreviewsRes = await adminFetch("/api/catalog", { token: null });
+  const catalogAfterPreviewsBody = await catalogAfterPreviewsRes.json();
+  const previewGuideInCatalog = catalogAfterPreviewsBody.guides?.find((g) => g.slug === PREVIEW_SLUG);
+  check(
+    "32a. /api/catalog surfaces previewImages for a guide that has them",
+    Array.isArray(previewGuideInCatalog?.previewImages) && previewGuideInCatalog.previewImages.length === 7,
+    JSON.stringify(previewGuideInCatalog?.previewImages?.length),
+  );
+  const untouchedPreviewGuideInCatalog = catalogAfterPreviewsBody.guides?.find((g) => g.slug === "the-revenge-trading-cure");
+  check(
+    "32b. /api/catalog reports previewImages: [] for a guide that never uploaded any (the four live guides)",
+    Array.isArray(untouchedPreviewGuideInCatalog?.previewImages) && untouchedPreviewGuideInCatalog.previewImages.length === 0,
+    JSON.stringify(untouchedPreviewGuideInCatalog?.previewImages),
+  );
 } finally {
   await mf.dispose();
 }

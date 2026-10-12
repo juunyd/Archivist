@@ -208,6 +208,79 @@ export function validateGuideInput(body: unknown): GuideValidationResult {
   };
 }
 
+// A guide's gallery can carry at most this many extra "preview page" images,
+// on top of its one required cover — see worker/routes/admin/guide-preview-images.ts.
+export const MAX_PREVIEW_IMAGES = 8;
+export const PREVIEW_CAPTION_MAX_LENGTH = 160;
+
+export interface PreviewImageInput {
+  path: string;
+  caption: string | null;
+}
+
+/** Validates one caption string from the admin UI. `null`/empty means "no caption". */
+export function validatePreviewCaption(raw: unknown): { ok: true; value: string | null } | { ok: false; error: string } {
+  if (raw === undefined || raw === null || raw === "") return { ok: true, value: null };
+  if (typeof raw !== "string") return { ok: false, error: "caption must be a string." };
+  const trimmed = raw.trim();
+  if (trimmed.length === 0) return { ok: true, value: null };
+  if (HTML_TAG_RE.test(trimmed)) return { ok: false, error: "caption cannot contain HTML tags." };
+  if (trimmed.length > PREVIEW_CAPTION_MAX_LENGTH) {
+    return { ok: false, error: `caption must be ${PREVIEW_CAPTION_MAX_LENGTH} characters or fewer.` };
+  }
+  return { ok: true, value: trimmed };
+}
+
+/**
+ * Validates the body of PUT .../preview-images: a full, reordered, re-captioned
+ * replacement of the guide's current preview image list. The *set* of paths must
+ * match exactly — this is a reorder/caption-edit endpoint, never a way to add,
+ * remove, or point the array at an arbitrary (unowned) R2 key.
+ */
+export function validatePreviewImagesUpdate(
+  body: unknown,
+  current: PreviewImageInput[],
+): { ok: true; value: PreviewImageInput[] } | { ok: false; errors: string[] } {
+  const errors: string[] = [];
+  const b = body as { images?: unknown } | null;
+  const items = b?.images;
+
+  if (!Array.isArray(items)) {
+    return { ok: false, errors: ["images must be an array."] };
+  }
+
+  const currentPaths = new Set(current.map((img) => img.path));
+  const seenPaths = new Set<string>();
+  const result: PreviewImageInput[] = [];
+
+  for (const item of items) {
+    const path = (item as { path?: unknown } | null)?.path;
+    if (typeof path !== "string" || !currentPaths.has(path)) {
+      errors.push(`"${String(path)}" is not one of this guide's current preview images.`);
+      continue;
+    }
+    if (seenPaths.has(path)) {
+      errors.push(`"${path}" is listed more than once.`);
+      continue;
+    }
+    seenPaths.add(path);
+
+    const captionResult = validatePreviewCaption((item as { caption?: unknown }).caption);
+    if (!captionResult.ok) {
+      errors.push(`${path}: ${captionResult.error}`);
+      continue;
+    }
+    result.push({ path, caption: captionResult.value });
+  }
+
+  if (result.length !== current.length) {
+    errors.push("images must include every one of this guide's current preview images exactly once.");
+  }
+
+  if (errors.length > 0) return { ok: false, errors };
+  return { ok: true, value: result };
+}
+
 /** A guide can only go live once it has both a cover and a PDF uploaded (Step 2). */
 export function publishBlockedReason(coverPath: string | null, pdfPath: string | null): string | null {
   const missing: string[] = [];

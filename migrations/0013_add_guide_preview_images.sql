@@ -1,0 +1,11 @@
+-- Additive only: the gallery's extra "preview page" images for a guide, stored as
+-- one JSON array column (never exceeds 8 items, so no separate table). NULL means
+-- "no previews" — every existing guide renders exactly as it does today.
+--
+-- Each element is {"path": string, "caption": string | null}. An element's
+-- position in the array IS its display order — no separate order column;
+-- reordering just rewrites the array.
+--
+-- Never touch any existing column in this table — this project has live paying
+-- customers.
+ALTER TABLE books ADD COLUMN preview_images TEXT;

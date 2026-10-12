@@ -36,6 +36,7 @@ interface CatalogRow {
   bonus_description: string | null;
   bonus_cover_path: string | null;
   bonus_enabled: number;
+  preview_images: string | null;
 }
 
 function parseJsonArray(raw: string | null): unknown[] {
@@ -58,7 +59,8 @@ export async function handleCatalog(req: Request, env: WorkerEnv): Promise<Respo
         `SELECT slug, number, title, subtitle, blurb, description,
                 price_paise, compare_at_price_paise, page_count, chapter_count,
                 cover_path, badge, button_text, whats_inside, sort_order,
-                bonus_title, bonus_description, bonus_cover_path, bonus_enabled
+                bonus_title, bonus_description, bonus_cover_path, bonus_enabled,
+                preview_images
            FROM books
           WHERE status = 'published'
           ORDER BY sort_order ASC, slug ASC`,
@@ -81,6 +83,7 @@ export async function handleCatalog(req: Request, env: WorkerEnv): Promise<Respo
     pageCount: row.page_count,
     chapterCount: row.chapter_count,
     coverPath: row.cover_path,
+    previewImages: parseJsonArray(row.preview_images),
     badge: row.badge,
     buttonText: row.button_text,
     whatsInside: parseJsonArray(row.whats_inside),

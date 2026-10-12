@@ -1245,6 +1245,68 @@
   color: var(--gray-700);
 }
 
+.admin__dropzone--compact {
+  padding: var(--space-4) var(--space-3);
+}
+
+.admin__dropzone--disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.admin__dropzone--disabled input[type="file"] {
+  cursor: default;
+}
+
+/* "Preview pages" side-panel card: one row per uploaded gallery image —
+   thumbnail, caption input, reorder/remove actions. */
+.admin__preview-image-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-2);
+  padding: 0;
+  list-style: none;
+}
+
+.admin__preview-image-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-white);
+}
+
+.admin__preview-image-thumb {
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--gray-300);
+}
+
+.admin__preview-image-fields {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.admin__preview-image-fields input {
+  width: 100%;
+  border: 1px solid var(--gray-300);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 0.8125rem;
+}
+
+.admin__preview-image-actions {
+  display: flex;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+
 /* --- Live page frame: the admin's own light card wraps the real page's
      own sections (including its dark ones) so it reads as "a page", not
      a lookalike. --- */
