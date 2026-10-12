@@ -8,7 +8,7 @@ import { PublishChangesButton } from "../PublishChangesButton";
 import { BUTTON_TEXT_MAX_LENGTH, DEFAULT_BUTTON_TEXT, resolveButtonText } from "@/lib/button-text";
 import { siteConfig } from "@/lib/site";
 import { ArrowDownIcon, ArrowUpIcon, BackArrowIcon, PlusIcon, TrashIcon } from "../../icons";
-import { LiveField, LiveImagePicker, LiveRequiredDot, LiveSwitch } from "./LiveField";
+import { LiveField, LiveImagePicker, LiveSwitch } from "./LiveField";
 import pageStyles from "../../../[slug]/page.module.css";
 
 interface AdminGuideDetail {
@@ -569,134 +569,151 @@ export function GuideEditContent() {
           <h2 className="admin__edit-card-title">Settings</h2>
           <p className="admin__edit-card-help">Identifiers, shelf placement and the files buyers receive — none of this appears on the page below.</p>
 
-          <div className="admin__edit-card-grid admin__edit-card-grid--3">
-            <div className="admin__field">
-              <label htmlFor="g-slug">
-                Slug <RequiredDot />
-              </label>
-              <input
-                id="g-slug"
-                type="text"
-                value={form.slug}
-                onChange={(e) => updateField("slug", e.target.value)}
-                disabled={mode === "edit" && !!guide?.slugLocked}
-                required
-                pattern="[a-z0-9]+(-[a-z0-9]+)*"
-                minLength={3}
-                maxLength={60}
-              />
-              <span className="admin__field-hint">
-                {mode === "edit" && guide?.slugLocked
-                  ? `Locked — this guide has ${guide.totalOrders > 0 ? "orders" : "a PDF uploaded"}.`
-                  : "Locks once this guide has orders or a PDF uploaded."}
-              </span>
-            </div>
-
-            <div className="admin__field">
-              <label htmlFor="g-number">Number</label>
-              <input id="g-number" type="text" placeholder="No. 05" value={form.number} onChange={(e) => updateField("number", e.target.value)} />
-            </div>
-
-            <div className="admin__field">
-              <label htmlFor="g-status">Status</label>
-              <select id="g-status" value={form.status} onChange={(e) => updateField("status", e.target.value as "draft" | "published")}>
-                <option value="draft">Draft</option>
-                <option value="published">Published</option>
-              </select>
-            </div>
-
-            <div className="admin__field">
-              <label htmlFor="g-sort">Sort order</label>
-              <input id="g-sort" type="number" step="1" value={form.sortOrder} onChange={(e) => updateField("sortOrder", e.target.value)} />
-            </div>
-
-            <div className="admin__field">
-              <label htmlFor="g-pages">
-                Page count <span className="admin__field-optional">optional</span>
-              </label>
-              <input id="g-pages" type="number" min="1" step="1" value={form.pageCount} onChange={(e) => updateField("pageCount", e.target.value)} />
-            </div>
-
-            <div className="admin__field">
-              <label htmlFor="g-chapters">
-                Chapter count <span className="admin__field-optional">optional</span>
-              </label>
-              <input
-                id="g-chapters"
-                type="number"
-                min="1"
-                step="1"
-                value={form.chapterCount}
-                onChange={(e) => updateField("chapterCount", e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="admin__edit-card-grid">
-            <div className="admin__field">
-              <label htmlFor="g-blurb">
-                Shelf blurb <RequiredDot />
-              </label>
-              <textarea id="g-blurb" value={form.blurb} onChange={(e) => updateField("blurb", e.target.value)} rows={2} required />
-            </div>
-
-            <div className="admin__field">
-              <label htmlFor="g-description">Description</label>
-              <textarea id="g-description" value={form.description} onChange={(e) => updateField("description", e.target.value)} rows={2} />
-              <span className="admin__field-hint">Not shown on the guide&apos;s page.</span>
-            </div>
-          </div>
-
-          {canUploadFiles && guide && (
-            <div className="admin__file-col">
-              <p className="admin__card-label">PDF</p>
-              {guide.pdfPath ? (
-                <p className="admin__file-state">Uploaded — {basename(guide.pdfPath)}</p>
-              ) : (
-                <p className="admin__file-state admin__file-state--empty">Not uploaded yet</p>
-              )}
-              <div className="admin__upload-controls">
-                <FileDropzone
-                  id="g-pdf-file"
-                  accept="application/pdf"
-                  label="Drop a PDF here, or click to choose"
-                  hint="PDF only, up to 25 MB"
-                  onFile={setPdfFile}
-                />
-                {pdfFile && (
-                  <span className="admin__upload-filename">
-                    {pdfFile.name} ({formatFileSize(pdfFile.size)})
+          <div className="admin__settings-layout">
+            <div className="admin__settings-fields">
+              <div className="admin__edit-card-grid admin__edit-card-grid--3">
+                <div className="admin__field">
+                  <label htmlFor="g-slug">
+                    Slug <RequiredDot />
+                  </label>
+                  <input
+                    id="g-slug"
+                    type="text"
+                    value={form.slug}
+                    onChange={(e) => updateField("slug", e.target.value)}
+                    disabled={mode === "edit" && !!guide?.slugLocked}
+                    required
+                    pattern="[a-z0-9]+(-[a-z0-9]+)*"
+                    minLength={3}
+                    maxLength={60}
+                  />
+                  <span className="admin__field-hint">
+                    {mode === "edit" && guide?.slugLocked
+                      ? `Locked — this guide has ${guide.totalOrders > 0 ? "orders" : "a PDF uploaded"}.`
+                      : "Locks once this guide has orders or a PDF uploaded."}
                   </span>
-                )}
-                <button type="button" className="admin__form-submit" onClick={() => handlePdfUpload(false)} disabled={!pdfFile || pdfUploading}>
-                  {pdfUploading ? "Uploading…" : guide.pdfPath ? "Replace PDF" : "Upload PDF"}
-                </button>
-                {pdfMessage && (
-                  <span className={`admin__form-message${pdfMessage.error ? " admin__form-message--error" : ""}`}>{pdfMessage.text}</span>
-                )}
-              </div>
-            </div>
-          )}
+                </div>
 
-          <div className="admin__shelf-preview">
-            <p className="admin__card-label">Shelf card preview</p>
-            <div className="admin__shelf-preview-card book-card">
-              <div className="book-card__cover">
-                {previewCover ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={previewCover} alt="" className="admin__shelf-preview-cover-img" />
-                ) : (
-                  <span className="admin__guide-thumb--empty" aria-hidden="true" />
-                )}
-                <span className="book-card__no">{form.number || "No. --"}</span>
-                <span className="book-card__price">
-                  ₹{priceDisplay ?? "…"}
-                  {compareAtDisplay != null && <span className="book-card__compare-at-price">₹{compareAtDisplay}</span>}
-                </span>
+                <div className="admin__field">
+                  <label htmlFor="g-number">Number</label>
+                  <input id="g-number" type="text" placeholder="No. 05" value={form.number} onChange={(e) => updateField("number", e.target.value)} />
+                </div>
+
+                <div className="admin__field">
+                  <label htmlFor="g-status">Status</label>
+                  <select id="g-status" value={form.status} onChange={(e) => updateField("status", e.target.value as "draft" | "published")}>
+                    <option value="draft">Draft</option>
+                    <option value="published">Published</option>
+                  </select>
+                </div>
+
+                <div className="admin__field">
+                  <label htmlFor="g-sort">Sort order</label>
+                  <input id="g-sort" type="number" step="1" value={form.sortOrder} onChange={(e) => updateField("sortOrder", e.target.value)} />
+                </div>
+
+                <div className="admin__field">
+                  <label htmlFor="g-pages">
+                    Page count <span className="admin__field-optional">optional</span>
+                  </label>
+                  <input id="g-pages" type="number" min="1" step="1" value={form.pageCount} onChange={(e) => updateField("pageCount", e.target.value)} />
+                </div>
+
+                <div className="admin__field">
+                  <label htmlFor="g-chapters">
+                    Chapter count <span className="admin__field-optional">optional</span>
+                  </label>
+                  <input
+                    id="g-chapters"
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={form.chapterCount}
+                    onChange={(e) => updateField("chapterCount", e.target.value)}
+                  />
+                </div>
               </div>
-              <div>
-                <h3 className="book-card__title">{form.title.trim() || "New guide"}</h3>
-                <p className="book-card__blurb">{form.blurb.trim() || "Add a shelf blurb"}</p>
+
+              <div className="admin__edit-card-grid admin__edit-card-grid--2">
+                <div className="admin__field">
+                  <label htmlFor="g-blurb">
+                    Shelf blurb <RequiredDot />
+                  </label>
+                  <textarea id="g-blurb" value={form.blurb} onChange={(e) => updateField("blurb", e.target.value)} rows={2} required />
+                </div>
+
+                <div className="admin__field">
+                  <label htmlFor="g-description">Description</label>
+                  <textarea id="g-description" value={form.description} onChange={(e) => updateField("description", e.target.value)} rows={2} />
+                  <span className="admin__field-hint">Not shown on the guide&apos;s page.</span>
+                </div>
+              </div>
+
+              {canUploadFiles && guide && (
+                <div className="admin__field-group">
+                  <p className="admin__card-label">PDF</p>
+                  {guide.pdfPath ? (
+                    <div className="admin__uploaded-row">
+                      <p className="admin__file-state">Uploaded — {basename(guide.pdfPath)}</p>
+                      <label htmlFor="g-pdf-file" className="admin__btn-secondary admin__file-trigger">
+                        <input
+                          id="g-pdf-file"
+                          type="file"
+                          accept="application/pdf"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) setPdfFile(file);
+                          }}
+                        />
+                        Replace PDF
+                      </label>
+                    </div>
+                  ) : (
+                    <FileDropzone
+                      id="g-pdf-file"
+                      accept="application/pdf"
+                      label="Drop a PDF here, or click to choose"
+                      hint="PDF only, up to 25 MB"
+                      onFile={setPdfFile}
+                    />
+                  )}
+                  {pdfFile && (
+                    <div className="admin__uploaded-row">
+                      <span className="admin__upload-filename">
+                        {pdfFile.name} ({formatFileSize(pdfFile.size)})
+                      </span>
+                      <button type="button" className="admin__form-submit" onClick={() => handlePdfUpload(false)} disabled={pdfUploading}>
+                        {pdfUploading ? "Uploading…" : "Upload"}
+                      </button>
+                    </div>
+                  )}
+                  {pdfMessage && (
+                    <span className={`admin__form-message${pdfMessage.error ? " admin__form-message--error" : ""}`}>{pdfMessage.text}</span>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="admin__settings-preview">
+              <p className="admin__card-label">Shelf card preview</p>
+              <div className="admin__shelf-preview-card book-card">
+                <div className="book-card__cover">
+                  {previewCover ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={previewCover} alt="" className="admin__shelf-preview-cover-img" />
+                  ) : (
+                    <span className="admin__guide-thumb--empty" aria-hidden="true" />
+                  )}
+                  <span className="book-card__no">{form.number || "No. --"}</span>
+                  <span className="book-card__price">
+                    ₹{priceDisplay ?? "…"}
+                    {compareAtDisplay != null && <span className="book-card__compare-at-price">₹{compareAtDisplay}</span>}
+                  </span>
+                </div>
+                <div>
+                  <h3 className="book-card__title">{form.title.trim() || "New guide"}</h3>
+                  <p className="book-card__blurb">{form.blurb.trim() || "Add a shelf blurb"}</p>
+                </div>
               </div>
             </div>
           </div>
@@ -704,9 +721,9 @@ export function GuideEditContent() {
 
         {/* LIVE PAGE EDITOR — the real guide page's own styles, edited in place. */}
         <div className="admin__live-page">
-          <section className={pageStyles.hero}>
+          <section className={`${pageStyles.hero} admin__live-hero`}>
             <div className={pageStyles.heroInner}>
-              <div className={pageStyles.heroGrid}>
+              <div className={`${pageStyles.heroGrid} admin__live-hero-grid`}>
                 <div className={pageStyles.heroMedia}>
                   {canUploadFiles ? (
                     <LiveImagePicker
@@ -731,44 +748,38 @@ export function GuideEditContent() {
                   )}
                 </div>
 
-                <div className={pageStyles.heroText}>
+                <div className={`${pageStyles.heroText} admin__live-hero-text`}>
                   <LiveField
                     value={form.badge}
                     onChange={(v) => updateField("badge", v)}
                     placeholder="Add a badge"
                     ariaLabel="Badge"
                     className={pageStyles.badge}
+                    sizeToContent
                   />
 
-                  <span className="admin__live-required-wrap">
-                    <LiveRequiredDot />
-                    <LiveField
-                      value={form.title}
-                      onChange={(v) => updateField("title", v)}
-                      placeholder="Add a title"
-                      ariaLabel="Title"
-                      className={pageStyles.title}
-                      multiline
-                      required
-                    />
-                  </span>
+                  <LiveField
+                    value={form.title}
+                    onChange={(v) => updateField("title", v)}
+                    placeholder="Add a title"
+                    ariaLabel="Title"
+                    className={pageStyles.title}
+                    multiline
+                    required
+                  />
 
-                  <span className="admin__live-required-wrap">
-                    <LiveRequiredDot />
-                    <LiveField
-                      value={form.subtitle}
-                      onChange={(v) => updateField("subtitle", v)}
-                      placeholder="Add a subtitle"
-                      ariaLabel="Subtitle"
-                      className={pageStyles.subtitle}
-                      multiline
-                      required
-                    />
-                  </span>
+                  <LiveField
+                    value={form.subtitle}
+                    onChange={(v) => updateField("subtitle", v)}
+                    placeholder="Add a subtitle"
+                    ariaLabel="Subtitle"
+                    className={pageStyles.subtitle}
+                    multiline
+                    required
+                  />
 
                   <div className={pageStyles.priceRow}>
                     <span className="admin__live-price-field">
-                      <LiveRequiredDot />
                       <span className={pageStyles.price}>₹</span>
                       <LiveField
                         value={form.priceRupees}
@@ -801,7 +812,7 @@ export function GuideEditContent() {
                     </span>
                   </div>
 
-                  <div className="admin__live-button-row">
+                  <div className="admin__live-button-col">
                     <div className="cta-button__wrap">
                       <div className="cta-button admin__live-button">
                         <LiveField
@@ -811,6 +822,7 @@ export function GuideEditContent() {
                           ariaLabel="Buy button text"
                           className="admin__live-button-text"
                           maxLength={BUTTON_TEXT_MAX_LENGTH}
+                          sizeToContent
                         />
                         <span className="admin__live-button-suffix"> - ₹{priceDisplay ?? "…"}</span>
                         <span className="cta-button__arrow" aria-hidden="true">
@@ -818,7 +830,7 @@ export function GuideEditContent() {
                         </span>
                       </div>
                     </div>
-                    <span className="admin__live-counter admin__live-counter--beside">
+                    <span className="admin__live-counter">
                       {form.buttonText.length}/{BUTTON_TEXT_MAX_LENGTH}
                     </span>
                   </div>
@@ -868,7 +880,10 @@ export function GuideEditContent() {
 
                     {canUploadFiles && guide ? (
                       <div className="admin__bonus-pdf-row">
-                        <label htmlFor="g-bonus-pdf-file" className="admin__bonus-pdf-btn">
+                        <span className={`admin__file-state${guide.bonusPdfPath ? "" : " admin__file-state--empty"}`}>
+                          {guide.bonusPdfPath ? "Uploaded" : "Not uploaded yet"}
+                        </span>
+                        <label htmlFor="g-bonus-pdf-file" className="admin__bonus-pdf-btn admin__file-trigger">
                           <input
                             id="g-bonus-pdf-file"
                             type="file"
@@ -880,9 +895,6 @@ export function GuideEditContent() {
                           />
                           {guide.bonusPdfPath ? "Replace bonus PDF" : "Upload bonus PDF"}
                         </label>
-                        <span className={`admin__file-state${guide.bonusPdfPath ? "" : " admin__file-state--empty"}`}>
-                          {guide.bonusPdfPath ? "Uploaded" : "Not uploaded yet"}
-                        </span>
                         {bonusPdfFile && (
                           <>
                             <span className="admin__upload-filename">
@@ -957,7 +969,7 @@ export function GuideEditContent() {
                     <div className="admin__live-inside-actions">
                       <button
                         type="button"
-                        className="admin__icon-btn admin__icon-btn--dark"
+                        className="admin__live-icon-btn"
                         onClick={() => moveInsideItem(i, -1)}
                         disabled={i === 0}
                         aria-label={`Move item ${i + 1} up`}
@@ -967,7 +979,7 @@ export function GuideEditContent() {
                       </button>
                       <button
                         type="button"
-                        className="admin__icon-btn admin__icon-btn--dark"
+                        className="admin__live-icon-btn"
                         onClick={() => moveInsideItem(i, 1)}
                         disabled={i === form.whatsInside.length - 1}
                         aria-label={`Move item ${i + 1} down`}
@@ -977,7 +989,7 @@ export function GuideEditContent() {
                       </button>
                       <button
                         type="button"
-                        className="admin__icon-btn admin__icon-btn--dark admin__icon-btn--danger"
+                        className="admin__live-icon-btn admin__live-icon-btn--danger"
                         onClick={() => removeInsideItem(i)}
                         aria-label={`Remove item ${i + 1}`}
                         title={`Remove item ${i + 1}`}

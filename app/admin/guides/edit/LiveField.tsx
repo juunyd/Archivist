@@ -1,12 +1,7 @@
 "use client";
 
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { PencilIcon } from "../../icons";
-
-/** Small red dot, floated at the field's corner since the live page has no label to hang it off. */
-export function LiveRequiredDot() {
-  return <span className="admin__live-required-dot" aria-hidden="true" />;
-}
 
 function useAutoGrow(value: string, enabled: boolean) {
   const ref = useRef<HTMLTextAreaElement>(null);
@@ -18,6 +13,25 @@ function useAutoGrow(value: string, enabled: boolean) {
     el.style.height = `${el.scrollHeight}px`;
   }, [value, enabled]);
   return ref;
+}
+
+/**
+ * Measures exactly how wide a piece of text renders in a given font, via an
+ * invisible mirror in the same classes — a ch-based guess runs too wide or
+ * too narrow depending on case and weight (bold uppercase vs. plain digits),
+ * so anything sizing or positioning itself around short text (the price
+ * field's width, the title's trailing required dot) uses this instead.
+ */
+function useTextWidth(text: string, active: boolean) {
+  const mirrorRef = useRef<HTMLSpanElement>(null);
+  const [width, setWidth] = useState(0);
+  useLayoutEffect(() => {
+    if (!active) return;
+    const mirror = mirrorRef.current;
+    if (!mirror) return;
+    setWidth(mirror.getBoundingClientRect().width);
+  }, [text, active]);
+  return { mirrorRef, width };
 }
 
 interface LiveFieldProps {
@@ -71,7 +85,19 @@ export function LiveField({
   const textareaRef = useAutoGrow(value, !!multiline);
   const wrapClass = `admin__live-field${dark ? " admin__live-field--dark" : ""}${sizeToContent ? " admin__live-field--size-to-content" : ""}`;
   const fieldClass = [className, "admin__live-field-el"].filter(Boolean).join(" ");
-  const sizeStyle = sizeToContent ? { width: `${Math.max((value || placeholder || "").length, 2) + 1}ch` } : undefined;
+
+  // Size-to-content fields (price, badge, button text) already hug their
+  // text; full-width wrapping required fields (title, subtitle) need the
+  // same measurement to place their trailing dot. Never both at once, so
+  // one mirror covers either case.
+  const needsTrailingDot = !!required && !!multiline && !sizeToContent;
+  const measuring = !!sizeToContent || needsTrailingDot;
+  const { mirrorRef, width: textWidth } = useTextWidth(value || placeholder, measuring);
+
+  const sizeStyle = sizeToContent ? { width: `${textWidth + 8}px` } : undefined;
+  const dotLeft = needsTrailingDot
+    ? Math.max(0, Math.min(textWidth + 4, (textareaRef.current?.clientWidth ?? textWidth + 4) - 10))
+    : undefined;
 
   return (
     <span className={wrapClass}>
@@ -106,6 +132,23 @@ export function LiveField({
         />
       )}
       <PencilIcon className="admin__live-pencil" />
+      {measuring && (
+        <span
+          ref={mirrorRef}
+          aria-hidden="true"
+          className={fieldClass}
+          style={{ position: "absolute", visibility: "hidden", whiteSpace: "pre", width: "auto", height: 0, top: 0, left: 0 }}
+        >
+          {value || placeholder}
+        </span>
+      )}
+      {required && (
+        <span
+          className="admin__live-field-required-dot"
+          aria-hidden="true"
+          style={needsTrailingDot ? { left: dotLeft, right: "auto" } : undefined}
+        />
+      )}
       {showCounter && maxLength != null && (
         <span className="admin__live-counter">
           {value.length}/{maxLength}

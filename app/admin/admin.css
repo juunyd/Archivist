@@ -682,7 +682,7 @@
 .admin__field {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: 6px;
   font-size: 0.8125rem;
 }
 
@@ -1123,6 +1123,35 @@
   gap: var(--space-5);
 }
 
+/* Fields on the left, the shelf-card preview as a small box on the right. */
+.admin__settings-layout {
+  display: flex;
+  gap: var(--space-6);
+  align-items: flex-start;
+}
+
+.admin__settings-fields {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.admin__settings-preview {
+  flex: 0 0 220px;
+}
+
+@media (max-width: 860px) {
+  .admin__settings-layout {
+    flex-direction: column;
+  }
+
+  .admin__settings-preview {
+    flex: 0 0 auto;
+  }
+}
+
 .admin__field-optional {
   font-size: 0.6875rem;
   font-weight: 400;
@@ -1131,12 +1160,73 @@
   color: var(--gray-600);
 }
 
-.admin__shelf-preview {
-  border-top: 1px solid var(--gray-200);
-  padding-top: var(--space-5);
+/* Required-field marker next to a label (Settings card only — the live
+   page's own fields carry their dot inline, see .admin__live-field-required-dot). */
+.admin__required-dot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-brand-red);
+}
+
+/* Tidy grid for the settings fields: one column on phones, several on
+   desktop, a consistent 16px between rows. */
+.admin__edit-card-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+  align-items: start;
+}
+
+@media (min-width: 700px) {
+  .admin__edit-card-grid--3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .admin__edit-card-grid--2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.admin__field-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* Already-uploaded file: one neat row, status on the left, the trigger
+   button on the right. */
+.admin__uploaded-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-white);
+}
+
+/* Shared "the whole control is the file input" mechanism, used by the
+   main PDF's Replace button and the bonus PDF's pill button. */
+.admin__file-trigger {
+  position: relative;
+  cursor: pointer;
+}
+
+.admin__file-trigger input[type="file"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
 }
 
 .admin__shelf-preview-card {
+  width: 100%;
   max-width: 220px;
   pointer-events: none;
 }
@@ -1150,6 +1240,51 @@
   object-position: top center;
 }
 
+/* Drop zone for a not-yet-uploaded file: the whole box is the clickable
+   area (native file input is fully transparent and covers it), its two
+   lines of text stacked. */
+.admin__dropzone {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  text-align: center;
+  border: 1.5px dashed var(--gray-300);
+  border-radius: 10px;
+  padding: var(--space-5) var(--space-4);
+  cursor: pointer;
+  background: var(--admin-bg);
+  width: 100%;
+}
+
+.admin__dropzone:hover,
+.admin__dropzone--active {
+  border-color: var(--color-brand-red);
+  background: #fdeceb;
+}
+
+.admin__dropzone input[type="file"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.admin__dropzone-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.admin__dropzone-hint {
+  font-size: 0.75rem;
+  color: var(--gray-700);
+}
+
 /* --- Live page frame: the admin's own light card wraps the real page's
      own sections (including its dark ones) so it reads as "a page", not
      a lookalike. --- */
@@ -1159,6 +1294,21 @@
   box-shadow: var(--admin-shadow);
   overflow: hidden;
   background: var(--color-white);
+}
+
+/* The real page's hero assumes a site header above it (80px top padding)
+   and a text column no taller than its own copy. Neither holds here: there
+   is no header, and the admin affordances (upload captions, the on/off
+   switch, counters) make the text column taller than the real page's ever
+   is. Both overrides need to win regardless of which stylesheet — this
+   page's CSS module or admin.css — happens to load last, hence !important
+   on these two narrowly-scoped rules only. */
+.admin__live-hero {
+  padding-top: 32px !important;
+}
+
+.admin__live-hero-grid {
+  align-items: start !important;
 }
 
 /* --- Inline-editable fields: look like the real page's copy until you
@@ -1252,21 +1402,27 @@
   white-space: nowrap;
 }
 
-/* Required dot: no label on the live page to hang it off, so it floats at
-   the field's corner instead. */
-.admin__live-required-wrap {
-  position: relative;
-  display: block;
-}
-
-.admin__live-required-dot {
+/* Required dot: lives inside the field itself instead of floating out in
+   the margin where there's no label to hang it off. Size-to-content
+   fields (price, badge) hug their text, so the dot sits right after the
+   content at the bottom-right corner; full-width wrapping fields (title,
+   subtitle) can't know where their last visible character falls, so the
+   dot pins to the box's own top-right corner instead — still clearly on
+   the field, never detached in blank space. */
+.admin__live-field-required-dot {
   position: absolute;
+  right: 2px;
   top: 2px;
-  left: -11px;
   width: 5px;
   height: 5px;
   border-radius: 50%;
   background: var(--color-brand-red);
+  pointer-events: none;
+}
+
+.admin__live-field--size-to-content .admin__live-field-required-dot {
+  top: auto;
+  bottom: 2px;
 }
 
 /* Price / compare-at price: the "₹" prefix and the number sit inline, not
@@ -1277,11 +1433,6 @@
   display: inline-flex;
   align-items: baseline;
   gap: 2px;
-}
-
-.admin__live-price-field .admin__live-required-dot {
-  top: -2px;
-  left: -10px;
 }
 
 .admin__live-field--size-to-content {
@@ -1406,28 +1557,17 @@
   transform: translateX(16px);
 }
 
-/* --- Buy button: editable label, price appends itself, counter beside --- */
+/* --- Buy button: editable label, price appends itself with no gap,
+     counter sits on its own line underneath. --- */
 
-.admin__live-button-row {
+.admin__live-button-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
   width: 100%;
   max-width: 400px;
   margin-bottom: var(--space-5);
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  flex-wrap: wrap;
-}
-
-.admin__live-button {
-  flex: 1;
-  min-width: 0;
-}
-
-.admin__live-button .admin__live-field {
-  display: flex;
-  align-items: center;
-  flex: 1;
-  min-width: 0;
 }
 
 .admin__live-button .admin__live-field:focus-within {
@@ -1450,10 +1590,6 @@
   flex-shrink: 0;
 }
 
-.admin__live-counter--beside {
-  flex-shrink: 0;
-}
-
 /* --- Free bonus card --- */
 
 .admin__live-bonus-wrap {
@@ -1472,13 +1608,12 @@
 .admin__bonus-pdf-row {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-3);
   flex-wrap: wrap;
   font-size: 0.8125rem;
 }
 
 .admin__bonus-pdf-btn {
-  position: relative;
   display: inline-flex;
   align-items: center;
   border: 1px solid var(--gray-300);
@@ -1487,20 +1622,10 @@
   padding: 6px 14px;
   font-size: 0.75rem;
   font-weight: 600;
-  cursor: pointer;
 }
 
 .admin__bonus-pdf-btn:hover {
   background: var(--gray-100);
-}
-
-.admin__bonus-pdf-btn input[type="file"] {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  cursor: pointer;
 }
 
 /* --- What's Inside: inline items on the dark section --- */
@@ -1513,22 +1638,42 @@
   gap: 4px;
 }
 
+/* A quiet row of icon-only actions, not a stack of boxes. */
 .admin__live-inside-actions {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  flex-direction: row;
+  align-items: center;
+  gap: 2px;
   flex-shrink: 0;
 }
 
-.admin__icon-btn--dark {
-  border-color: var(--border-dark);
+.admin__live-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
   background: transparent;
-  color: var(--gray-400);
+  color: var(--gray-500);
+  cursor: pointer;
+  padding: 0;
+  border-radius: 6px;
 }
 
-.admin__icon-btn--dark:hover {
-  background: rgba(255, 255, 255, 0.08);
+.admin__live-icon-btn:hover {
   color: var(--color-white);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.admin__live-icon-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.admin__live-icon-btn--danger:hover {
+  color: #ff8a86;
+  background: rgba(255, 138, 134, 0.12);
 }
 
 .admin__live-add-item {
@@ -1547,7 +1692,8 @@
 }
 
 .admin__live-add-item:hover {
-  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--color-brand-red);
+  color: var(--color-brand-red);
 }
 
 /* --- Phones: stack to one column, pin action buttons above the bottom
