@@ -237,14 +237,20 @@ try {
     JSON.stringify(detailBody.guide),
   );
   check("1d2. detail no longer exposes faqs (admin FAQ editing removed)", !("faqs" in (detailBody.guide ?? {})), JSON.stringify(detailBody.guide));
+  check(
+    "1d3. detail no longer exposes blurb/description (shelf card now uses subtitle)",
+    !("blurb" in (detailBody.guide ?? {})) && !("description" in (detailBody.guide ?? {})),
+    JSON.stringify(detailBody.guide),
+  );
   check("1e. detail reports slugLocked (has orders)", detailBody.guide?.slugLocked === true, JSON.stringify(detailBody.guide));
 
   const newGuideBody = {
     slug: "test-guide-automated",
     title: "Automated Test Guide",
     subtitle: "A guide created by an automated test",
-    blurb: "Short blurb for the automated test guide.",
-    description: "Longer description for the automated test guide.",
+    // Deliberately no blurb/description — the admin no longer collects
+    // either, and this guide proves creating and publishing works with
+    // neither set (see 2a/10a below).
     pricePaise: 9900,
     pageCount: 20,
     chapterCount: 5,
@@ -306,8 +312,6 @@ try {
     slug: "renamed-guide",
     title: existing.title,
     subtitle: existing.subtitle,
-    blurb: existing.blurb,
-    description: existing.description,
     pricePaise: existing.pricePaise,
     compareAtPricePaise: existing.compareAtPricePaise,
     pageCount: existing.pageCount,
@@ -661,7 +665,6 @@ try {
       slug: "test-guide-no-faqs",
       title: "No FAQ Test Guide",
       subtitle: "A guide created without any FAQ data",
-      blurb: "Short blurb.",
       whatsInside: [{ title: "Chapter one", description: "Covers the basics." }],
       pricePaise: 9900,
       status: "draft",

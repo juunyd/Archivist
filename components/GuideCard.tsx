@@ -27,7 +27,7 @@ export function GuideCard({ guide }: GuideCardProps) {
       </div>
       <div>
         <h3 className="book-card__title">{guide.title}</h3>
-        <p className="book-card__blurb">{guide.blurb}</p>
+        {guide.subtitle && <p className="book-card__blurb">{guide.subtitle}</p>}
       </div>
     </Link>
   );

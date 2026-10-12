@@ -194,8 +194,6 @@ function pngForm() {
 
 const BASE_GUIDE_FIELDS = {
   subtitle: "A test subtitle",
-  blurb: "A test blurb.",
-  description: "A test description.",
   pricePaise: 34900,
   pageCount: 40,
   chapterCount: 10,

@@ -16,8 +16,6 @@ interface AdminGuideDetail {
   title: string;
   number: string | null;
   subtitle: string | null;
-  blurb: string | null;
-  description: string | null;
   pricePaise: number;
   compareAtPricePaise: number | null;
   currency: string;
@@ -52,8 +50,6 @@ interface FormState {
   title: string;
   number: string;
   subtitle: string;
-  blurb: string;
-  description: string;
   priceRupees: string;
   compareAtPriceRupees: string;
   pageCount: string;
@@ -73,8 +69,6 @@ const EMPTY_FORM: FormState = {
   title: "",
   number: "",
   subtitle: "",
-  blurb: "",
-  description: "",
   priceRupees: "",
   compareAtPriceRupees: "",
   pageCount: "",
@@ -95,8 +89,6 @@ function guideToForm(guide: AdminGuideDetail): FormState {
     title: guide.title,
     number: guide.number ?? "",
     subtitle: guide.subtitle ?? "",
-    blurb: guide.blurb ?? "",
-    description: guide.description ?? "",
     priceRupees: String(guide.pricePaise / 100),
     compareAtPriceRupees: guide.compareAtPricePaise != null ? String(guide.compareAtPricePaise / 100) : "",
     pageCount: guide.pageCount != null ? String(guide.pageCount) : "",
@@ -325,8 +317,6 @@ export function GuideEditContent() {
       slug: form.slug.trim(),
       title: form.title.trim(),
       subtitle: form.subtitle.trim(),
-      blurb: form.blurb.trim(),
-      description: form.description.trim() || undefined,
       number: form.number.trim() || undefined,
       pricePaise: Math.round(Number.parseFloat(form.priceRupees || "0") * 100),
       compareAtPricePaise: form.compareAtPriceRupees
@@ -634,21 +624,6 @@ export function GuideEditContent() {
                 </div>
               </div>
 
-              <div className="admin__edit-card-grid admin__edit-card-grid--2">
-                <div className="admin__field">
-                  <label htmlFor="g-blurb">
-                    Shelf blurb <RequiredDot />
-                  </label>
-                  <textarea id="g-blurb" value={form.blurb} onChange={(e) => updateField("blurb", e.target.value)} rows={2} required />
-                </div>
-
-                <div className="admin__field">
-                  <label htmlFor="g-description">Description</label>
-                  <textarea id="g-description" value={form.description} onChange={(e) => updateField("description", e.target.value)} rows={2} />
-                  <span className="admin__field-hint">Not shown on the guide&apos;s page.</span>
-                </div>
-              </div>
-
               {canUploadFiles && guide && (
                 <div className="admin__field-group">
                   <p className="admin__card-label">PDF</p>
@@ -712,7 +687,7 @@ export function GuideEditContent() {
                 </div>
                 <div>
                   <h3 className="book-card__title">{form.title.trim() || "New guide"}</h3>
-                  <p className="book-card__blurb">{form.blurb.trim() || "Add a shelf blurb"}</p>
+                  {form.subtitle.trim() && <p className="book-card__blurb">{form.subtitle.trim()}</p>}
                 </div>
               </div>
             </div>

@@ -33,8 +33,6 @@ export interface ValidatedGuideInput {
   slug: string;
   title: string;
   subtitle: string;
-  blurb: string;
-  description: string | null;
   number: string | null;
   pricePaise: number;
   compareAtPricePaise: number | null;
@@ -92,7 +90,6 @@ export function validateGuideInput(body: unknown): GuideValidationResult {
 
   if (!isNonEmptyString(b.title)) errors.push("title is required.");
   if (!isNonEmptyString(b.subtitle)) errors.push("subtitle is required.");
-  if (!isNonEmptyString(b.blurb)) errors.push("blurb is required.");
 
   if (!isPositiveInt(b.pricePaise)) errors.push("pricePaise must be a positive integer.");
 
@@ -194,8 +191,6 @@ export function validateGuideInput(body: unknown): GuideValidationResult {
       slug,
       title: (b.title as string).trim(),
       subtitle: (b.subtitle as string).trim(),
-      blurb: (b.blurb as string).trim(),
-      description: isNonEmptyString(b.description) ? (b.description as string).trim() : null,
       number: isNonEmptyString(b.number) ? (b.number as string).trim() : null,
       pricePaise: b.pricePaise as number,
       compareAtPricePaise,

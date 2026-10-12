@@ -25,8 +25,6 @@ export interface AdminGuideDetailRow {
   title: string;
   number: string | null;
   subtitle: string | null;
-  blurb: string | null;
-  description: string | null;
   price_paise: number;
   compare_at_price_paise: number | null;
   currency: string;
@@ -89,21 +87,22 @@ export async function orderCountsForSlug(
 const nowIso = () => new Date().toISOString();
 
 export async function insertGuide(env: WorkerEnv, input: ValidatedGuideInput): Promise<void> {
-  // faqs is deliberately never written here — the admin no longer edits it,
-  // so a new guide's faqs column stays NULL (unused) rather than being set
-  // to an empty array. See updateGuide's comment for why this also matters
-  // on every future save of an existing guide.
+  // faqs, blurb and description are deliberately never written here — the
+  // admin no longer edits any of them, so a new guide's columns stay NULL
+  // (unused) rather than being set to an empty value. See updateGuide's
+  // comment for why this also matters on every future save of an existing
+  // guide.
   await env.DB.prepare(
     `INSERT INTO books
        (slug, title, price_paise, currency, status,
-        number, subtitle, blurb, description, page_count, chapter_count,
+        number, subtitle, page_count, chapter_count,
         whats_inside, badge, button_text, compare_at_price_paise, sort_order, updated_at,
         bonus_title, bonus_description, bonus_enabled)
      VALUES
        (?1, ?2, ?3, 'INR', ?4,
-        ?5, ?6, ?7, ?8, ?9, ?10,
-        ?11, ?12, ?13, ?14, ?15, ?16,
-        ?17, ?18, ?19)`,
+        ?5, ?6, ?7, ?8,
+        ?9, ?10, ?11, ?12, ?13, ?14,
+        ?15, ?16, ?17)`,
   )
     .bind(
       input.slug,
@@ -112,8 +111,6 @@ export async function insertGuide(env: WorkerEnv, input: ValidatedGuideInput): P
       input.status,
       input.number,
       input.subtitle,
-      input.blurb,
-      input.description,
       input.pageCount,
       input.chapterCount,
       JSON.stringify(input.whatsInside),
@@ -135,18 +132,19 @@ export async function updateGuide(
   currentSlug: string,
   input: ValidatedGuideInput,
 ): Promise<void> {
-  // faqs is deliberately left out of this UPDATE's column list — the admin
-  // no longer edits it, and leaving it out of the statement entirely (rather
-  // than writing back whatever an empty, faqs-less form would imply) is what
-  // keeps an existing guide's old FAQ data in the database untouched.
+  // faqs, blurb and description are deliberately left out of this UPDATE's
+  // column list — the admin no longer edits any of them, and leaving them
+  // out of the statement entirely (rather than writing back whatever an
+  // empty, blurb/description-less form would imply) is what keeps an
+  // existing guide's old data in the database untouched.
   await env.DB.prepare(
     `UPDATE books SET
        slug = ?1, title = ?2, price_paise = ?3, status = ?4,
-       number = ?5, subtitle = ?6, blurb = ?7, description = ?8,
-       page_count = ?9, chapter_count = ?10, whats_inside = ?11,
-       badge = ?12, button_text = ?13, compare_at_price_paise = ?14, sort_order = ?15, updated_at = ?16,
-       bonus_title = ?17, bonus_description = ?18, bonus_enabled = ?19
-     WHERE slug = ?20`,
+       number = ?5, subtitle = ?6,
+       page_count = ?7, chapter_count = ?8, whats_inside = ?9,
+       badge = ?10, button_text = ?11, compare_at_price_paise = ?12, sort_order = ?13, updated_at = ?14,
+       bonus_title = ?15, bonus_description = ?16, bonus_enabled = ?17
+     WHERE slug = ?18`,
   )
     .bind(
       input.slug,
@@ -155,8 +153,6 @@ export async function updateGuide(
       input.status,
       input.number,
       input.subtitle,
-      input.blurb,
-      input.description,
       input.pageCount,
       input.chapterCount,
       JSON.stringify(input.whatsInside),
@@ -227,8 +223,6 @@ export function serializeGuideDetail(row: AdminGuideDetailRow, paidOrders: numbe
     title: row.title,
     number: row.number,
     subtitle: row.subtitle,
-    blurb: row.blurb,
-    description: row.description,
     pricePaise: row.price_paise,
     compareAtPricePaise: row.compare_at_price_paise,
     currency: row.currency,

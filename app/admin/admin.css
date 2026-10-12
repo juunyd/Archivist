@@ -1183,10 +1183,6 @@
   .admin__edit-card-grid--3 {
     grid-template-columns: repeat(3, 1fr);
   }
-
-  .admin__edit-card-grid--2 {
-    grid-template-columns: repeat(2, 1fr);
-  }
 }
 
 .admin__field-group {
