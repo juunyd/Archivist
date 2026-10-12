@@ -126,7 +126,7 @@ export default async function GuidePage({ params }: GuidePageProps) {
               <div className={styles.trustBadges}>
                 <span>&#10003; Instant delivery</span>
                 <span>&#10003; Secure checkout</span>
-                <span>&#10003; PDF</span>
+                <span>&#10003; Printable PDF</span>
               </div>
             </div>
           </div>

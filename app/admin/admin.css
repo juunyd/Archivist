@@ -1020,45 +1020,39 @@
   gap: var(--space-5);
 }
 
-/* Type scale */
-.admin__edit-title {
-  font-size: 1.25rem; /* 20px */
-  font-weight: 700;
-  margin: 0;
-  line-height: 1.25;
-  max-width: 46ch;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .admin__edit-card-title {
   font-size: 1rem; /* 16px */
   font-weight: 700;
   margin: 0 0 2px;
 }
 
-.admin__edit-card-help {
-  font-size: 0.8125rem; /* 13px */
-  color: var(--gray-700);
-  margin: 0 0 var(--space-4);
+/* --- Split layout: the live page at ~75%, the side panel at ~25%,
+     sticky so its Save/Publish actions stay reachable while the page
+     scrolls underneath. --- */
+
+.admin__edit-split {
+  display: grid;
+  grid-template-columns: 3fr 1fr;
+  gap: var(--space-6);
+  align-items: start;
 }
 
-/* --- Top bar: always visible, sticky on desktop --- */
+.admin__edit-main {
+  min-width: 0;
+}
 
-.admin__topbar {
+.admin__edit-side {
   position: sticky;
-  top: 0;
-  z-index: 25;
+  top: var(--space-5);
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+  flex-direction: column;
   gap: var(--space-4);
-  flex-wrap: wrap;
-  background: var(--color-white);
-  border-radius: var(--admin-radius);
-  box-shadow: var(--admin-shadow);
-  padding: var(--space-4) var(--space-5);
+}
+
+.admin__side-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
 }
 
 .admin__edit-back {
@@ -1069,31 +1063,43 @@
   font-weight: 600;
   color: var(--gray-800);
   text-decoration: none;
-  margin-bottom: var(--space-2);
 }
 
 .admin__edit-back:hover {
   color: var(--color-ink);
 }
 
-.admin__topbar-title-row {
+.admin__side-status-row {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: var(--space-3);
-  flex-wrap: wrap;
+}
+
+.admin__side-bonus-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
 }
 
 .admin__edit-saved-line {
   font-size: 0.8125rem;
   color: var(--gray-700);
-  margin: var(--space-1) 0 0;
+  margin: 0;
 }
 
-.admin__topbar-actions {
+.admin__side-actions {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
   gap: var(--space-3);
-  flex-wrap: wrap;
+}
+
+.admin__side-actions .admin__form-submit,
+.admin__side-actions .admin__btn-secondary,
+.admin__side-actions .admin__publish {
+  width: 100%;
 }
 
 .admin__btn-secondary {
@@ -1115,40 +1121,13 @@
   background: var(--gray-100);
 }
 
-/* --- Settings card --- */
-
-.admin__settings-card {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
-}
-
-/* Fields on the left, the shelf-card preview as a small box on the right. */
-.admin__settings-layout {
-  display: flex;
-  gap: var(--space-6);
-  align-items: flex-start;
-}
-
-.admin__settings-fields {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
-}
-
-.admin__settings-preview {
-  flex: 0 0 220px;
-}
-
-@media (max-width: 860px) {
-  .admin__settings-layout {
-    flex-direction: column;
+@media (max-width: 960px) {
+  .admin__edit-split {
+    grid-template-columns: 1fr;
   }
 
-  .admin__settings-preview {
-    flex: 0 0 auto;
+  .admin__edit-side {
+    position: static;
   }
 }
 
@@ -1160,7 +1139,7 @@
   color: var(--gray-600);
 }
 
-/* Required-field marker next to a label (Settings card only — the live
+/* Required-field marker next to a label (side-panel fields only — the live
    page's own fields carry their dot inline, see .admin__live-field-required-dot). */
 .admin__required-dot {
   display: inline-block;
@@ -1168,21 +1147,6 @@
   height: 5px;
   border-radius: 50%;
   background: var(--color-brand-red);
-}
-
-/* Tidy grid for the settings fields: one column on phones, several on
-   desktop, a consistent 16px between rows. */
-.admin__edit-card-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-4);
-  align-items: start;
-}
-
-@media (min-width: 700px) {
-  .admin__edit-card-grid--3 {
-    grid-template-columns: repeat(3, 1fr);
-  }
 }
 
 .admin__field-group {
@@ -1401,10 +1365,7 @@
 /* Required dot: lives inside the field itself instead of floating out in
    the margin where there's no label to hang it off. Size-to-content
    fields (price, badge) hug their text, so the dot sits right after the
-   content at the bottom-right corner; full-width wrapping fields (title,
-   subtitle) can't know where their last visible character falls, so the
-   dot pins to the box's own top-right corner instead — still clearly on
-   the field, never detached in blank space. */
+   content at the box's own corner. */
 .admin__live-field-required-dot {
   position: absolute;
   right: 2px;
@@ -1419,6 +1380,15 @@
 .admin__live-field--size-to-content .admin__live-field-required-dot {
   top: auto;
   bottom: 2px;
+}
+
+/* A full-width wrapping field's trailing dot (title, subtitle): positioned
+   from the last-line DOMRect the component measures off a hidden echo of
+   the same text (see useTrailingDotPosition in LiveField.tsx) — left/top
+   come from that measurement, not from this rule. */
+.admin__live-field-required-dot--trailing {
+  top: auto;
+  right: auto;
 }
 
 /* Price / compare-at price: the "₹" prefix and the number sit inline, not
@@ -1513,12 +1483,10 @@
   flex-wrap: wrap;
 }
 
-/* --- On/Off switch (free bonus) --- */
+/* --- On/Off switch (status, free bonus) --- */
 
 .admin__live-switch {
-  position: absolute;
-  top: var(--space-3);
-  right: var(--space-3);
+  flex-shrink: 0;
   width: 36px;
   height: 20px;
   border-radius: 999px;
@@ -1588,40 +1556,8 @@
 
 /* --- Free bonus card --- */
 
-.admin__live-bonus-wrap {
-  width: 100%;
-  max-width: 400px;
-  margin-top: var(--space-5);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
 .admin__live-bonus-wrap--off .bonus-card {
   opacity: 0.55;
-}
-
-.admin__bonus-pdf-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  flex-wrap: wrap;
-  font-size: 0.8125rem;
-}
-
-.admin__bonus-pdf-btn {
-  display: inline-flex;
-  align-items: center;
-  border: 1px solid var(--gray-300);
-  background: var(--color-white);
-  border-radius: 999px;
-  padding: 6px 14px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.admin__bonus-pdf-btn:hover {
-  background: var(--gray-100);
 }
 
 /* --- What's Inside: inline items on the dark section --- */
@@ -1692,20 +1628,20 @@
   color: var(--color-brand-red);
 }
 
-/* --- Phones: stack to one column, pin action buttons above the bottom
-     nav, keep the last field reachable. --- */
+/* --- Phones: the page first, then the side cards stacked below; the
+     Status card's Save/Publish/Unpublish actions pin above the bottom
+     nav regardless, so they're always one tap away. --- */
 
 @media (max-width: 860px) {
-  .admin__topbar {
-    position: static;
-  }
-
-  .admin__topbar-actions {
+  .admin__side-actions {
     position: fixed;
     left: 0;
     right: 0;
     bottom: 56px;
     z-index: 15;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
     gap: var(--space-2);
     background: var(--color-white);
     border-top: 1px solid var(--gray-300);
@@ -1713,12 +1649,14 @@
     box-shadow: 0 -4px 16px rgba(10, 10, 10, 0.06);
   }
 
-  .admin__topbar-actions .admin__form-submit,
-  .admin__topbar-actions .admin__publish {
+  .admin__side-actions .admin__form-submit,
+  .admin__side-actions .admin__btn-secondary,
+  .admin__side-actions .admin__publish {
+    width: auto;
     flex: 1;
   }
 
-  .admin__topbar-actions .admin__form-message {
+  .admin__side-actions .admin__form-message {
     display: none; /* no room in the condensed mobile bar; shown on desktop */
   }
 

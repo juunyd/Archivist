@@ -181,6 +181,111 @@ function FileDropzone({
   );
 }
 
+type UploadMessage = { text: string; error?: boolean } | null;
+
+/**
+ * One file's full upload control: already-uploaded state + Replace button,
+ * or a drop zone when there's nothing yet, plus the pending-file confirm
+ * row. Used for both the main PDF and the bonus PDF — identical shape,
+ * different file and endpoint behind `onFile`/`onUpload`.
+ */
+function PdfUploadControl({
+  id,
+  path,
+  pendingFile,
+  uploading,
+  message,
+  onFile,
+  onUpload,
+}: {
+  id: string;
+  path: string | null;
+  pendingFile: File | null;
+  uploading: boolean;
+  message: UploadMessage;
+  onFile: (file: File) => void;
+  onUpload: () => void;
+}) {
+  return (
+    <div className="admin__field-group">
+      {path ? (
+        <div className="admin__uploaded-row">
+          <p className="admin__file-state">Uploaded — {basename(path)}</p>
+          <label htmlFor={id} className="admin__btn-secondary admin__file-trigger">
+            <input
+              id={id}
+              type="file"
+              accept="application/pdf"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) onFile(file);
+              }}
+            />
+            Replace PDF
+          </label>
+        </div>
+      ) : (
+        <FileDropzone id={id} accept="application/pdf" label="Drop a PDF here, or click to choose" hint="PDF only, up to 25 MB" onFile={onFile} />
+      )}
+      {pendingFile && (
+        <div className="admin__uploaded-row">
+          <span className="admin__upload-filename">
+            {pendingFile.name} ({formatFileSize(pendingFile.size)})
+          </span>
+          <button type="button" className="admin__form-submit" onClick={onUpload} disabled={uploading}>
+            {uploading ? "Uploading…" : "Upload"}
+          </button>
+        </div>
+      )}
+      {message && (
+        <span className={`admin__form-message${message.error ? " admin__form-message--error" : ""}`}>{message.text}</span>
+      )}
+    </div>
+  );
+}
+
+/**
+ * The bonus cover's upload status + pending-file confirm, shown in the side
+ * panel. The actual click/drop target lives on the page itself (a `minimal`
+ * LiveImagePicker, right on the bonus card) so the card stays pixel-exact
+ * to the live page; this is just the rest of that same control.
+ */
+function ImageUploadStatus({
+  label,
+  uploaded,
+  pendingFile,
+  uploading,
+  message,
+  onUpload,
+}: {
+  label: string;
+  uploaded: boolean;
+  pendingFile: File | null;
+  uploading: boolean;
+  message: UploadMessage;
+  onUpload: () => void;
+}) {
+  return (
+    <div className="admin__field-group">
+      <p className="admin__card-label">{label}</p>
+      <p className={`admin__file-state${uploaded ? "" : " admin__file-state--empty"}`}>{uploaded ? "Uploaded" : "Not uploaded yet"}</p>
+      {pendingFile && (
+        <div className="admin__uploaded-row">
+          <span className="admin__upload-filename">
+            {pendingFile.name} ({formatFileSize(pendingFile.size)})
+          </span>
+          <button type="button" className="admin__form-submit" onClick={onUpload} disabled={uploading}>
+            {uploading ? "Uploading…" : "Upload"}
+          </button>
+        </div>
+      )}
+      {message && (
+        <span className={`admin__form-message${message.error ? " admin__form-message--error" : ""}`}>{message.text}</span>
+      )}
+    </div>
+  );
+}
+
 export function GuideEditContent() {
   const searchParams = useSearchParams();
   const slugParam = searchParams.get("slug");
@@ -512,190 +617,9 @@ export function GuideEditContent() {
 
   return (
     <div className="admin__edit-page">
-      <form onSubmit={handleSave}>
-        {/* TOP BAR — always visible, sticky on desktop; stacks + pins its
-            buttons above the bottom nav on phones (see admin.css). */}
-        <div className="admin__topbar">
-          <div className="admin__topbar-info">
-            <Link href="/admin/guides/" className="admin__edit-back">
-              <BackArrowIcon /> Guides
-            </Link>
-            <div className="admin__topbar-title-row">
-              <h1 className="admin__edit-title">{form.title.trim() || "New guide"}</h1>
-              <span className={`admin__status admin__status--${form.status}`}>{form.status}</span>
-            </div>
-            {lastSavedAt && <p className="admin__edit-saved-line">Last saved {formatSavedAt(lastSavedAt)}</p>}
-          </div>
-
-          <div className="admin__topbar-actions">
-            <button type="submit" className="admin__form-submit" disabled={saving} title={saving ? "Saving in progress" : undefined}>
-              {saving ? "Saving…" : mode === "create" ? "Create guide" : "Save"}
-            </button>
-            {saveMessage && (
-              <span className={`admin__form-message${saveMessage.error ? " admin__form-message--error" : ""}`}>{saveMessage.text}</span>
-            )}
-            {mode === "edit" && guide && <PublishChangesButton onPublished={() => setInitialPriceRupees(Number.parseFloat(form.priceRupees))} />}
-            {mode === "edit" && guide && guide.status === "published" && (
-              <a className="admin__btn-secondary" href={`${siteConfig.url}/${guide.slug}/`} target="_blank" rel="noopener noreferrer">
-                View on site ↗
-              </a>
-            )}
-            {mode === "edit" && guide && guide.status === "published" && (
-              <button type="button" className="admin__danger-link" onClick={handleUnpublish} disabled={unpublishing}>
-                {unpublishing ? "Unpublishing…" : "Unpublish"}
-              </button>
-            )}
-          </div>
-        </div>
-
-        {priceChanged && (
-          <p className="admin__price-warning">
-            Price changes take effect at checkout immediately, but the site shows the old price until it rebuilds. Click Publish changes.
-          </p>
-        )}
-
-        {/* SETTINGS — everything that isn't shown on the page itself. */}
-        <section className="admin__card admin__settings-card">
-          <h2 className="admin__edit-card-title">Settings</h2>
-          <p className="admin__edit-card-help">Identifiers, shelf placement and the files buyers receive — none of this appears on the page below.</p>
-
-          <div className="admin__settings-layout">
-            <div className="admin__settings-fields">
-              <div className="admin__edit-card-grid admin__edit-card-grid--3">
-                <div className="admin__field">
-                  <label htmlFor="g-slug">
-                    Slug <RequiredDot />
-                  </label>
-                  <input
-                    id="g-slug"
-                    type="text"
-                    value={form.slug}
-                    onChange={(e) => updateField("slug", e.target.value)}
-                    disabled={mode === "edit" && !!guide?.slugLocked}
-                    required
-                    pattern="[a-z0-9]+(-[a-z0-9]+)*"
-                    minLength={3}
-                    maxLength={60}
-                  />
-                  <span className="admin__field-hint">
-                    {mode === "edit" && guide?.slugLocked
-                      ? `Locked — this guide has ${guide.totalOrders > 0 ? "orders" : "a PDF uploaded"}.`
-                      : "Locks once this guide has orders or a PDF uploaded."}
-                  </span>
-                </div>
-
-                <div className="admin__field">
-                  <label htmlFor="g-number">Number</label>
-                  <input id="g-number" type="text" placeholder="No. 05" value={form.number} onChange={(e) => updateField("number", e.target.value)} />
-                </div>
-
-                <div className="admin__field">
-                  <label htmlFor="g-status">Status</label>
-                  <select id="g-status" value={form.status} onChange={(e) => updateField("status", e.target.value as "draft" | "published")}>
-                    <option value="draft">Draft</option>
-                    <option value="published">Published</option>
-                  </select>
-                </div>
-
-                <div className="admin__field">
-                  <label htmlFor="g-sort">Sort order</label>
-                  <input id="g-sort" type="number" step="1" value={form.sortOrder} onChange={(e) => updateField("sortOrder", e.target.value)} />
-                </div>
-
-                <div className="admin__field">
-                  <label htmlFor="g-pages">
-                    Page count <span className="admin__field-optional">optional</span>
-                  </label>
-                  <input id="g-pages" type="number" min="1" step="1" value={form.pageCount} onChange={(e) => updateField("pageCount", e.target.value)} />
-                </div>
-
-                <div className="admin__field">
-                  <label htmlFor="g-chapters">
-                    Chapter count <span className="admin__field-optional">optional</span>
-                  </label>
-                  <input
-                    id="g-chapters"
-                    type="number"
-                    min="1"
-                    step="1"
-                    value={form.chapterCount}
-                    onChange={(e) => updateField("chapterCount", e.target.value)}
-                  />
-                </div>
-              </div>
-
-              {canUploadFiles && guide && (
-                <div className="admin__field-group">
-                  <p className="admin__card-label">PDF</p>
-                  {guide.pdfPath ? (
-                    <div className="admin__uploaded-row">
-                      <p className="admin__file-state">Uploaded — {basename(guide.pdfPath)}</p>
-                      <label htmlFor="g-pdf-file" className="admin__btn-secondary admin__file-trigger">
-                        <input
-                          id="g-pdf-file"
-                          type="file"
-                          accept="application/pdf"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) setPdfFile(file);
-                          }}
-                        />
-                        Replace PDF
-                      </label>
-                    </div>
-                  ) : (
-                    <FileDropzone
-                      id="g-pdf-file"
-                      accept="application/pdf"
-                      label="Drop a PDF here, or click to choose"
-                      hint="PDF only, up to 25 MB"
-                      onFile={setPdfFile}
-                    />
-                  )}
-                  {pdfFile && (
-                    <div className="admin__uploaded-row">
-                      <span className="admin__upload-filename">
-                        {pdfFile.name} ({formatFileSize(pdfFile.size)})
-                      </span>
-                      <button type="button" className="admin__form-submit" onClick={() => handlePdfUpload(false)} disabled={pdfUploading}>
-                        {pdfUploading ? "Uploading…" : "Upload"}
-                      </button>
-                    </div>
-                  )}
-                  {pdfMessage && (
-                    <span className={`admin__form-message${pdfMessage.error ? " admin__form-message--error" : ""}`}>{pdfMessage.text}</span>
-                  )}
-                </div>
-              )}
-            </div>
-
-            <div className="admin__settings-preview">
-              <p className="admin__card-label">Shelf card preview</p>
-              <div className="admin__shelf-preview-card book-card">
-                <div className="book-card__cover">
-                  {previewCover ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={previewCover} alt="" className="admin__shelf-preview-cover-img" />
-                  ) : (
-                    <span className="admin__guide-thumb--empty" aria-hidden="true" />
-                  )}
-                  <span className="book-card__no">{form.number || "No. --"}</span>
-                  <span className="book-card__price">
-                    ₹{priceDisplay ?? "…"}
-                    {compareAtDisplay != null && <span className="book-card__compare-at-price">₹{compareAtDisplay}</span>}
-                  </span>
-                </div>
-                <div>
-                  <h3 className="book-card__title">{form.title.trim() || "New guide"}</h3>
-                  {form.subtitle.trim() && <p className="book-card__blurb">{form.subtitle.trim()}</p>}
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* LIVE PAGE EDITOR — the real guide page's own styles, edited in place. */}
-        <div className="admin__live-page">
+      <form onSubmit={handleSave} className="admin__edit-split">
+        {/* MAIN — the real guide page itself, edited in place. */}
+        <div className="admin__edit-main admin__live-page">
           <section className={`${pageStyles.hero} admin__live-hero`}>
             <div className={pageStyles.heroInner}>
               <div className={`${pageStyles.heroGrid} admin__live-hero-grid`}>
@@ -813,7 +737,6 @@ export function GuideEditContent() {
                   <div className={`bonus-card-wrap admin__live-bonus-wrap${form.bonusEnabled ? "" : " admin__live-bonus-wrap--off"}`}>
                     <div className="bonus-card">
                       <span className="bonus-card__tag">Free</span>
-                      <LiveSwitch checked={form.bonusEnabled} onChange={(v) => updateField("bonusEnabled", v)} ariaLabel="Show the free bonus on the guide page" />
                       <div className="bonus-card__media">
                         {canUploadFiles ? (
                           <LiveImagePicker
@@ -829,6 +752,7 @@ export function GuideEditContent() {
                             uploading={bonusCoverUploading}
                             message={bonusCoverMessage}
                             formatFileSize={formatFileSize}
+                            minimal
                           />
                         ) : (
                           <span className="bonus-card__cover admin__live-media-empty" aria-hidden="true" />
@@ -852,48 +776,7 @@ export function GuideEditContent() {
                         />
                       </div>
                     </div>
-
-                    {canUploadFiles && guide ? (
-                      <div className="admin__bonus-pdf-row">
-                        <span className={`admin__file-state${guide.bonusPdfPath ? "" : " admin__file-state--empty"}`}>
-                          {guide.bonusPdfPath ? "Uploaded" : "Not uploaded yet"}
-                        </span>
-                        <label htmlFor="g-bonus-pdf-file" className="admin__bonus-pdf-btn admin__file-trigger">
-                          <input
-                            id="g-bonus-pdf-file"
-                            type="file"
-                            accept="application/pdf"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) setBonusPdfFile(file);
-                            }}
-                          />
-                          {guide.bonusPdfPath ? "Replace bonus PDF" : "Upload bonus PDF"}
-                        </label>
-                        {bonusPdfFile && (
-                          <>
-                            <span className="admin__upload-filename">
-                              {bonusPdfFile.name} ({formatFileSize(bonusPdfFile.size)})
-                            </span>
-                            <button
-                              type="button"
-                              className="admin__form-submit"
-                              onClick={() => handleBonusPdfUpload(false)}
-                              disabled={bonusPdfUploading}
-                            >
-                              {bonusPdfUploading ? "Uploading…" : "Upload"}
-                            </button>
-                          </>
-                        )}
-                        {bonusPdfMessage && (
-                          <span className={`admin__form-message${bonusPdfMessage.error ? " admin__form-message--error" : ""}`}>
-                            {bonusPdfMessage.text}
-                          </span>
-                        )}
-                      </div>
-                    ) : (
-                      <p className="admin__file-state admin__file-state--empty">Save the guide first to upload a bonus PDF</p>
-                    )}
+                    <p className="bonus-card__caption">Included free with your purchase</p>
                   </div>
 
                   {(form.pageCount || form.chapterCount) && (
@@ -907,7 +790,7 @@ export function GuideEditContent() {
                   <div className={pageStyles.trustBadges}>
                     <span>✓ Instant delivery</span>
                     <span>✓ Secure checkout</span>
-                    <span>✓ PDF</span>
+                    <span>✓ Printable PDF</span>
                   </div>
                 </div>
               </div>
@@ -997,6 +880,183 @@ export function GuideEditContent() {
             </div>
           </section>
         </div>
+
+        {/* SIDE PANEL — everything that isn't shown on the page itself. */}
+        <aside className="admin__edit-side">
+          <section className="admin__card admin__side-card">
+            <Link href="/admin/guides/" className="admin__edit-back">
+              <BackArrowIcon /> Guides
+            </Link>
+
+            <div className="admin__side-status-row">
+              <span className={`admin__status admin__status--${form.status}`}>{form.status}</span>
+              <LiveSwitch
+                checked={form.status === "published"}
+                onChange={(checked) => updateField("status", checked ? "published" : "draft")}
+                ariaLabel="Published"
+              />
+            </div>
+
+            {lastSavedAt && <p className="admin__edit-saved-line">Last saved {formatSavedAt(lastSavedAt)}</p>}
+
+            {priceChanged && (
+              <p className="admin__price-warning">
+                Price changes take effect at checkout immediately, but the site shows the old price until it rebuilds. Click Publish changes.
+              </p>
+            )}
+
+            <div className="admin__side-actions">
+              <button type="submit" className="admin__form-submit" disabled={saving} title={saving ? "Saving in progress" : undefined}>
+                {saving ? "Saving…" : mode === "create" ? "Create guide" : "Save"}
+              </button>
+              {saveMessage && (
+                <span className={`admin__form-message${saveMessage.error ? " admin__form-message--error" : ""}`}>{saveMessage.text}</span>
+              )}
+              {mode === "edit" && guide && <PublishChangesButton onPublished={() => setInitialPriceRupees(Number.parseFloat(form.priceRupees))} />}
+              {mode === "edit" && guide && guide.status === "published" && (
+                <a className="admin__btn-secondary" href={`${siteConfig.url}/${guide.slug}/`} target="_blank" rel="noopener noreferrer">
+                  View on site ↗
+                </a>
+              )}
+              {mode === "edit" && guide && guide.status === "published" && (
+                <button type="button" className="admin__danger-link" onClick={handleUnpublish} disabled={unpublishing}>
+                  {unpublishing ? "Unpublishing…" : "Unpublish"}
+                </button>
+              )}
+            </div>
+          </section>
+
+          <section className="admin__card admin__side-card">
+            <h2 className="admin__edit-card-title">Page details</h2>
+
+            <div className="admin__field">
+              <label htmlFor="g-slug">
+                Slug <RequiredDot />
+              </label>
+              <input
+                id="g-slug"
+                type="text"
+                value={form.slug}
+                onChange={(e) => updateField("slug", e.target.value)}
+                disabled={mode === "edit" && !!guide?.slugLocked}
+                required
+                pattern="[a-z0-9]+(-[a-z0-9]+)*"
+                minLength={3}
+                maxLength={60}
+              />
+              <span className="admin__field-hint">
+                {mode === "edit" && guide?.slugLocked
+                  ? `Locked — this guide has ${guide.totalOrders > 0 ? "orders" : "a PDF uploaded"}.`
+                  : "Locks once this guide has orders or a PDF uploaded."}
+              </span>
+            </div>
+
+            <div className="admin__field">
+              <label htmlFor="g-number">Number</label>
+              <input id="g-number" type="text" placeholder="No. 05" value={form.number} onChange={(e) => updateField("number", e.target.value)} />
+            </div>
+
+            <div className="admin__field">
+              <label htmlFor="g-sort">Sort order</label>
+              <input id="g-sort" type="number" step="1" value={form.sortOrder} onChange={(e) => updateField("sortOrder", e.target.value)} />
+            </div>
+          </section>
+
+          <section className="admin__card admin__side-card">
+            <h2 className="admin__edit-card-title">Optional facts</h2>
+
+            <div className="admin__field">
+              <label htmlFor="g-pages">
+                Page count <span className="admin__field-optional">optional</span>
+              </label>
+              <input id="g-pages" type="number" min="1" step="1" value={form.pageCount} onChange={(e) => updateField("pageCount", e.target.value)} />
+            </div>
+
+            <div className="admin__field">
+              <label htmlFor="g-chapters">
+                Chapter count <span className="admin__field-optional">optional</span>
+              </label>
+              <input
+                id="g-chapters"
+                type="number"
+                min="1"
+                step="1"
+                value={form.chapterCount}
+                onChange={(e) => updateField("chapterCount", e.target.value)}
+              />
+            </div>
+          </section>
+
+          <section className="admin__card admin__side-card">
+            <h2 className="admin__edit-card-title">Files</h2>
+            {canUploadFiles && guide ? (
+              <PdfUploadControl
+                id="g-pdf-file"
+                path={guide.pdfPath}
+                pendingFile={pdfFile}
+                uploading={pdfUploading}
+                message={pdfMessage}
+                onFile={setPdfFile}
+                onUpload={() => handlePdfUpload(false)}
+              />
+            ) : (
+              <p className="admin__file-state admin__file-state--empty">Save the guide first to upload a PDF</p>
+            )}
+          </section>
+
+          <section className="admin__card admin__side-card">
+            <div className="admin__side-bonus-head">
+              <h2 className="admin__edit-card-title">Free bonus files</h2>
+              <LiveSwitch checked={form.bonusEnabled} onChange={(v) => updateField("bonusEnabled", v)} ariaLabel="Show the free bonus on the guide page" />
+            </div>
+            {canUploadFiles && guide ? (
+              <>
+                <ImageUploadStatus
+                  label="Bonus cover"
+                  uploaded={!!guide.bonusCoverPath}
+                  pendingFile={bonusCoverFile}
+                  uploading={bonusCoverUploading}
+                  message={bonusCoverMessage}
+                  onUpload={handleBonusCoverUpload}
+                />
+                <PdfUploadControl
+                  id="g-bonus-pdf-file"
+                  path={guide.bonusPdfPath}
+                  pendingFile={bonusPdfFile}
+                  uploading={bonusPdfUploading}
+                  message={bonusPdfMessage}
+                  onFile={setBonusPdfFile}
+                  onUpload={() => handleBonusPdfUpload(false)}
+                />
+              </>
+            ) : (
+              <p className="admin__file-state admin__file-state--empty">Save the guide first to upload bonus files</p>
+            )}
+          </section>
+
+          <section className="admin__card admin__side-card">
+            <h2 className="admin__edit-card-title">Shelf card preview</h2>
+            <div className="admin__shelf-preview-card book-card">
+              <div className="book-card__cover">
+                {previewCover ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={previewCover} alt="" className="admin__shelf-preview-cover-img" />
+                ) : (
+                  <span className="admin__guide-thumb--empty" aria-hidden="true" />
+                )}
+                <span className="book-card__no">{form.number || "No. --"}</span>
+                <span className="book-card__price">
+                  ₹{priceDisplay ?? "…"}
+                  {compareAtDisplay != null && <span className="book-card__compare-at-price">₹{compareAtDisplay}</span>}
+                </span>
+              </div>
+              <div>
+                <h3 className="book-card__title">{form.title.trim() || "New guide"}</h3>
+                {form.subtitle.trim() && <p className="book-card__blurb">{form.subtitle.trim()}</p>}
+              </div>
+            </div>
+          </section>
+        </aside>
       </form>
     </div>
   );
