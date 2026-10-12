@@ -125,3 +125,19 @@ export function BackArrowIcon(props: SVGProps<SVGSVGElement>) {
     </Icon>
   );
 }
+
+export function PencilIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon width={14} height={14} strokeWidth={1.8} {...props}>
+      <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19 3 20l1-4Z" />
+    </Icon>
+  );
+}
+
+export function PlusIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon width={16} height={16} {...props}>
+      <path d="M12 5v14M5 12h14" />
+    </Icon>
+  );
+}

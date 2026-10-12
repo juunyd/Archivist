@@ -1012,14 +1012,24 @@
   }
 }
 
-/* --- Guide edit page redesign (layout/style only) --- */
+/* --- Guide edit page: live page editor (layout/style only) --- */
+
+.admin__edit-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
 
 /* Type scale */
 .admin__edit-title {
-  font-size: 1.5rem; /* 24px */
+  font-size: 1.25rem; /* 20px */
   font-weight: 700;
   margin: 0;
   line-height: 1.25;
+  max-width: 46ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .admin__edit-card-title {
@@ -1034,29 +1044,21 @@
   margin: 0 0 var(--space-4);
 }
 
-.admin__edit-card .admin__field label {
-  font-size: 0.8125rem; /* 13px */
-  font-weight: 500;
-  color: var(--gray-900);
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
+/* --- Top bar: always visible, sticky on desktop --- */
 
-.admin__edit-card .admin__field input,
-.admin__edit-card .admin__field select,
-.admin__edit-card .admin__field textarea {
-  font-size: 0.9375rem; /* 15px */
-}
-
-.admin__edit-card .admin__field-hint {
-  font-size: 0.8125rem; /* 13px */
-  color: var(--gray-700);
-}
-
-/* Page header */
-.admin__edit-header {
-  margin-bottom: var(--space-6);
+.admin__topbar {
+  position: sticky;
+  top: 0;
+  z-index: 25;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  background: var(--color-white);
+  border-radius: var(--admin-radius);
+  box-shadow: var(--admin-shadow);
+  padding: var(--space-4) var(--space-5);
 }
 
 .admin__edit-back {
@@ -1067,11 +1069,18 @@
   font-weight: 600;
   color: var(--gray-800);
   text-decoration: none;
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--space-2);
 }
 
 .admin__edit-back:hover {
   color: var(--color-ink);
+}
+
+.admin__topbar-title-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
 }
 
 .admin__edit-saved-line {
@@ -1080,99 +1089,13 @@
   margin: var(--space-1) 0 0;
 }
 
-/* Two-column layout */
-.admin__edit-layout {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: var(--space-6);
-  align-items: start;
-}
-
-.admin__edit-main {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-6);
-  min-width: 0;
-}
-
-.admin__edit-side {
-  position: sticky;
-  top: var(--space-6);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
-  min-width: 0;
-}
-
-.admin__edit-card {
-  /* Reuses the dashboard's existing card look (.admin__card) via composition
-     in markup — this rule only adds edit-page-specific spacing on top. */
-  display: flex;
-  flex-direction: column;
-}
-
-.admin__edit-card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: var(--space-4);
-}
-
-@media (min-width: 700px) {
-  .admin__edit-card-grid--3 {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-/* Required-field marker: a small dot, not a long note */
-.admin__required-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--color-brand-red);
-  display: inline-block;
-}
-
-/* Focus ring + error state, applied wherever .admin__field already is used */
-.admin__field input:focus-visible,
-.admin__field select:focus-visible,
-.admin__field textarea:focus-visible {
-  outline: 2px solid var(--color-brand-red);
-  outline-offset: 1px;
-  border-color: var(--color-brand-red);
-}
-
-.admin__field--error input,
-.admin__field--error select,
-.admin__field--error textarea {
-  border-color: var(--admin-bad);
-}
-
-.admin__field-error-text {
-  font-size: 0.8125rem;
-  color: var(--admin-bad);
-  margin: 0;
-}
-
-/* Money fields: ₹ prefix */
-.admin__money-field {
-  position: relative;
+.admin__topbar-actions {
   display: flex;
   align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
 }
 
-.admin__money-prefix {
-  position: absolute;
-  left: var(--space-3);
-  color: var(--gray-700);
-  font-size: 0.9375rem;
-  pointer-events: none;
-}
-
-.admin__money-field input {
-  padding-left: calc(var(--space-3) + 14px) !important;
-}
-
-/* Secondary (outline) button, alongside the existing primary/danger ones */
 .admin__btn-secondary {
   border: 1px solid var(--gray-300);
   border-radius: 6px;
@@ -1192,69 +1115,211 @@
   background: var(--gray-100);
 }
 
-.admin__btn-secondary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
+/* --- Settings card --- */
 
-/* Icon buttons (move up/down, remove) */
-.admin__icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border: 1px solid var(--gray-300);
-  background: var(--color-white);
-  border-radius: 6px;
-  color: var(--gray-800);
-  cursor: pointer;
-  padding: 0;
-}
-
-.admin__icon-btn:hover {
-  background: var(--gray-100);
-  color: var(--color-ink);
-}
-
-.admin__icon-btn:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
-
-.admin__icon-btn--danger:hover {
-  background: #fdecec;
-  color: var(--admin-bad);
-  border-color: #f3b4b0;
-}
-
-/* Drop zone for file uploads */
-.admin__dropzone {
+.admin__settings-card {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-1);
-  text-align: center;
-  border: 1.5px dashed var(--gray-300);
-  border-radius: 10px;
-  padding: var(--space-5) var(--space-4);
-  cursor: pointer;
-  background: var(--admin-bg);
+  gap: var(--space-5);
+}
+
+.admin__field-optional {
+  font-size: 0.6875rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--gray-600);
+}
+
+.admin__shelf-preview {
+  border-top: 1px solid var(--gray-200);
+  padding-top: var(--space-5);
+}
+
+.admin__shelf-preview-card {
+  max-width: 220px;
+  pointer-events: none;
+}
+
+.admin__shelf-preview-cover-img {
+  position: absolute;
+  inset: 0;
   width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
 }
 
-.admin__dropzone:hover,
-.admin__dropzone--active {
-  border-color: var(--color-brand-red);
-  background: #fdeceb;
+/* --- Live page frame: the admin's own light card wraps the real page's
+     own sections (including its dark ones) so it reads as "a page", not
+     a lookalike. --- */
+
+.admin__live-page {
+  border-radius: var(--admin-radius);
+  box-shadow: var(--admin-shadow);
+  overflow: hidden;
+  background: var(--color-white);
 }
 
-.admin__dropzone {
+/* --- Inline-editable fields: look like the real page's copy until you
+     touch them — soft outline + pencil on hover, red outline while
+     editing, grey placeholder when empty. --- */
+
+.admin__live-field {
   position: relative;
+  display: block;
+  border-radius: 6px;
+  margin: -4px -6px;
+  padding: 4px 6px;
 }
 
-.admin__dropzone input[type="file"] {
+.admin__live-field-el {
+  display: block;
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  margin: 0;
+  font-family: inherit;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+}
+
+.admin__live-field-el::placeholder {
+  color: var(--gray-500);
+  opacity: 1;
+}
+
+.admin__live-field--dark .admin__live-field-el::placeholder {
+  color: var(--gray-600);
+}
+
+.admin__live-field-el[type="number"]::-webkit-outer-spin-button,
+.admin__live-field-el[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.admin__live-field-el[type="number"] {
+  -moz-appearance: textfield;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .admin__live-field,
+  .admin__live-pencil {
+    transition: box-shadow 120ms ease, opacity 120ms ease;
+  }
+}
+
+.admin__live-field:hover {
+  box-shadow: 0 0 0 1px var(--gray-300);
+}
+
+.admin__live-field--dark:hover {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3);
+}
+
+.admin__live-field:focus-within {
+  box-shadow: 0 0 0 2px var(--color-brand-red);
+}
+
+.admin__live-pencil {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  opacity: 0;
+  pointer-events: none;
+  color: var(--gray-700);
+}
+
+.admin__live-field--dark .admin__live-pencil {
+  color: var(--gray-400);
+}
+
+.admin__live-field:hover .admin__live-pencil {
+  opacity: 1;
+}
+
+.admin__live-field:focus-within .admin__live-pencil {
+  opacity: 0;
+}
+
+.admin__live-counter {
+  font-size: 0.75rem;
+  color: var(--gray-700);
+  white-space: nowrap;
+}
+
+/* Required dot: no label on the live page to hang it off, so it floats at
+   the field's corner instead. */
+.admin__live-required-wrap {
+  position: relative;
+  display: block;
+}
+
+.admin__live-required-dot {
+  position: absolute;
+  top: 2px;
+  left: -11px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-brand-red);
+}
+
+/* Price / compare-at price: the "₹" prefix and the number sit inline, not
+   stacked — unlike title/subtitle, which are deliberately block-level so
+   they wrap like the real page's copy. */
+.admin__live-price-field {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.admin__live-price-field .admin__live-required-dot {
+  top: -2px;
+  left: -10px;
+}
+
+.admin__live-field--size-to-content {
+  display: inline-block;
+  margin: -4px 0;
+}
+
+.admin__live-field--size-to-content .admin__live-field-el {
+  width: auto;
+}
+
+.admin__field-error-text {
+  font-size: 0.8125rem;
+  color: var(--admin-bad);
+  margin: var(--space-2) 0 0;
+}
+
+.admin__field-error-text--dark {
+  color: #ff8a86;
+}
+
+/* --- Cover / bonus-cover: click-or-drop directly on the art --- */
+
+.admin__live-media {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.admin__live-media-drop {
+  position: relative;
+  display: block;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.admin__live-media-drop input[type="file"] {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -1263,209 +1328,266 @@
   cursor: pointer;
 }
 
-.admin__dropzone-label {
+.admin__live-media-empty {
+  display: block;
+  background: var(--gray-100);
+}
+
+.admin__live-media-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: rgba(10, 10, 10, 0.55);
+  color: var(--color-white);
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--color-ink);
+  opacity: 0;
+  border-radius: 6px;
 }
 
-.admin__dropzone-hint {
-  font-size: 0.75rem;
-  color: var(--gray-700);
+@media (prefers-reduced-motion: no-preference) {
+  .admin__live-media-overlay {
+    transition: opacity 120ms ease;
+  }
 }
 
-/* Clear uploaded/not-uploaded file state */
-.admin__file-state {
+.admin__live-media-drop:hover .admin__live-media-overlay,
+.admin__live-media-drop:focus-within .admin__live-media-overlay {
+  opacity: 1;
+}
+
+.admin__live-media-pending {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+/* --- On/Off switch (free bonus) --- */
+
+.admin__live-switch {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  width: 36px;
+  height: 20px;
+  border-radius: 999px;
+  border: 1px solid var(--gray-300);
+  background: var(--gray-200);
+  padding: 2px;
+  cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--admin-good);
-  margin: 0;
-  word-break: break-all;
 }
 
-.admin__file-state::before {
-  content: "";
-  width: 7px;
-  height: 7px;
+.admin__live-switch-knob {
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
+  background: var(--color-white);
+  box-shadow: 0 1px 2px rgba(10, 10, 10, 0.3);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .admin__live-switch-knob {
+    transition: transform 150ms ease;
+  }
+}
+
+.admin__live-switch--on {
   background: var(--admin-good);
+  border-color: var(--admin-good);
+}
+
+.admin__live-switch--on .admin__live-switch-knob {
+  transform: translateX(16px);
+}
+
+/* --- Buy button: editable label, price appends itself, counter beside --- */
+
+.admin__live-button-row {
+  width: 100%;
+  max-width: 400px;
+  margin-bottom: var(--space-5);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.admin__live-button {
+  flex: 1;
+  min-width: 0;
+}
+
+.admin__live-button .admin__live-field {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.admin__live-button .admin__live-field:focus-within {
+  box-shadow: 0 0 0 2px var(--color-white);
+}
+
+.admin__live-button .admin__live-pencil {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.admin__live-button-text {
+  text-align: center;
+}
+
+.admin__live-button-text::placeholder {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.admin__live-button-suffix {
   flex-shrink: 0;
 }
 
-.admin__file-state--empty {
-  color: var(--gray-700);
-  font-weight: 500;
+.admin__live-counter--beside {
+  flex-shrink: 0;
 }
 
-.admin__file-state--empty::before {
-  background: var(--gray-400);
-}
+/* --- Free bonus card --- */
 
-.admin__file-pair {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-5);
-}
-
-.admin__file-col {
+.admin__live-bonus-wrap {
+  width: 100%;
+  max-width: 400px;
+  margin-top: var(--space-5);
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
 }
 
-/* Right panel contents */
-.admin__edit-side-card {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
+.admin__live-bonus-wrap--off .bonus-card {
+  opacity: 0.55;
 }
 
-.admin__edit-view-link {
+.admin__bonus-pdf-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
   font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--color-brand-red);
-  text-decoration: none;
+}
+
+.admin__bonus-pdf-btn {
+  position: relative;
   display: inline-flex;
   align-items: center;
+  border: 1px solid var(--gray-300);
+  background: var(--color-white);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin__bonus-pdf-btn:hover {
+  background: var(--gray-100);
+}
+
+.admin__bonus-pdf-btn input[type="file"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* --- What's Inside: inline items on the dark section --- */
+
+.admin__live-inside-fields {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
   gap: 4px;
 }
 
-.admin__edit-actions {
+.admin__live-inside-actions {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
-}
-
-.admin__edit-preview {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.admin__edit-preview-cover {
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  object-fit: cover;
-  border-radius: 10px;
-  border: 1px solid var(--gray-300);
-  background: var(--gray-100);
-  display: block;
-}
-
-.admin__edit-preview-button {
-  display: block;
-  width: 100%;
-  text-align: center;
-  background: var(--color-ink);
-  color: var(--color-white);
-  border-radius: 999px;
-  padding: var(--space-3) var(--space-4);
-  font-size: 0.8125rem;
-  font-weight: 700;
-}
-
-/* Bonus card mini-preview */
-.admin__bonus-preview {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  border-radius: 12px;
-  border: 1px solid var(--gray-300);
-  background: var(--color-white);
-}
-
-.admin__bonus-preview-cover {
-  width: 48px;
-  height: 48px;
-  border-radius: 8px;
-  object-fit: cover;
-  background: var(--gray-100);
+  gap: 4px;
   flex-shrink: 0;
 }
 
-.admin__bonus-preview-title {
-  margin: 0;
-  font-size: 0.8125rem;
-  font-weight: 700;
+.admin__icon-btn--dark {
+  border-color: var(--border-dark);
+  background: transparent;
+  color: var(--gray-400);
 }
 
-.admin__bonus-preview-description {
-  margin: 2px 0 0;
-  font-size: 0.75rem;
-  color: var(--gray-700);
-}
-
-.admin__bonus-preview-tag {
-  position: absolute;
-  top: -8px;
-  left: var(--space-3);
-  background: var(--color-brand-red);
+.admin__icon-btn--dark:hover {
+  background: rgba(255, 255, 255, 0.08);
   color: var(--color-white);
-  font-size: 0.625rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  border-radius: 999px;
-  padding: 2px 8px;
 }
 
-/* Keep every form field at 16px minimum on phones so iOS Safari never
-   zooms in on focus — same technique already used by the site's own
-   .checkout-email__input. */
+.admin__live-add-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: var(--space-4);
+  border: 1px solid var(--border-dark);
+  background: transparent;
+  color: var(--color-white);
+  border-radius: 6px;
+  padding: var(--space-2) var(--space-4);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin__live-add-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* --- Phones: stack to one column, pin action buttons above the bottom
+     nav, keep the last field reachable. --- */
+
 @media (max-width: 860px) {
-  .admin__edit-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .admin__edit-side {
+  .admin__topbar {
     position: static;
-    top: auto;
   }
 
-  .admin__edit-card .admin__field input,
-  .admin__edit-card .admin__field select,
-  .admin__edit-card .admin__field textarea {
-    font-size: 16px;
-  }
-
-  .admin__file-pair {
-    grid-template-columns: 1fr;
-  }
-
-  /* Only the panel's action buttons pin to the bottom on phones — the rest
-     of the panel (badge, view link, preview) stays in normal flow above
-     the form, per spec. 56px clears the admin shell's own bottom nav bar
-     (see .admin-shell__bottombar / the matching padding rule above). */
-  .admin__edit-actions {
+  .admin__topbar-actions {
     position: fixed;
     left: 0;
     right: 0;
     bottom: 56px;
     z-index: 15;
-    flex-direction: row;
+    gap: var(--space-2);
     background: var(--color-white);
     border-top: 1px solid var(--gray-300);
     padding: var(--space-3) var(--pad);
     box-shadow: 0 -4px 16px rgba(10, 10, 10, 0.06);
   }
 
-  .admin__edit-actions .admin__form-submit,
-  .admin__edit-actions .admin__publish {
+  .admin__topbar-actions .admin__form-submit,
+  .admin__topbar-actions .admin__publish {
     flex: 1;
   }
 
-  .admin__edit-actions .admin__form-message {
+  .admin__topbar-actions .admin__form-message {
     display: none; /* no room in the condensed mobile bar; shown on desktop */
   }
 
-  /* Extra bottom padding so the fixed action bar + the shell's own bottom
-     nav never cover the last card's content. */
   .admin__edit-page {
     padding-bottom: 96px;
+  }
+
+  .admin__live-field-el,
+  .admin__field input,
+  .admin__field select,
+  .admin__field textarea {
+    font-size: 16px; /* stops iOS Safari zooming the page on focus */
   }
 }
