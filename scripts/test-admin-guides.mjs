@@ -233,11 +233,10 @@ try {
     "1d. detail has full content fields",
     detailBody.guide?.slug === "i-lost-money-in-fno" &&
       Array.isArray(detailBody.guide?.whatsInside) &&
-      detailBody.guide.whatsInside.length > 0 &&
-      Array.isArray(detailBody.guide?.faqs) &&
-      detailBody.guide.faqs.length > 0,
+      detailBody.guide.whatsInside.length > 0,
     JSON.stringify(detailBody.guide),
   );
+  check("1d2. detail no longer exposes faqs (admin FAQ editing removed)", !("faqs" in (detailBody.guide ?? {})), JSON.stringify(detailBody.guide));
   check("1e. detail reports slugLocked (has orders)", detailBody.guide?.slugLocked === true, JSON.stringify(detailBody.guide));
 
   const newGuideBody = {
@@ -250,7 +249,9 @@ try {
     pageCount: 20,
     chapterCount: 5,
     whatsInside: [{ title: "Chapter one", description: "Covers the basics." }],
-    faqs: [{ question: "Is this real?", answer: "No, it's a test fixture." }],
+    // Deliberately no faqs — the admin no longer collects it, and this guide
+    // proves (via 10a below, once it has a cover+PDF) that a guide with no
+    // FAQ data saves and publishes fine.
     status: "draft",
   };
   const createRes = await adminFetch("/api/admin/guides", { method: "POST", body: newGuideBody });
@@ -312,7 +313,6 @@ try {
     pageCount: existing.pageCount,
     chapterCount: existing.chapterCount,
     whatsInside: existing.whatsInside,
-    faqs: existing.faqs,
     badge: existing.badge,
     status: existing.status,
     sortOrder: existing.sortOrder,
@@ -643,6 +643,35 @@ try {
     "23b. /api/catalog reports buttonText: null for a guide that never set one (the four live guides)",
     untouchedGuideInCatalog != null && untouchedGuideInCatalog.buttonText === null,
     JSON.stringify(untouchedGuideInCatalog),
+  );
+
+  // =====================================================================
+  // FAQs: guide pages now use the shared homepage FAQ list, not per-guide
+  // DB content — /api/catalog must never read or return a faqs field at all.
+  // =====================================================================
+  check(
+    "25a. /api/catalog never returns a faqs field, for any guide",
+    catalogBody.guides?.every((g) => !("faqs" in g)),
+    JSON.stringify(catalogBody.guides?.map((g) => Object.keys(g))),
+  );
+
+  const noFaqGuideRes = await adminFetch("/api/admin/guides", {
+    method: "POST",
+    body: {
+      slug: "test-guide-no-faqs",
+      title: "No FAQ Test Guide",
+      subtitle: "A guide created without any FAQ data",
+      blurb: "Short blurb.",
+      whatsInside: [{ title: "Chapter one", description: "Covers the basics." }],
+      pricePaise: 9900,
+      status: "draft",
+    },
+  });
+  const noFaqGuideBody = await noFaqGuideRes.json();
+  check(
+    "25b. a guide with no FAQ data (and no pageCount/chapterCount) still saves fine -> 201",
+    noFaqGuideRes.status === 201,
+    `got ${noFaqGuideRes.status}: ${JSON.stringify(noFaqGuideBody)}`,
   );
 } finally {
   await mf.dispose();

@@ -31,7 +31,6 @@ interface CatalogRow {
   badge: string | null;
   button_text: string | null;
   whats_inside: string | null;
-  faqs: string | null;
   sort_order: number | null;
   bonus_title: string | null;
   bonus_description: string | null;
@@ -58,7 +57,7 @@ export async function handleCatalog(req: Request, env: WorkerEnv): Promise<Respo
       .prepare(
         `SELECT slug, number, title, subtitle, blurb, description,
                 price_paise, compare_at_price_paise, page_count, chapter_count,
-                cover_path, badge, button_text, whats_inside, faqs, sort_order,
+                cover_path, badge, button_text, whats_inside, sort_order,
                 bonus_title, bonus_description, bonus_cover_path, bonus_enabled
            FROM books
           WHERE status = 'published'
@@ -85,7 +84,6 @@ export async function handleCatalog(req: Request, env: WorkerEnv): Promise<Respo
     badge: row.badge,
     buttonText: row.button_text,
     whatsInside: parseJsonArray(row.whats_inside),
-    faqs: parseJsonArray(row.faqs),
     ...(row.bonus_enabled === 1 && row.bonus_title != null && row.bonus_cover_path != null
       ? { bonus: { title: row.bonus_title, description: row.bonus_description, coverPath: row.bonus_cover_path } }
       : {}),

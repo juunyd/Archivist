@@ -33,7 +33,6 @@ export interface AdminGuideDetailRow {
   page_count: number | null;
   chapter_count: number | null;
   whats_inside: string | null;
-  faqs: string | null;
   badge: string | null;
   button_text: string | null;
   cover_path: string | null;
@@ -90,17 +89,21 @@ export async function orderCountsForSlug(
 const nowIso = () => new Date().toISOString();
 
 export async function insertGuide(env: WorkerEnv, input: ValidatedGuideInput): Promise<void> {
+  // faqs is deliberately never written here — the admin no longer edits it,
+  // so a new guide's faqs column stays NULL (unused) rather than being set
+  // to an empty array. See updateGuide's comment for why this also matters
+  // on every future save of an existing guide.
   await env.DB.prepare(
     `INSERT INTO books
        (slug, title, price_paise, currency, status,
         number, subtitle, blurb, description, page_count, chapter_count,
-        whats_inside, faqs, badge, button_text, compare_at_price_paise, sort_order, updated_at,
+        whats_inside, badge, button_text, compare_at_price_paise, sort_order, updated_at,
         bonus_title, bonus_description, bonus_enabled)
      VALUES
        (?1, ?2, ?3, 'INR', ?4,
         ?5, ?6, ?7, ?8, ?9, ?10,
-        ?11, ?12, ?13, ?14, ?15, ?16, ?17,
-        ?18, ?19, ?20)`,
+        ?11, ?12, ?13, ?14, ?15, ?16,
+        ?17, ?18, ?19)`,
   )
     .bind(
       input.slug,
@@ -114,7 +117,6 @@ export async function insertGuide(env: WorkerEnv, input: ValidatedGuideInput): P
       input.pageCount,
       input.chapterCount,
       JSON.stringify(input.whatsInside),
-      JSON.stringify(input.faqs),
       input.badge,
       input.buttonText,
       input.compareAtPricePaise,
@@ -133,14 +135,18 @@ export async function updateGuide(
   currentSlug: string,
   input: ValidatedGuideInput,
 ): Promise<void> {
+  // faqs is deliberately left out of this UPDATE's column list — the admin
+  // no longer edits it, and leaving it out of the statement entirely (rather
+  // than writing back whatever an empty, faqs-less form would imply) is what
+  // keeps an existing guide's old FAQ data in the database untouched.
   await env.DB.prepare(
     `UPDATE books SET
        slug = ?1, title = ?2, price_paise = ?3, status = ?4,
        number = ?5, subtitle = ?6, blurb = ?7, description = ?8,
-       page_count = ?9, chapter_count = ?10, whats_inside = ?11, faqs = ?12,
-       badge = ?13, button_text = ?14, compare_at_price_paise = ?15, sort_order = ?16, updated_at = ?17,
-       bonus_title = ?18, bonus_description = ?19, bonus_enabled = ?20
-     WHERE slug = ?21`,
+       page_count = ?9, chapter_count = ?10, whats_inside = ?11,
+       badge = ?12, button_text = ?13, compare_at_price_paise = ?14, sort_order = ?15, updated_at = ?16,
+       bonus_title = ?17, bonus_description = ?18, bonus_enabled = ?19
+     WHERE slug = ?20`,
   )
     .bind(
       input.slug,
@@ -154,7 +160,6 @@ export async function updateGuide(
       input.pageCount,
       input.chapterCount,
       JSON.stringify(input.whatsInside),
-      JSON.stringify(input.faqs),
       input.badge,
       input.buttonText,
       input.compareAtPricePaise,
@@ -230,7 +235,6 @@ export function serializeGuideDetail(row: AdminGuideDetailRow, paidOrders: numbe
     pageCount: row.page_count,
     chapterCount: row.chapter_count,
     whatsInside: parseJsonArray(row.whats_inside),
-    faqs: parseJsonArray(row.faqs),
     badge: row.badge,
     buttonText: row.button_text,
     coverPath: row.cover_path,

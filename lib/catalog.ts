@@ -44,7 +44,6 @@ export interface Guide {
   /** Overrides the buy button's label (price is always appended separately — never typed here). Falls back to "Get Instant Access" when unset. */
   buttonText?: string;
   whatsInside: WhatsInsideItem[];
-  faqs: FaqItem[];
   /** A second, free PDF (with its own cover) included with the purchase — absent when the guide has none. */
   bonus?: {
     title: string;
@@ -89,7 +88,6 @@ interface CatalogApiGuide {
   badge: string | null;
   buttonText: string | null;
   whatsInside: WhatsInsideItem[];
-  faqs: FaqItem[];
   bonus?: {
     title: string;
     description: string | null;
@@ -104,8 +102,7 @@ function assertValidApiGuide(value: unknown): CatalogApiGuide {
     typeof g.slug !== "string" ||
     typeof g.title !== "string" ||
     typeof g.pricePaise !== "number" ||
-    !Array.isArray(g.whatsInside) ||
-    !Array.isArray(g.faqs)
+    !Array.isArray(g.whatsInside)
   ) {
     throw new Error(`/api/catalog returned a malformed guide: ${JSON.stringify(value)}`);
   }
@@ -142,7 +139,6 @@ function mapApiGuide(g: CatalogApiGuide): Guide {
     ...(g.badge != null ? { badge: g.badge } : {}),
     ...(g.buttonText != null ? { buttonText: g.buttonText } : {}),
     whatsInside: g.whatsInside,
-    faqs: g.faqs,
     ...(g.bonus != null
       ? {
           bonus: {

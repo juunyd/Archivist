@@ -200,7 +200,6 @@ const BASE_GUIDE_FIELDS = {
   pageCount: 40,
   chapterCount: 10,
   whatsInside: [{ title: "Chapter one", description: "Covers the basics." }],
-  faqs: [{ question: "Is this real?", answer: "No, it's a test fixture." }],
 };
 
 /** Creates a guide, uploads a real cover+PDF, and publishes it — the baseline every scenario starts from. */

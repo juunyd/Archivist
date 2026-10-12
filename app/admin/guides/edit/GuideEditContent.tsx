@@ -20,7 +20,6 @@ interface AdminGuideDetail {
   pageCount: number | null;
   chapterCount: number | null;
   whatsInside: { title: string; description: string }[];
-  faqs: { question: string; answer: string }[];
   badge: string | null;
   buttonText: string | null;
   coverPath: string | null;
@@ -55,7 +54,6 @@ interface FormState {
   sortOrder: string;
   status: "draft" | "published";
   whatsInside: TwoFieldItem[];
-  faqs: TwoFieldItem[];
   bonusTitle: string;
   bonusDescription: string;
   bonusEnabled: boolean;
@@ -77,7 +75,6 @@ const EMPTY_FORM: FormState = {
   sortOrder: "",
   status: "draft",
   whatsInside: [],
-  faqs: [],
   bonusTitle: "",
   bonusDescription: "",
   bonusEnabled: false,
@@ -100,7 +97,6 @@ function guideToForm(guide: AdminGuideDetail): FormState {
     sortOrder: guide.sortOrder != null ? String(guide.sortOrder) : "",
     status: guide.status,
     whatsInside: guide.whatsInside.map((w) => ({ a: w.title, b: w.description })),
-    faqs: guide.faqs.map((f) => ({ a: f.question, b: f.answer })),
     bonusTitle: guide.bonusTitle ?? "",
     bonusDescription: guide.bonusDescription ?? "",
     bonusEnabled: guide.bonusEnabled,
@@ -201,8 +197,8 @@ export function GuideEditContent() {
     e.preventDefault();
     setSaveMessage(null);
 
-    if (form.whatsInside.length === 0 || form.faqs.length === 0) {
-      setSaveMessage({ text: 'Add at least one "what\'s inside" item and one FAQ before saving.', error: true });
+    if (form.whatsInside.length === 0) {
+      setSaveMessage({ text: 'Add at least one "what\'s inside" item before saving.', error: true });
       return;
     }
 
@@ -220,7 +216,6 @@ export function GuideEditContent() {
       pageCount: form.pageCount ? Number.parseInt(form.pageCount, 10) : undefined,
       chapterCount: form.chapterCount ? Number.parseInt(form.chapterCount, 10) : undefined,
       whatsInside: form.whatsInside.map((item) => ({ title: item.a.trim(), description: item.b.trim() })),
-      faqs: form.faqs.map((item) => ({ question: item.a.trim(), answer: item.b.trim() })),
       badge: form.badge.trim() || undefined,
       buttonText: form.buttonText.trim() || undefined,
       status: form.status,
@@ -531,18 +526,6 @@ export function GuideEditContent() {
           labelB="Description"
           addLabel="Add item"
           itemNoun="item"
-        />
-      </section>
-
-      <section className="admin__section">
-        <h2 className="admin__section-title">FAQs</h2>
-        <TwoFieldListEditor
-          items={form.faqs}
-          onChange={(items) => updateField("faqs", items)}
-          labelA="Question"
-          labelB="Answer"
-          addLabel="Add FAQ"
-          itemNoun="FAQ"
         />
       </section>
 

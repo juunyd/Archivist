@@ -29,11 +29,6 @@ export interface WhatsInsideItemInput {
   description: string;
 }
 
-export interface FaqItemInput {
-  question: string;
-  answer: string;
-}
-
 export interface ValidatedGuideInput {
   slug: string;
   title: string;
@@ -46,7 +41,6 @@ export interface ValidatedGuideInput {
   pageCount: number | null;
   chapterCount: number | null;
   whatsInside: WhatsInsideItemInput[];
-  faqs: FaqItemInput[];
   badge: string | null;
   buttonText: string | null;
   status: "draft" | "published";
@@ -129,9 +123,6 @@ export function validateGuideInput(body: unknown): GuideValidationResult {
   if (!isStringArrayField(b.whatsInside, ["title", "description"])) {
     errors.push("whatsInside must be a non-empty array of { title, description } with non-empty strings.");
   }
-  if (!isStringArrayField(b.faqs, ["question", "answer"])) {
-    errors.push("faqs must be a non-empty array of { question, answer } with non-empty strings.");
-  }
 
   // Empty/undefined means "use the default label" and is valid; whitespace-
   // only text is a distinct, rejected case, since the admin clearly typed
@@ -211,7 +202,6 @@ export function validateGuideInput(body: unknown): GuideValidationResult {
       pageCount,
       chapterCount,
       whatsInside: b.whatsInside as WhatsInsideItemInput[],
-      faqs: b.faqs as FaqItemInput[],
       badge: isNonEmptyString(b.badge) ? (b.badge as string).trim() : null,
       buttonText,
       status: status as "draft" | "published",

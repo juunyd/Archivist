@@ -10,6 +10,7 @@ import { StickyBuyBar } from "@/components/StickyBuyBar";
 import { GuideViewTracker } from "@/components/GuideViewTracker";
 import { ViewCounter } from "@/components/ViewCounter";
 import { getAllGuideSlugs, getGuideBySlug } from "@/lib/catalog";
+import { homepageFaqs } from "@/lib/site";
 import styles from "./page.module.css";
 
 interface GuidePageProps {
@@ -161,7 +162,7 @@ export default async function GuidePage({ params }: GuidePageProps) {
       <section id="faq" className={styles.faqSection}>
         <div className={styles.faqInner}>
           <h2 className={styles.faqHeading}>Questions</h2>
-          <FaqAccordion items={guide.faqs} variant="bold" />
+          <FaqAccordion items={homepageFaqs} variant="bold" />
         </div>
       </section>
 
