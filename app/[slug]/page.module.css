@@ -135,13 +135,14 @@
   text-wrap: pretty;
 }
 
-.insideEyebrow {
-  font-size: 10.5px;
+.insideHeading {
+  font-size: clamp(24px, 5.6vw, 32px);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
   font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--gray-600);
-  margin-bottom: 6px;
+  margin: 0 0 24px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border-dark);
 }
 
 .insideList {

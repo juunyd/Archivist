@@ -135,29 +135,29 @@ export default async function GuidePage({ params }: GuidePageProps) {
 
       <div id={SENTINEL_ID} style={{ width: "100%", height: 1 }} />
 
-      <section id="inside" className={styles.insideSection}>
-        <div className={styles.insideInner}>
-          <div className={styles.eyebrow}>The problem</div>
-          <p className={styles.problemStatement}>{guide.problemStatement}</p>
+      {guide.whatsInside.length > 0 && (
+        <section id="inside" className={styles.insideSection}>
+          <div className={styles.insideInner}>
+            <h2 className={styles.insideHeading}>What&apos;s Inside</h2>
 
-          <div className={styles.insideEyebrow}>What&apos;s inside</div>
-          <div className={styles.insideList}>
-            {guide.whatsInside.map((item, index) => (
-              <div key={item.title} className={styles.insideItem}>
-                <span className={styles.insideItemNumber}>
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-                <div>
-                  <h3 className={styles.insideItemTitle}>{item.title}</h3>
-                  <p className={styles.insideItemBody}>{item.description}</p>
+            <div className={styles.insideList}>
+              {guide.whatsInside.map((item, index) => (
+                <div key={item.title} className={styles.insideItem}>
+                  <span className={styles.insideItemNumber}>
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <div>
+                    <h3 className={styles.insideItemTitle}>{item.title}</h3>
+                    <p className={styles.insideItemBody}>{item.description}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
 
-          <CtaButton guide={guide} align="center" className={styles.insideCta} />
-        </div>
-      </section>
+            <CtaButton guide={guide} align="center" className={styles.insideCta} />
+          </div>
+        </section>
+      )}
 
       <section id="faq" className={styles.faqSection}>
         <div className={styles.faqInner}>
@@ -168,7 +168,7 @@ export default async function GuidePage({ params }: GuidePageProps) {
 
       <section id="buy" className={styles.buySection}>
         <div className={styles.buyInner}>
-          <h2 className={styles.buyHeading}>Decide better by this time tomorrow.</h2>
+          <h2 className={styles.buyHeading}>You are just a download away.</h2>
           <p className={styles.buySub}>
             {guide.pageCount ? `${guide.pageCount} pages, ` : ""}PDF, delivered the moment you check out.
           </p>
