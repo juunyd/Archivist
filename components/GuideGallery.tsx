@@ -26,33 +26,18 @@ interface GuideGalleryProps {
   renderCoverSlot?: (defaultImage: ReactNode) => ReactNode;
 }
 
-function PrevIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M15 18l-6-6 6-6" />
-    </svg>
-  );
-}
-
-function NextIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M9 18l6-6-6-6" />
-    </svg>
-  );
-}
-
 /**
  * The guide page's hero image area. With a single image (the common case
  * today: every guide that has no preview pages uploaded) this renders the
- * exact same markup the hero always has — no dots, no arrows, nothing new in
- * the DOM. With more than one image it becomes a swipeable/clickable gallery
- * with dots (always), arrows + thumbnails (desktop), and a full-screen
- * lightbox on click/tap.
+ * exact same markup the hero always has — no dots, nothing new in the DOM.
+ * With more than one image it becomes a one-at-a-time swipeable/clickable
+ * gallery: one image fills the whole area (no peeking neighbor), small dots
+ * below it, swipe on touch and arrow keys from the keyboard, tap/click opens
+ * the full-screen lightbox.
  */
 export function GuideGallery({ images, wrapperClassName, imageClassName, renderCoverSlot }: GuideGalleryProps) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const { trackRef, currentIndex, goTo, next, prev } = useGalleryCarousel(images.length, 0, lightboxIndex === null);
+  const { trackRef, currentIndex, goTo } = useGalleryCarousel(images.length, 0, lightboxIndex === null);
 
   if (images.length <= 1) {
     const image = images[0];
@@ -62,7 +47,7 @@ export function GuideGallery({ images, wrapperClassName, imageClassName, renderC
 
   return (
     <div className={wrapperClassName}>
-      <div className={styles.galleryWrap}>
+      <div className={styles.galleryInner}>
         <div
           className={styles.galleryTrack}
           ref={trackRef}
@@ -90,53 +75,19 @@ export function GuideGallery({ images, wrapperClassName, imageClassName, renderC
           })}
         </div>
 
-        <button
-          type="button"
-          className={`${styles.galleryArrow} ${styles.galleryArrowPrev}`}
-          onClick={prev}
-          disabled={currentIndex === 0}
-          aria-label="Previous image"
-        >
-          <PrevIcon />
-        </button>
-        <button
-          type="button"
-          className={`${styles.galleryArrow} ${styles.galleryArrowNext}`}
-          onClick={next}
-          disabled={currentIndex === images.length - 1}
-          aria-label="Next image"
-        >
-          <NextIcon />
-        </button>
-      </div>
-
-      <div className={styles.galleryDots} role="tablist" aria-label="Choose image">
-        {images.map((image, index) => (
-          <button
-            key={image.src}
-            type="button"
-            role="tab"
-            aria-selected={index === currentIndex}
-            aria-label={`Go to image ${index + 1} of ${images.length}`}
-            className={`${styles.galleryDot}${index === currentIndex ? ` ${styles.galleryDotActive}` : ""}`}
-            onClick={() => goTo(index)}
-          />
-        ))}
-      </div>
-
-      <div className={styles.galleryThumbs}>
-        {images.map((image, index) => (
-          <button
-            key={image.src}
-            type="button"
-            className={`${styles.galleryThumb}${index === currentIndex ? ` ${styles.galleryThumbActive}` : ""}`}
-            onClick={() => goTo(index)}
-            aria-label={`Go to image ${index + 1} of ${images.length}`}
-            aria-current={index === currentIndex}
-          >
-            <Image src={image.src} alt="" width={160} height={90} className={styles.galleryThumbImg} loading="lazy" />
-          </button>
-        ))}
+        <div className={styles.galleryDots} role="tablist" aria-label="Choose image">
+          {images.map((image, index) => (
+            <button
+              key={image.src}
+              type="button"
+              role="tab"
+              aria-selected={index === currentIndex}
+              aria-label={`Go to image ${index + 1} of ${images.length}`}
+              className={`${styles.galleryDot}${index === currentIndex ? ` ${styles.galleryDotActive}` : ""}`}
+              onClick={() => goTo(index)}
+            />
+          ))}
+        </div>
       </div>
 
       {lightboxIndex !== null && (
