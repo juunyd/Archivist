@@ -93,3 +93,35 @@ export function CloseIcon(props: SVGProps<SVGSVGElement>) {
     </Icon>
   );
 }
+
+export function ArrowUpIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon width={16} height={16} {...props}>
+      <path d="M12 19V5M6 11l6-6 6 6" />
+    </Icon>
+  );
+}
+
+export function ArrowDownIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon width={16} height={16} {...props}>
+      <path d="M12 5v14M18 13l-6 6-6-6" />
+    </Icon>
+  );
+}
+
+export function TrashIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon width={16} height={16} {...props}>
+      <path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1.5 1.5 0 0 0 1.5 1.5h7a1.5 1.5 0 0 0 1.5-1.5l1-13" />
+    </Icon>
+  );
+}
+
+export function BackArrowIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon width={16} height={16} {...props}>
+      <path d="M19 12H5M11 18l-6-6 6-6" />
+    </Icon>
+  );
+}

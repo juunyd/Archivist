@@ -1,5 +1,7 @@
 "use client";
 
+import { ArrowUpIcon, ArrowDownIcon, TrashIcon } from "../icons";
+
 export interface TwoFieldItem {
   a: string;
   b: string;
@@ -40,6 +42,9 @@ export function TwoFieldListEditor({ items, onChange, labelA, labelB, addLabel, 
     <div className="admin__list-editor">
       {items.map((item, i) => (
         <div className="admin__list-editor-item" key={i}>
+          <span className="admin__list-editor-index" aria-hidden="true">
+            {i + 1}
+          </span>
           <div className="admin__list-editor-fields">
             <input
               type="text"
@@ -57,14 +62,34 @@ export function TwoFieldListEditor({ items, onChange, labelA, labelB, addLabel, 
             />
           </div>
           <div className="admin__list-editor-actions">
-            <button type="button" onClick={() => move(i, -1)} disabled={i === 0} aria-label={`Move ${itemNoun} ${i + 1} up`}>
-              ↑
+            <button
+              type="button"
+              className="admin__icon-btn"
+              onClick={() => move(i, -1)}
+              disabled={i === 0}
+              aria-label={`Move ${itemNoun} ${i + 1} up`}
+              title={`Move ${itemNoun} ${i + 1} up`}
+            >
+              <ArrowUpIcon />
             </button>
-            <button type="button" onClick={() => move(i, 1)} disabled={i === items.length - 1} aria-label={`Move ${itemNoun} ${i + 1} down`}>
-              ↓
+            <button
+              type="button"
+              className="admin__icon-btn"
+              onClick={() => move(i, 1)}
+              disabled={i === items.length - 1}
+              aria-label={`Move ${itemNoun} ${i + 1} down`}
+              title={`Move ${itemNoun} ${i + 1} down`}
+            >
+              <ArrowDownIcon />
             </button>
-            <button type="button" onClick={() => remove(i)} aria-label={`Remove ${itemNoun} ${i + 1}`}>
-              Remove
+            <button
+              type="button"
+              className="admin__icon-btn admin__icon-btn--danger"
+              onClick={() => remove(i)}
+              aria-label={`Remove ${itemNoun} ${i + 1}`}
+              title={`Remove ${itemNoun} ${i + 1}`}
+            >
+              <TrashIcon />
             </button>
           </div>
         </div>
