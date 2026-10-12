@@ -43,7 +43,7 @@ export default async function HomePage() {
         </h1>
         <div className={styles.heroSub}>
           <span className={styles.heroSubText}>
-            One question per guide. Read it in a sitting.
+            One question per guide.
           </span>
         </div>
       </section>

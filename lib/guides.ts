@@ -56,7 +56,7 @@ export interface Guide {
   /** Only set this when the guide genuinely has a "was" price to strike through. */
   compareAtPrice?: number;
   pageCount: number;
-  /** Optional. When set, renders the "N pages · N chapters · Read it in one sitting" line near the hero trust ticks. */
+  /** Optional. When set, renders the "N pages · N chapters" line near the hero trust ticks. */
   chapterCount?: number;
   coverImage: string;
   /** Optional small claim badge shown above the hero title. */

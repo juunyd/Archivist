@@ -111,10 +111,14 @@ export default async function GuidePage({ params }: GuidePageProps) {
 
               {guide.bonus && <BonusCard bonus={guide.bonus} />}
 
-              {guide.chapterCount && (
+              {(guide.pageCount || guide.chapterCount) && (
                 <p className={styles.formatLine}>
-                  {guide.pageCount} pages &middot; {guide.chapterCount} chapters &middot; Read it
-                  in one sitting
+                  {[
+                    guide.pageCount ? `${guide.pageCount} pages` : null,
+                    guide.chapterCount ? `${guide.chapterCount} chapters` : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
                 </p>
               )}
 
@@ -165,7 +169,7 @@ export default async function GuidePage({ params }: GuidePageProps) {
         <div className={styles.buyInner}>
           <h2 className={styles.buyHeading}>Decide better by this time tomorrow.</h2>
           <p className={styles.buySub}>
-            {guide.pageCount} pages, PDF, delivered the moment you check out.
+            {guide.pageCount ? `${guide.pageCount} pages, ` : ""}PDF, delivered the moment you check out.
           </p>
           <div className={styles.buyPriceRow}>
             <span className={styles.buyPrice}>&#8377;{guide.price}</span>

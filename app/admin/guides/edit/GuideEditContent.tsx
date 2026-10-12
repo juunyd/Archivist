@@ -217,8 +217,8 @@ export function GuideEditContent() {
       compareAtPricePaise: form.compareAtPriceRupees
         ? Math.round(Number.parseFloat(form.compareAtPriceRupees) * 100)
         : undefined,
-      pageCount: Number.parseInt(form.pageCount, 10),
-      chapterCount: Number.parseInt(form.chapterCount, 10),
+      pageCount: form.pageCount ? Number.parseInt(form.pageCount, 10) : undefined,
+      chapterCount: form.chapterCount ? Number.parseInt(form.chapterCount, 10) : undefined,
       whatsInside: form.whatsInside.map((item) => ({ title: item.a.trim(), description: item.b.trim() })),
       faqs: form.faqs.map((item) => ({ question: item.a.trim(), answer: item.b.trim() })),
       badge: form.badge.trim() || undefined,
@@ -464,12 +464,12 @@ export function GuideEditContent() {
         </div>
 
         <div className="admin__field">
-          <label htmlFor="g-pages">Page count</label>
-          <input id="g-pages" type="number" min="1" step="1" value={form.pageCount} onChange={(e) => updateField("pageCount", e.target.value)} required />
+          <label htmlFor="g-pages">Page count (optional)</label>
+          <input id="g-pages" type="number" min="1" step="1" value={form.pageCount} onChange={(e) => updateField("pageCount", e.target.value)} />
         </div>
 
         <div className="admin__field">
-          <label htmlFor="g-chapters">Chapter count</label>
+          <label htmlFor="g-chapters">Chapter count (optional)</label>
           <input
             id="g-chapters"
             type="number"
@@ -477,7 +477,6 @@ export function GuideEditContent() {
             step="1"
             value={form.chapterCount}
             onChange={(e) => updateField("chapterCount", e.target.value)}
-            required
           />
         </div>
 

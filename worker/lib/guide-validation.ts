@@ -43,8 +43,8 @@ export interface ValidatedGuideInput {
   number: string | null;
   pricePaise: number;
   compareAtPricePaise: number | null;
-  pageCount: number;
-  chapterCount: number;
+  pageCount: number | null;
+  chapterCount: number | null;
   whatsInside: WhatsInsideItemInput[];
   faqs: FaqItemInput[];
   badge: string | null;
@@ -114,8 +114,17 @@ export function validateGuideInput(body: unknown): GuideValidationResult {
     }
   }
 
-  if (!isPositiveInt(b.pageCount)) errors.push("pageCount must be a positive integer.");
-  if (!isPositiveInt(b.chapterCount)) errors.push("chapterCount must be a positive integer.");
+  let pageCount: number | null = null;
+  if (b.pageCount !== undefined && b.pageCount !== null && b.pageCount !== ("" as unknown)) {
+    if (!isPositiveInt(b.pageCount)) errors.push("pageCount must be empty or a positive integer.");
+    else pageCount = b.pageCount;
+  }
+
+  let chapterCount: number | null = null;
+  if (b.chapterCount !== undefined && b.chapterCount !== null && b.chapterCount !== ("" as unknown)) {
+    if (!isPositiveInt(b.chapterCount)) errors.push("chapterCount must be empty or a positive integer.");
+    else chapterCount = b.chapterCount;
+  }
 
   if (!isStringArrayField(b.whatsInside, ["title", "description"])) {
     errors.push("whatsInside must be a non-empty array of { title, description } with non-empty strings.");
@@ -199,8 +208,8 @@ export function validateGuideInput(body: unknown): GuideValidationResult {
       number: isNonEmptyString(b.number) ? (b.number as string).trim() : null,
       pricePaise: b.pricePaise as number,
       compareAtPricePaise,
-      pageCount: b.pageCount as number,
-      chapterCount: b.chapterCount as number,
+      pageCount,
+      chapterCount,
       whatsInside: b.whatsInside as WhatsInsideItemInput[],
       faqs: b.faqs as FaqItemInput[],
       badge: isNonEmptyString(b.badge) ? (b.badge as string).trim() : null,

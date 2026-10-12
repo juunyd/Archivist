@@ -258,6 +258,42 @@ try {
   check("2a. POST /api/admin/guides -> 201", createRes.status === 201, `got ${createRes.status}: ${JSON.stringify(createBody)}`);
   check("2b. created guide is a draft", createBody.guide?.status === "draft", JSON.stringify(createBody.guide));
 
+  // 2c/2d. pageCount and chapterCount are optional — a guide can be created
+  // and later published with either or both omitted.
+  const noCountsGuideBody = {
+    ...newGuideBody,
+    slug: "test-guide-no-counts",
+    pageCount: undefined,
+    chapterCount: undefined,
+  };
+  const noCountsCreateRes = await adminFetch("/api/admin/guides", { method: "POST", body: noCountsGuideBody });
+  const noCountsCreateBody = await noCountsCreateRes.json();
+  check(
+    "2c. POST with pageCount/chapterCount omitted -> 201",
+    noCountsCreateRes.status === 201,
+    `got ${noCountsCreateRes.status}: ${JSON.stringify(noCountsCreateBody)}`,
+  );
+  check(
+    "2d. created guide reports pageCount/chapterCount as null",
+    noCountsCreateBody.guide?.pageCount === null && noCountsCreateBody.guide?.chapterCount === null,
+    JSON.stringify(noCountsCreateBody.guide),
+  );
+
+  // Publishing this guide still fails (it has no cover/PDF yet), but the
+  // reason must be the missing files, never the missing page/chapter counts.
+  const noCountsPublishRes = await adminFetch("/api/admin/guides/test-guide-no-counts", {
+    method: "PUT",
+    body: { ...noCountsGuideBody, status: "published" },
+  });
+  const noCountsPublishBody = await noCountsPublishRes.json();
+  check(
+    "2e. publishing with no counts still blocked only by missing cover/PDF",
+    noCountsPublishRes.status === 400 &&
+      noCountsPublishBody.error?.code === "cannot_publish" &&
+      !(noCountsPublishBody.error?.message ?? "").toLowerCase().includes("count"),
+    JSON.stringify(noCountsPublishBody),
+  );
+
   const publishAttempt = { ...newGuideBody, status: "published" };
   const publishRes = await adminFetch("/api/admin/guides/test-guide-automated", { method: "PUT", body: publishAttempt });
   const publishBody = await publishRes.json();

@@ -37,7 +37,7 @@ export interface Guide {
   /** Rupees, shown to the visitor. Derived from D1's price_paise — see getAllGuides(). */
   price: number;
   compareAtPrice?: number;
-  pageCount: number;
+  pageCount?: number;
   chapterCount?: number;
   coverImage: string;
   badge?: string;
@@ -136,7 +136,7 @@ function mapApiGuide(g: CatalogApiGuide): Guide {
     ...(g.compareAtPricePaise != null
       ? { compareAtPrice: Math.round(g.compareAtPricePaise / 100) }
       : {}),
-    pageCount: g.pageCount ?? 0,
+    ...(g.pageCount != null ? { pageCount: g.pageCount } : {}),
     ...(g.chapterCount != null ? { chapterCount: g.chapterCount } : {}),
     coverImage: g.coverPath ?? "",
     ...(g.badge != null ? { badge: g.badge } : {}),
